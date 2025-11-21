@@ -1,0 +1,3465 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Scheduler Management Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        :root {
+            --primary: #4f46e5;
+            --primary-dark: #4338ca;
+            --primary-light: #818cf8;
+            --success: #10b981;
+            --danger: #ef4444;
+            --warning: #f59e0b;
+            --info: #3b82f6;
+            --gray-50: #f9fafb;
+            --gray-100: #f3f4f6;
+            --gray-200: #e5e7eb;
+            --gray-300: #d1d5db;
+            --gray-600: #4b5563;
+            --gray-700: #374151;
+            --gray-800: #1f2937;
+            --gray-900: #111827;
+            --sidebar-width: 260px;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: var(--gray-50);
+            color: var(--gray-900);
+            line-height: 1.5;
+        }
+        
+        /* Layout */
+        .app-container {
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
+        }
+        
+        /* Sidebar */
+        .sidebar {
+            width: var(--sidebar-width);
+            background: white;
+            border-right: 1px solid var(--gray-200);
+            display: flex;
+            flex-direction: column;
+            box-shadow: 2px 0 8px rgba(0,0,0,0.05);
+        }
+        
+        .sidebar-header {
+            padding: 1.5rem;
+            border-bottom: 1px solid var(--gray-200);
+        }
+        
+        .sidebar-header h1 {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--gray-900);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .sidebar-nav {
+            flex: 1;
+            overflow-y: auto;
+            padding: 1rem 0;
+        }
+        
+        .nav-section {
+            margin-bottom: 1.5rem;
+        }
+        
+        .nav-section-title {
+            padding: 0.5rem 1.5rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            color: var(--gray-600);
+            letter-spacing: 0.5px;
+        }
+        
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            padding: 0.75rem 1.5rem;
+            color: var(--gray-700);
+            cursor: pointer;
+            transition: all 0.2s;
+            border-left: 3px solid transparent;
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+        
+        .nav-item:hover {
+            background: var(--gray-50);
+            color: var(--primary);
+        }
+        
+        .nav-item.active {
+            background: #eef2ff;
+            color: var(--primary);
+            border-left-color: var(--primary);
+        }
+        
+        .nav-icon {
+            font-size: 1.1rem;
+        }
+        
+        /* Main Content */
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        
+        .top-bar {
+            background: white;
+            border-bottom: 1px solid var(--gray-200);
+            padding: 1rem 1.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
+        
+        .top-bar h2 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--gray-900);
+        }
+        
+        .top-bar-meta {
+            font-size: 0.875rem;
+            color: var(--gray-600);
+        }
+        
+        .content-area {
+            flex: 1;
+            overflow-y: auto;
+            padding: 1.5rem;
+        }
+        
+        .page-section {
+            display: none;
+        }
+        
+        .page-section.active {
+            display: block;
+        }
+        
+        /* Stats Cards */
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+        
+        .stat-card {
+            background: white;
+            padding: 1.25rem;
+            border-radius: 0.5rem;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            border-left: 3px solid var(--primary);
+        }
+        
+        .stat-card.success { border-left-color: var(--success); }
+        .stat-card.danger { border-left-color: var(--danger); }
+        .stat-card.warning { border-left-color: var(--warning); }
+        .stat-card.info { border-left-color: var(--info); }
+        
+        .stat-label {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            color: var(--gray-600);
+            font-weight: 600;
+            letter-spacing: 0.5px;
+        }
+        
+        .stat-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--gray-900);
+            margin-top: 0.25rem;
+        }
+        
+        /* Filters */
+        .filters {
+            display: flex;
+            gap: 0.75rem;
+            flex-wrap: wrap;
+            margin-bottom: 1.5rem;
+            padding: 1rem;
+            background: white;
+            border-radius: 0.5rem;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        
+        .filter-group {
+            flex: 1;
+            min-width: 200px;
+        }
+        
+        .filter-group label {
+            display: block;
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: var(--gray-700);
+            margin-bottom: 0.25rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .filter-group input,
+        .filter-group select {
+            width: 100%;
+            padding: 0.5rem 0.75rem;
+            border: 1px solid var(--gray-300);
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            transition: all 0.2s;
+        }
+        
+        .filter-group input:focus,
+        .filter-group select:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+        }
+        
+        /* Buttons */
+        .btn {
+            padding: 0.5rem 1rem;
+            border: none;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: var(--primary-dark);
+        }
+        
+        .btn-success {
+            background: var(--success);
+            color: white;
+        }
+        
+        .btn-success:hover {
+            background: #059669;
+        }
+        
+        .btn-sm {
+            padding: 0.375rem 0.75rem;
+            font-size: 0.8125rem;
+        }
+        
+        /* Table */
+        .table-container {
+            background: white;
+            border-radius: 0.5rem;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        
+        .table-wrapper {
+            overflow-x: auto;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.875rem;
+        }
+        
+        thead {
+            background: var(--gray-50);
+            position: sticky;
+            top: 0;
+        }
+        
+        th {
+            padding: 0.75rem;
+            text-align: left;
+            font-weight: 600;
+            color: var(--gray-700);
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            border-bottom: 1px solid var(--gray-200);
+            cursor: pointer;
+            user-select: none;
+            white-space: nowrap;
+        }
+        
+        th:hover {
+            background: var(--gray-100);
+        }
+        
+        th.sortable::after {
+            content: " ⇅";
+            opacity: 0.3;
+        }
+        
+        th.sorted-asc::after, th.sort-asc::after {
+            content: " ↑";
+            opacity: 1;
+            color: var(--primary);
+        }
+        
+        th.sorted-desc::after, th.sort-desc::after {
+            content: " ↓";
+            opacity: 1;
+            color: var(--primary);
+        }
+        
+        td {
+            padding: 0.75rem;
+            border-bottom: 1px solid var(--gray-100);
+            color: var(--gray-900);
+        }
+        
+        tr:hover {
+            background: var(--gray-50);
+        }
+        
+        /* Badges */
+        .badge {
+            display: inline-block;
+            padding: 0.25rem 0.625rem;
+            border-radius: 0.25rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+        
+        .badge-success, .status-enabled, .badge.success {
+            background: #d1fae5;
+            color: #065f46;
+        }
+        
+        .badge-danger, .status-disabled, .badge.failed {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+        
+        .badge-warning, .badge.running {
+            background: #fef3c7;
+            color: #92400e;
+        }
+        
+        .badge-info, .badge.date {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+        
+        .badge-daily, .frequency-daily {
+            background: #d1fae5;
+            color: #065f46;
+        }
+        
+        .badge-weekly, .frequency-weekly {
+            background: #fef3c7;
+            color: #92400e;
+        }
+        
+        .badge-monthly, .frequency-monthly {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+        
+        .badge-secondary {
+            background: #e5e7eb;
+            color: #4b5563;
+        }
+        
+        .action-btn {
+            padding: 0.375rem 0.75rem;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.375rem;
+        }
+        
+        .action-btn:hover {
+            background: #2563eb;
+            transform: translateY(-1px);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .action-btn:active {
+            transform: translateY(0);
+        }
+        
+        .action-btn-icon {
+            padding: 0.5rem;
+            background: transparent;
+            color: var(--primary);
+            border: 1px solid var(--primary);
+            border-radius: 0.375rem;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 32px;
+            height: 32px;
+        }
+        
+        .action-btn-icon:hover {
+            background: var(--primary);
+            color: white;
+            transform: scale(1.1);
+        }
+        
+        .action-btn-icon:active {
+            transform: scale(0.95);
+        }
+        
+        .toggle-switch {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.75rem;
+            margin-bottom: 1rem;
+        }
+        
+        .toggle-label {
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: var(--gray-700);
+        }
+        
+        .toggle-buttons {
+            display: inline-flex;
+            border: 1px solid var(--gray-300);
+            border-radius: 0.375rem;
+            overflow: hidden;
+        }
+        
+        .toggle-btn {
+            padding: 0.5rem 1rem;
+            border: none;
+            background: white;
+            color: var(--gray-700);
+            font-size: 0.875rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            border-right: 1px solid var(--gray-300);
+        }
+        
+        .toggle-btn:last-child {
+            border-right: none;
+        }
+        
+        .toggle-btn.active {
+            background: var(--primary);
+            color: white;
+        }
+        
+        .toggle-btn:hover:not(.active) {
+            background: var(--gray-50);
+        }
+        
+        .job-name {
+            font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', monospace;
+            font-size: 0.8125rem;
+            color: var(--primary);
+            font-weight: 500;
+        }
+        
+        .schedule-time {
+            font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', monospace;
+            font-size: 0.8125rem;
+            color: var(--success);
+            font-weight: 500;
+        }
+        
+        /* Insights Grid */
+        .insights-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+        
+        .insight-card {
+            background: white;
+            padding: 1.25rem;
+            border-radius: 0.5rem;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            border-left: 3px solid var(--info);
+        }
+        
+        .insight-label {
+            font-size: 0.75rem;
+            color: var(--gray-600);
+            text-transform: uppercase;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+        }
+        
+        .insight-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-top: 0.5rem;
+            color: var(--gray-900);
+        }
+        
+        /* Day Breakdown */
+        .day-breakdown {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+        
+        .day-item {
+            background: white;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .day-name {
+            font-weight: 600;
+            color: var(--gray-900);
+            min-width: 180px;
+        }
+        
+        .day-metrics {
+            display: flex;
+            gap: 1.5rem;
+        }
+        
+        .day-metric {
+            display: flex;
+            align-items: baseline;
+            gap: 0.5rem;
+        }
+        
+        .day-metric-label {
+            font-size: 0.75rem;
+            color: var(--gray-600);
+            text-transform: uppercase;
+        }
+        
+        .day-metric-value {
+            font-size: 1.25rem;
+            font-weight: 700;
+        }
+        
+        .day-metric.total .day-metric-value { color: var(--info); }
+        .day-metric.success .day-metric-value { color: var(--success); }
+        .day-metric.failed .day-metric-value { color: var(--danger); }
+        
+        /* Performance Cards */
+        .performance-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1rem;
+        }
+        
+        .performance-card {
+            background: white;
+            padding: 1.25rem;
+            border-radius: 0.5rem;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        
+        .performance-card h3 {
+            font-size: 1rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            color: var(--gray-900);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .perf-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 0.625rem 0;
+            border-bottom: 1px solid var(--gray-100);
+        }
+        
+        .perf-item:last-child {
+            border-bottom: none;
+        }
+        
+        .perf-item-name {
+            font-weight: 500;
+            color: var(--gray-900);
+            font-size: 0.875rem;
+        }
+        
+        .perf-item-value {
+            font-weight: 600;
+            color: var(--primary);
+            font-size: 0.875rem;
+        }
+        
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(4px);
+        }
+        
+        .modal-content {
+            background: white;
+            margin: 5% auto;
+            padding: 0;
+            border-radius: 0.75rem;
+            max-width: 800px;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+        }
+        
+        .modal-header {
+            background: var(--gray-50);
+            padding: 1.25rem 1.5rem;
+            border-bottom: 1px solid var(--gray-200);
+            border-radius: 0.75rem 0.75rem 0 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .modal-header h3 {
+            font-size: 1.125rem;
+            font-weight: 600;
+            color: var(--gray-900);
+        }
+        
+        .close {
+            font-size: 1.5rem;
+            font-weight: 300;
+            color: var(--gray-600);
+            cursor: pointer;
+            transition: color 0.2s;
+            border: none;
+            background: none;
+        }
+        
+        .close:hover {
+            color: var(--gray-900);
+        }
+        
+        .modal-body {
+            padding: 1.5rem;
+        }
+        
+        .modal-body pre {
+            background: var(--gray-50);
+            padding: 1rem;
+            border-radius: 0.5rem;
+            overflow-x: auto;
+            font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', monospace;
+            font-size: 0.8125rem;
+            border: 1px solid var(--gray-200);
+            margin: 1rem 0;
+        }
+        
+        .curl-command {
+            font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', monospace;
+            font-size: 0.75rem;
+            color: var(--gray-600);
+            max-width: 300px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            cursor: pointer;
+            padding: 0.375rem 0.625rem;
+            background: var(--gray-50);
+            border-radius: 0.25rem;
+            border: 1px solid var(--gray-200);
+            transition: all 0.2s;
+        }
+        
+        .curl-command:hover {
+            background: var(--gray-100);
+            border-color: var(--gray-300);
+        }
+        
+        .no-results {
+            text-align: center;
+            padding: 3rem;
+            color: var(--gray-600);
+        }
+        
+        /* Today's Report Styles */
+        .chart-container {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 0.5rem;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            margin-bottom: 1.5rem;
+        }
+        
+        .chart-title {
+            font-weight: 700;
+            font-size: 1.125rem;
+            margin-bottom: 0.75rem;
+            color: var(--gray-900);
+        }
+        
+        /* Heatmap Styles */
+        .heatmap-container {
+            overflow-x: auto;
+            margin: 1rem 0;
+        }
+        
+        .heatmap-grid {
+            display: grid;
+            gap: 2px;
+            min-width: 800px;
+        }
+        
+        .heatmap-row {
+            display: grid;
+            grid-template-columns: 200px repeat(24, 1fr);
+            gap: 2px;
+        }
+        
+        .heatmap-label {
+            padding: 0.5rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            background: var(--gray-50);
+            border-radius: 0.25rem;
+        }
+        
+        .heatmap-cell {
+            padding: 0.5rem;
+            text-align: center;
+            font-size: 0.7rem;
+            border-radius: 0.25rem;
+            cursor: pointer;
+            transition: transform 0.2s;
+            min-height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .heatmap-cell:hover {
+            transform: scale(1.1);
+            z-index: 10;
+        }
+        
+        .heatmap-cell.empty {
+            background: var(--gray-100);
+        }
+        
+        /* Timeline Styles */
+        .timeline-container {
+            position: relative;
+            padding: 2rem 0;
+            background: white;
+            border-radius: 0.5rem;
+        }
+        
+        .timeline-hours {
+            display: grid;
+            grid-template-columns: repeat(24, 1fr);
+            border-bottom: 2px solid var(--gray-300);
+            padding-bottom: 0.5rem;
+            margin-bottom: 1rem;
+        }
+        
+        .timeline-hour {
+            text-align: center;
+            font-size: 0.7rem;
+            color: var(--gray-600);
+            font-weight: 600;
+        }
+        
+        .timeline-row {
+            position: relative;
+            height: 40px;
+            margin-bottom: 0.5rem;
+            background: var(--gray-50);
+            border-radius: 0.25rem;
+            border-left: 3px solid var(--primary);
+        }
+        
+        .timeline-label {
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 200px;
+            padding: 0.5rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            background: white;
+            z-index: 2;
+            border-right: 1px solid var(--gray-300);
+        }
+        
+        .timeline-track {
+            position: absolute;
+            left: 200px;
+            right: 0;
+            top: 0;
+            bottom: 0;
+            display: grid;
+            grid-template-columns: repeat(24, 1fr);
+        }
+        
+        .timeline-event {
+            position: absolute;
+            height: 80%;
+            top: 10%;
+            border-radius: 0.25rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.65rem;
+            font-weight: 600;
+            color: white;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .timeline-event:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+        
+        .timeline-event.success {
+            background: linear-gradient(135deg, var(--success) 0%, #059669 100%);
+        }
+        
+        .timeline-event.failed {
+            background: linear-gradient(135deg, var(--danger) 0%, #dc2626 100%);
+        }
+        
+        .timeline-event.retry {
+            background: linear-gradient(135deg, var(--warning) 0%, #d97706 100%);
+        }
+        
+        .timeline-event.pending {
+            background: linear-gradient(135deg, var(--gray-300) 0%, var(--gray-400) 100%);
+            color: var(--gray-600);
+            border: 1px dashed var(--gray-400);
+        }
+        
+        .legend-toggle {
+            font-size: 0.875rem;
+            color: var(--primary);
+            cursor: pointer;
+            user-select: none;
+            margin-bottom: 0.75rem;
+            display: inline-block;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.375rem;
+            transition: background 0.2s;
+        }
+        
+        .legend-toggle:hover {
+            background: var(--gray-100);
+        }
+        
+        .job-names {
+            margin-top: 1rem;
+            font-size: 0.875rem;
+            color: var(--gray-900);
+            max-height: 150px;
+            overflow-y: auto;
+            background: var(--gray-50);
+            border-radius: 0.5rem;
+            padding: 0.75rem;
+            line-height: 1.4;
+            white-space: pre-line;
+            word-break: break-word;
+            border: 1px solid var(--gray-200);
+        }
+        
+        .status-success {
+            color: var(--success);
+            font-weight: 700;
+        }
+        
+        .status-fail {
+            color: var(--danger);
+            font-weight: 700;
+        }
+        
+        .data-mismatch {
+            background-color: #fff3cd !important;
+        }
+        
+        .data-mismatch:hover {
+            background-color: #ffe69c !important;
+        }
+        
+        /* Responsive */
+        @media (max-width: 768px) {
+            .sidebar {
+                position: fixed;
+                left: -260px;
+                z-index: 100;
+                transition: left 0.3s;
+            }
+            
+            .sidebar.open {
+                left: 0;
+            }
+            
+            .stats {
+                grid-template-columns: 1fr;
+            }
+            
+            .filters {
+                flex-direction: column;
+            }
+            
+            .filter-group {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar -->
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <h1>
+                    <span>📊</span>
+                    Scheduler Dashboard
+                </h1>
+            </div>
+            
+            <nav class="sidebar-nav">
+                <div class="nav-section">
+                    <div class="nav-section-title">Rundeck Jobs</div>
+                    <div class="nav-item" onclick="navigateTo('jobs')">
+                        <span class="nav-icon">🚀</span>
+                        <span>All Jobs</span>
+                    </div>
+                </div>
+                
+                <div class="nav-section">
+                    <div class="nav-section-title">Today's Report</div>
+                    <div class="nav-item active" onclick="navigateTo('today-report')">
+                        <span class="nav-icon">📊</span>
+                        <span>Today's Summary</span>
+                    </div>
+                </div>
+                
+                <div class="nav-section">
+                    <div class="nav-section-title">Scheduler Reports</div>
+                    <div class="nav-item" onclick="navigateTo('reports-overview')">
+                        <span class="nav-icon">📈</span>
+                        <span>Overview</span>
+                    </div>
+                    <div class="nav-item" onclick="navigateTo('reports-patterns')">
+                        <span class="nav-icon">🔍</span>
+                        <span>Pattern Analysis</span>
+                    </div>
+                    <div class="nav-item" onclick="navigateTo('reports-data')">
+                        <span class="nav-icon">📋</span>
+                        <span>All Data</span>
+                    </div>
+                </div>
+            </nav>
+        </aside>
+        
+        <!-- Main Content -->
+        <main class="main-content">
+            <div class="top-bar">
+                <h2 id="pageTitle">Today's Report</h2>
+                <div class="top-bar-meta">
+                    <span id="currentDate"></span>
+                </div>
+            </div>
+            
+            <div class="content-area">
+                <!-- Rundeck Jobs Section -->
+                <section id="jobs-section" class="page-section">
+                    <!-- Compact Metrics -->
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 0.75rem; margin-bottom: 1rem;">
+                        <div class="stat-card info" style="padding: 0.75rem 1rem; border-left-width: 3px;">
+                            <div class="stat-label" style="font-size: 0.7rem;">📊 Total Jobs</div>
+                            <div class="stat-value" style="font-size: 1.5rem; margin-top: 0.125rem;" id="totalJobs">0</div>
+                        </div>
+                        <div class="stat-card success" style="padding: 0.75rem 1rem; border-left-width: 3px;">
+                            <div class="stat-label" style="font-size: 0.7rem;">✅ Enabled</div>
+                            <div class="stat-value" style="font-size: 1.5rem; margin-top: 0.125rem;" id="enabledJobs">0</div>
+                        </div>
+                        <div class="stat-card warning" style="padding: 0.75rem 1rem; border-left-width: 3px; background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);">
+                            <div class="stat-label" style="font-size: 0.7rem;">🟡 Canary</div>
+                            <div class="stat-value" style="font-size: 1.5rem; margin-top: 0.125rem; color: #92400e;" id="canaryJobs">0</div>
+                        </div>
+                        <div class="stat-card info" style="padding: 0.75rem 1rem; border-left-width: 3px; background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);">
+                            <div class="stat-label" style="font-size: 0.7rem;">🔵 Non-Canary</div>
+                            <div class="stat-value" style="font-size: 1.5rem; margin-top: 0.125rem; color: #1e40af;" id="nonCanaryJobs">0</div>
+                        </div>
+                    </div>
+                    
+                    <!-- Frequency Breakdown -->
+                    <div style="background: white; padding: 0.875rem 1rem; border-radius: 0.375rem; box-shadow: 0 1px 3px rgba(0,0,0,0.1); margin-bottom: 1rem;">
+                        <div style="display: flex; align-items: center; gap: 1.5rem; flex-wrap: wrap;">
+                            <div style="font-size: 0.75rem; font-weight: 600; text-transform: uppercase; color: var(--gray-600); letter-spacing: 0.5px;">
+                                📅 Frequency (Enabled)
+                            </div>
+                            <div style="display: flex; gap: 1rem; flex: 1; justify-content: space-around; min-width: 300px;">
+                                <div style="text-align: center; padding: 0.5rem 0.75rem; background: var(--gray-50); border-radius: 0.25rem; border-left: 3px solid #059669; flex: 1;">
+                                    <div style="font-size: 0.65rem; color: var(--gray-600); margin-bottom: 0.25rem; font-weight: 600;">DAILY</div>
+                                    <div style="font-size: 1.375rem; font-weight: 700; color: #059669;" id="dailyJobs">0</div>
+                                </div>
+                                <div style="text-align: center; padding: 0.5rem 0.75rem; background: var(--gray-50); border-radius: 0.25rem; border-left: 3px solid #d97706; flex: 1;">
+                                    <div style="font-size: 0.65rem; color: var(--gray-600); margin-bottom: 0.25rem; font-weight: 600;">WEEKLY</div>
+                                    <div style="font-size: 1.375rem; font-weight: 700; color: #d97706;" id="weeklyJobs">0</div>
+                                </div>
+                                <div style="text-align: center; padding: 0.5rem 0.75rem; background: var(--gray-50); border-radius: 0.25rem; border-left: 3px solid #1e40af; flex: 1;">
+                                    <div style="font-size: 0.65rem; color: var(--gray-600); margin-bottom: 0.25rem; font-weight: 600;">MONTHLY</div>
+                                    <div style="font-size: 1.375rem; font-weight: 700; color: #1e40af;" id="monthlyJobs">0</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Job Schedule Heatmap -->
+                    <div class="chart-container">
+                        <div class="chart-title">🔥 Job Schedule Heatmap (By Hour of Day)</div>
+                        <div style="display: flex; gap: 1rem; align-items: center; margin-bottom: 1rem; font-size: 0.875rem; flex-wrap: wrap;">
+                            <span style="color: var(--gray-600); font-weight: 600;">Legend:</span>
+                            <div style="display: flex; gap: 0.5rem; align-items: center;">
+                                <div style="width: 20px; height: 20px; background: #10b981; border-radius: 0.25rem;"></div>
+                                <span>Enabled</span>
+                            </div>
+                            <div style="display: flex; gap: 0.5rem; align-items: center;">
+                                <div style="width: 20px; height: 20px; background: #9ca3af; border-radius: 0.25rem;"></div>
+                                <span>Disabled</span>
+                            </div>
+                            <div style="display: flex; gap: 0.5rem; align-items: center; margin-left: 1rem;">
+                                <span style="color: var(--gray-600);">Intensity = Number of Jobs</span>
+                            </div>
+                            <div style="display: flex; gap: 0.5rem; align-items: center; margin-left: 1rem; padding: 0.375rem 0.75rem; background: var(--gray-100); border-radius: 0.25rem;">
+                                <span style="color: var(--primary); font-size: 0.8rem;">💡 Jobs with multiple scheduled times appear in multiple hours</span>
+                            </div>
+                        </div>
+                        <div class="heatmap-container" id="jobsHeatmapContainer">
+                            <div class="no-results">Loading heatmap...</div>
+                        </div>
+                    </div>
+                    
+                    <div class="filters">
+                        <div class="filter-group">
+                            <label>🔍 Search</label>
+                            <input type="text" id="jobSearch" placeholder="Search by job name...">
+                        </div>
+                        <div class="filter-group">
+                            <label>📅 Frequency</label>
+                            <select id="frequencyFilter">
+                                <option value="All">All</option>
+                                <option value="Daily">Daily</option>
+                                <option value="Weekly">Weekly</option>
+                                <option value="Monthly">Monthly</option>
+                            </select>
+                        </div>
+                        <div class="filter-group">
+                            <label>⚡ Status</label>
+                            <select id="jobStatusFilter">
+                                <option value="All">All</option>
+                                <option value="Enabled">Enabled</option>
+                                <option value="Disabled">Disabled</option>
+                            </select>
+                        </div>
+                        <div class="filter-group">
+                            <label>🌐 Environment</label>
+                            <select id="environmentFilter">
+                                <option value="All">All</option>
+                                <option value="Canary">🟡 Canary</option>
+                                <option value="Non-Canary">🔵 Non-Canary</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <!-- Jobs Table Result Count -->
+                    <div style="padding: 1rem 1rem 0.5rem; background: white; border-radius: 0.5rem 0.5rem 0 0; margin-bottom: -0.5rem; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <div style="font-size: 0.875rem; color: var(--gray-700); font-weight: 600;">
+                                <span id="jobsResultCount">0</span> <span style="color: var(--gray-500);">job(s) found</span>
+                            </div>
+                            <div style="font-size: 0.75rem; color: var(--gray-500);">
+                                Total: <span id="jobsTotalCount">0</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="table-container" style="border-radius: 0 0 0.5rem 0.5rem;">
+                        <div class="table-wrapper">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th class="sortable" data-sort="name">Job Name</th>
+                                        <th class="sortable" data-sort="time">Schedule Time</th>
+                                        <th class="sortable" data-sort="frequency">Frequency</th>
+                                        <th>Day Info</th>
+                                        <th class="sortable" data-sort="status">Status</th>
+                                        <th class="sortable" data-sort="environment">Environment</th>
+                                        <th>Command</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="jobsTableBody">
+                                    <tr><td colspan="7" class="no-results">Loading...</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+                
+                <!-- Today's Report Section -->
+                <section id="today-report-section" class="page-section active">
+                    <div class="stats">
+                        <div class="stat-card success">
+                            <div class="stat-label">Succeeded Jobs</div>
+                            <div class="stat-value" id="todaySucceeded">0</div>
+                        </div>
+                        <div class="stat-card danger">
+                            <div class="stat-label">Failed Jobs</div>
+                            <div class="stat-value" id="todayFailed">0</div>
+                        </div>
+                        <div class="stat-card info">
+                            <div class="stat-label">Total Jobs</div>
+                            <div class="stat-value" id="todayTotal">0</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-label">Total Rows (Success)</div>
+                            <div class="stat-value" id="todayTotalRows">0</div>
+                        </div>
+                        <div class="stat-card warning">
+                            <div class="stat-label">Largest Job Size</div>
+                            <div class="stat-value" id="todayLargestJob">0</div>
+                        </div>
+                    </div>
+                    
+                    <!-- Failed Schedulers Section -->
+                    <div id="todayFailedSection" class="chart-container" style="display: none;">
+                        <div class="chart-title" style="color: var(--danger);">❌ Failed Schedulers</div>
+                        <div id="todayFailedList" style="display: grid; gap: 0.75rem; margin-top: 1rem;">
+                            <!-- Failed jobs will be populated here -->
+                        </div>
+                    </div>
+                    
+                    <div class="table-container">
+                        <div style="padding: 1rem 1rem 0;">
+                            <input type="search" id="todaySearchInput" placeholder="Search analytic name..." 
+                                   style="width: 100%; max-width: 400px; padding: 0.5rem 0.75rem; border: 1px solid var(--gray-300); 
+                                   border-radius: 0.375rem; font-size: 0.875rem; margin-bottom: 1rem;">
+                        </div>
+                        <div class="table-wrapper">
+                            <table id="todaySchedulerTable">
+                                <thead>
+                                    <tr>
+                                        <th class="sortable" data-key="analyticName">Analytic Name</th>
+                                        <th class="sortable" data-key="executionSuccess">Status</th>
+                                        <th>Time Slots</th>
+                                        <th class="sortable" data-key="executionStartDate">Start Time</th>
+                                        <th class="sortable" data-key="executionFinishDate">End Time</th>
+                                        <th class="sortable" data-key="duration">Duration</th>
+                                        <th class="sortable" data-key="bqTotalData">BQ Data Fetch</th>
+                                        <th class="sortable" data-key="analyticTotalData">Saved Data</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="todayTableBody">
+                                    <tr><td colspan="8" class="no-results">Loading...</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+                
+                <!-- Reports Overview Section -->
+                <section id="reports-overview-section" class="page-section">
+                    <!-- Daily Breakdown Chart -->
+                    <div class="chart-container" style="min-height: auto;">
+                        <div class="chart-title">📊 Daily Breakdown - Success vs Failed</div>
+                        <div id="dailyBreakdownChart" style="overflow-x: auto;"></div>
+                    </div>
+                    
+                    <!-- Heatmap: Scheduler Activity by Hour -->
+                    <div class="chart-container">
+                        <div class="chart-title">🔥 Scheduler Activity Heatmap (By Hour of Day)</div>
+                        
+                        <!-- Frequency Filter -->
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; flex-wrap: wrap; gap: 1rem;">
+                            <div style="display: flex; gap: 0.5rem;">
+                                <button class="filter-btn active" id="heatmap-all" onclick="filterHeatmap('All')" 
+                                        style="padding: 0.5rem 1rem; border: 1px solid var(--gray-300); border-radius: 0.375rem; 
+                                        background: var(--primary); color: white; cursor: pointer; font-size: 0.875rem; font-weight: 500;">
+                                    All
+                                </button>
+                                <button class="filter-btn" id="heatmap-daily" onclick="filterHeatmap('Daily')" 
+                                        style="padding: 0.5rem 1rem; border: 1px solid var(--gray-300); border-radius: 0.375rem; 
+                                        background: white; color: var(--gray-700); cursor: pointer; font-size: 0.875rem; font-weight: 500;">
+                                    Daily
+                                </button>
+                                <button class="filter-btn" id="heatmap-weekly" onclick="filterHeatmap('Weekly')" 
+                                        style="padding: 0.5rem 1rem; border: 1px solid var(--gray-300); border-radius: 0.375rem; 
+                                        background: white; color: var(--gray-700); cursor: pointer; font-size: 0.875rem; font-weight: 500;">
+                                    Weekly
+                                </button>
+                                <button class="filter-btn" id="heatmap-monthly" onclick="filterHeatmap('Monthly')" 
+                                        style="padding: 0.5rem 1rem; border: 1px solid var(--gray-300); border-radius: 0.375rem; 
+                                        background: white; color: var(--gray-700); cursor: pointer; font-size: 0.875rem; font-weight: 500;">
+                                    Monthly
+                                </button>
+                            </div>
+                            
+                            <div style="display: flex; gap: 1rem; align-items: center; font-size: 0.875rem;">
+                                <span style="color: var(--gray-600); font-weight: 500;">Legend:</span>
+                                <div style="display: flex; gap: 0.5rem; align-items: center;">
+                                    <div style="width: 20px; height: 20px; background: #10b981; border-radius: 0.25rem;"></div>
+                                    <span>Success</span>
+                                </div>
+                                <div style="display: flex; gap: 0.5rem; align-items: center;">
+                                    <div style="width: 20px; height: 20px; background: #f59e0b; border-radius: 0.25rem;"></div>
+                                    <span>Retry</span>
+                                </div>
+                                <div style="display: flex; gap: 0.5rem; align-items: center;">
+                                    <div style="width: 20px; height: 20px; background: #ef4444; border-radius: 0.25rem;"></div>
+                                    <span>Failed</span>
+                                </div>
+                                <div style="display: flex; gap: 0.5rem; align-items: center;">
+                                    <div style="width: 20px; height: 20px; background: #e5e7eb; border-radius: 0.25rem;"></div>
+                                    <span>No Activity</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="heatmap-container" id="heatmapContainer">
+                            <div class="no-results">Loading heatmap...</div>
+                        </div>
+                    </div>
+                </section>
+                
+                <!-- Reports All Data Section -->
+                <section id="reports-data-section" class="page-section">
+                    <!-- Detailed Analysis Table -->
+                    <div class="table-container">
+                        <h3 style="padding: 1rem 1rem 0; font-size: 1.125rem; font-weight: 600;">🔍 Detailed Execution Analysis</h3>
+                        <div style="padding: 1rem; display: flex; gap: 1rem; flex-wrap: wrap;">
+                            <input type="search" id="patternSearchInput" placeholder="Search scheduler name..." 
+                                   style="flex: 1; min-width: 250px; padding: 0.5rem 0.75rem; border: 1px solid var(--gray-300); 
+                                   border-radius: 0.375rem; font-size: 0.875rem;">
+                            <select id="patternDateFilter" onchange="filterPatternTable()" 
+                                    style="padding: 0.5rem 0.75rem; border: 1px solid var(--gray-300); border-radius: 0.375rem; 
+                                    font-size: 0.875rem; background: white; min-width: 150px;">
+                                <option value="">All Dates</option>
+                            </select>
+                        </div>
+                        <div class="table-wrapper">
+                            <table>
+                                <thead>
+                                    <tr>
+                                        <th class="sortable" onclick="sortPatternTable('analyticName')">Scheduler Name</th>
+                                        <th class="sortable" onclick="sortPatternTable('date')">Date</th>
+                                        <th class="sortable" onclick="sortPatternTable('timeSlot')">Time Slots</th>
+                                        <th class="sortable" onclick="sortPatternTable('successSlot')">Success Time Slot</th>
+                                        <th class="sortable" onclick="sortPatternTable('status')">Status</th>
+                                        <th class="sortable" onclick="sortPatternTable('duration')">Duration</th>
+                                        <th class="sortable" onclick="sortPatternTable('data')">Data Rows</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="patternMatchBody">
+                                    <tr><td colspan="7" class="no-results">Loading...</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+                
+                <!-- Pattern Analysis Section -->
+                <section id="reports-patterns-section" class="page-section">
+                    <div class="stats">
+                        <div class="stat-card info">
+                            <div class="stat-label">Total Schedulers</div>
+                            <div class="stat-value" id="patternTotalSchedulers">0</div>
+                            <div class="stat-trend" id="patternSchedulersTrend"></div>
+                        </div>
+                        <div class="stat-card success">
+                            <div class="stat-label">Success Rate</div>
+                            <div class="stat-value" id="patternSuccessRate">0%</div>
+                            <div class="stat-trend" id="patternSuccessTrend"></div>
+                        </div>
+                        <div class="stat-card primary">
+                            <div class="stat-label">Peak Hour</div>
+                            <div class="stat-value" id="patternPeakHour">--:--</div>
+                            <div class="stat-trend" id="patternPeakTrend"></div>
+                        </div>
+                    </div>
+                    
+                    <!-- Duration Distribution Chart -->
+                    <div class="chart-container" style="height: auto; min-height: 400px;">
+                        <div class="chart-title">⏱️ Duration Distribution (All Schedulers)</div>
+                        <div id="durationChart"></div>
+                        <div id="attemptChart" style="margin-top: 30px;"></div>
+                    </div>
+                </section>
+            </div>
+        </main>
+    </div>
+    
+    <!-- Modal -->
+    <div id="curlModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>📋 Curl Command Details</h3>
+                <button class="close" onclick="closeModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <!-- Job Details -->
+                <div style="background: var(--gray-50); padding: 1rem; border-radius: 0.5rem; margin-bottom: 1rem; border-left: 3px solid var(--primary);">
+                    <div style="margin-bottom: 0.75rem;">
+                        <span style="font-size: 0.75rem; font-weight: 600; color: var(--gray-600); text-transform: uppercase; letter-spacing: 0.5px;">Job</span>
+                        <div style="font-size: 1rem; font-weight: 600; color: var(--gray-900); margin-top: 0.25rem;" id="modalJobName"></div>
+                    </div>
+                    <div style="display: grid; grid-template-columns: auto 1fr; gap: 0.5rem 1rem; font-size: 0.875rem;">
+                        <span style="font-weight: 600; color: var(--gray-600);">🌐 Host:</span>
+                        <span id="modalHost" style="color: var(--gray-900); font-family: monospace;"></span>
+                        <span style="font-weight: 600; color: var(--gray-600);">📁 Path:</span>
+                        <span id="modalPath" style="color: var(--gray-900); font-family: monospace; word-break: break-all;"></span>
+                    </div>
+                </div>
+                
+                <!-- Environment Toggle and Force Execute -->
+                <div style="display: flex; align-items: center; justify-content: space-between; gap: 1.5rem; flex-wrap: wrap;">
+                    <div class="toggle-switch" style="margin-bottom: 0;">
+                        <span class="toggle-label">Environment:</span>
+                        <div class="toggle-buttons">
+                            <button class="toggle-btn active" id="toggleNonCanary" onclick="toggleCanaryMode(false)">Non-Canary</button>
+                            <button class="toggle-btn" id="toggleCanary" onclick="toggleCanaryMode(true)">Canary</button>
+                        </div>
+                    </div>
+                    
+                    <div style="display: flex; align-items: center; gap: 0.5rem;">
+                        <input type="checkbox" id="forceExecuteCheckbox" onchange="updateCurlCommand()" 
+                               style="width: 18px; height: 18px; cursor: pointer; accent-color: var(--primary);">
+                        <label for="forceExecuteCheckbox" style="cursor: pointer; font-size: 0.875rem; font-weight: 600; color: var(--gray-700); user-select: none;">
+                            ⚡ Force Execute
+                        </label>
+                    </div>
+                </div>
+                
+                <pre id="modalCurlCommand"></pre>
+                <div style="display: flex; gap: 0.75rem;">
+                    <button class="btn btn-success btn-sm" onclick="copyCurlCommand()">📋 Copy Command</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // Canary Cookie Value
+        const CANARY_COOKIE = '__bwa_user_id=657116261.U.3972438181951890.1660647073; _vwo_uuid_v2=DFBEE5736AFAB4C1BEDEB33E3710EC953|c38d9dc86f328ff3a67df0f80cd24218; _fbp=fb.1.1687412890719.927626789; afUserId=5c97cc6f-85ff-4f76-95b6-4bcd119e31ab-p; Static-Base-Url="https://www.static-src.com"; Has-Login-History=true; _ga_71BLJD18MP=deleted; _ga_71BLJD18MP=deleted; _gcl_au=1.1.1734537722.1742533786; IR_gbd=blibli.com; cebs=1; _vwo_uuid=D9325CACBD354ADF462D059C17D37F5FB; _vis_opt_s=1%7C; _vis_opt_test_cookie=1; _vwo_ssm=1; _vwo_ds=3%3At_0%2Ca_0%3A0%241742533786%3A36.37716957%3A%3A%3A%3A0; Blibli-Device-Id=U.1c5c9c80-20e8-4024-9893-70c46223a23f; Blibli-Device-Id-Signature=4427c723a38072a10880b842dae7abb0247cdcc3; QrCodeGenerationTutuorial=["cc824edd-05b4-479a-a2d5-48afdb43d34e"]; creationTutorialVisitedUser=["cc824edd-05b4-479a-a2d5-48afdb43d34e"]; userPicTickerVisitedUserPdp=["cc824edd-05b4-479a-a2d5-48afdb43d34e"]; multipPpTutorialVisitedUser=["cc824edd-05b4-479a-a2d5-48afdb43d34e"]; __gtm_cam=; __gtm_src=affiliates; _vis_opt_exp_516_exclude=1; productOptimisationBanner=["cc824edd-05b4-479a-a2d5-48afdb43d34e"]; _vis_opt_exp_497_exclude=1; __gtm_med=1299619_Love Savings Group; AF_SYNC=1747919929657; Announcement-Has-Been-Read=true; IR_PI=5ed22751-10c0-11ee-baa1-810287776b27%7C1747941199745; _gid=GA1.2.2082243399.1748235048; _ce.clock_data=-105%2C49.206.115.41%2C1%2C8b2bf32448aaaa1415d4b0b61938828d%2CEdge%2CIN; IR_19024=1748235052297%7C4120732%7C1748235052297%7C17m2Fhxz0xyPTOpUw2UFa3IqUksWXP2gZSo8yE0%7C; forterToken=5bc29b922ef74b7cb68e9d45f2c79313_1748235054462__UDF43-m4_25ck_; Partners-Device-Id=d9c56577-9703-4db7-8373-b2f0203366f4; Partners-Sso-Type=OpenID; Partners-Username=sachin.ravanth@gdn-commerce.com; Partners-User-Id=cc824edd-05b4-479a-a2d5-48afdb43d34e; Partners-Signature=A300E614886D5198D5C8E579274121DABD8A7CCE19EDE66F81E85F78D9155E6B; Blibli-Extras-MerchantId=RAM-70107; _ga_G3ZP2F3MW9=GS2.1.s1748235053$o159$g0$t1748235757$j60$l0$h924341940$dkwfhkqXNc8Ls5n4IGULYI8iU_Nxw77ybng; __cf_bm=8jlubjmONqecTPnNx.JxbkwSCptNZQQKrS1t241LJ4o-1748237701-1.0.1.1-Y.DHWcgR6jGeNTmR9GoiEJSevQ0E6gPW1UbwQRVXdE_yAkBoutbbIoQYBy7.JIbAkbpSMF6UWo5Zlw7gvw55TEkCfanHUS5qLrN9VH9X28w; _vwo_sn=5410220%3A%3A%3A%3A1; _gat_UA-21718848-28=1; cf_clearance=CutPv.gIAHYIhFLaNpjFhXQoWFVBoBhk_rzJbG1uPFs-1748238168-1.2.1.1-Klf9lIxSdlSnlmeQq06dC6PjMa0igG3Ma0Vpoa2HhRlK1T.yps312XQCrgycPKxWWlGAbP3z4ooEi9T51BvX5089109SLEmc9n8l3qWsFeYiJ2PrDwZVhl9nftfyzU4jOd9gBUOpciNwnNYUW6A07WsdYSrvwNvEF1JicB4kBqWnDPbwL1xlqe8idP0XQfaWAZlm6jFzt7l5I3SeqeG10Nl.Krn3Zsor.AqmVmNXNzHmN1Cr8uiIvs.ww_wsxRHoa0_rkf8ufRgjQfu6UqA2gvO6oR_f8pGDM55uC6E41KW9LtA5AbnL_4RBxn8a1qzNmO1Kn2sjRrRMM6zdqTy1w624qBdNYrA7T2EIOw.qp8s; __bwa_session_id=1432166451.S.4429960498796943.1748238169; __bwa_user_session_sequence=295; _ce.s=v~70f9e88dc7ec439badd9661a8335477de7f61609~vpv~18~v11.rlc~1693457238074~lcw~1748235428984~ir~1~v11.fhb~1747287849213~v11.lhb~1747316495275~lva~1748235048600~vir~returning~v11ls~fe3f1ee0-39ec-11f0-b758-677d31b88d50~gtrk.la~mazrls36~v11.cs~295312~v11.s~fe3f1ee0-39ec-11f0-b758-677d31b88d50~v11.vs~70f9e88dc7ec439badd9661a8335477de7f61609~v11.ss~1748235048913~lcw~1748238169635; moe_uuid=3a165403-455f-4aaa-b7e5-16fd60df6d64; Partners-Canary-Flag=true; SESSION=58d4a391-f2e2-4478-b792-85af446f245c; _ga_71BLJD18MP=GS2.1.s1748237853$o239$g1$t1748238220$j0$l0$h0; _ga=GA1.2.1253831296.1660647073; __bwa_session_action_sequence=3; cebsp_=650; JSESSIONID=55F36300E695CD5BF01F19EB8350B244; __cf_bm=BDQF7VJx25tLFqe8jSIzz36jX5fWEQxMqi9rdk.SJw4-1748238220-1.0.1.1-QMVunfVeCd4GAE06PE4aNQM.hFGEpYjp00TPFNsNGbN8xuzK3ggFLZosCpqwTMOMdk5U2G848NFkk3x2pOyw_m8mEk3mWNlbgrKITO6OV0Q';
+        
+        // Data Arrays - Will be loaded from external JSON files
+        let JOBS_DATA = [];
+        let TODAY_DATA = [];
+        let REPORTS_DATA = [];
+        
+        // Function to load data from JSON files
+        async function loadData() {
+            try {
+                const [jobsResponse, todayResponse, reportsResponse] = await Promise.all([
+                    fetch('jobs-data.json'),
+                    fetch('today-data.json'),
+                    fetch('past-data.json')
+                ]);
+                
+                JOBS_DATA = await jobsResponse.json();
+                TODAY_DATA = await todayResponse.json();
+                REPORTS_DATA = await reportsResponse.json();
+                
+                return true;
+            } catch (error) {
+                console.error('Error loading data:', error);
+                
+                // Provide helpful error message
+                const errorMsg = `Failed to load data files.
+
+CORS Error Detected: Browsers block loading local files via fetch() for security reasons.
+
+To fix this, run a local web server:
+
+Option 1 - Python (if installed):
+  • Open Terminal in this folder
+  • Run: python3 -m http.server 8000
+  • Open: http://localhost:8000/scheduler-dashboard.html
+
+Option 2 - Python 2:
+  • Run: python -m SimpleHTTPServer 8000
+  • Open: http://localhost:8000/scheduler-dashboard.html
+
+Option 3 - PHP (if installed):
+  • Run: php -S localhost:8000
+  • Open: http://localhost:8000/scheduler-dashboard.html
+
+Option 4 - Node.js (if installed):
+  • Run: npx http-server -p 8000
+  • Open: http://localhost:8000/scheduler-dashboard.html`;
+                
+                alert(errorMsg);
+                return false;
+            }
+        }
+        
+        // Global variables
+        let filteredJobs = [];
+        let filteredReports = [];
+        let jobSort = { field: 'name', direction: 'asc' };
+        let reportSort = { column: null, direction: 'asc' };
+        
+        let pageTitles = {
+            'jobs': 'Rundeck Jobs',
+            'today-report': "Today's Report",
+            'reports-overview': 'Reports Overview',
+            'reports-patterns': 'Pattern Analysis',
+            'reports-data': 'All Scheduler Data'
+        };
+        
+        // Navigation
+        function navigateTo(page) {
+            // Update nav items
+            document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
+            event.target.closest('.nav-item').classList.add('active');
+            
+            // Update sections
+            document.querySelectorAll('.page-section').forEach(section => section.classList.remove('active'));
+            document.getElementById(`${page}-section`).classList.add('active');
+            
+            // Update title
+            document.getElementById('pageTitle').textContent = pageTitles[page] || 'Dashboard';
+        }
+        
+        // Utility Functions
+        function formatTime(hour, minute, seconds) {
+            if (hour.includes(',')) {
+                const hours = hour.split(',');
+                const times = hours.map(h => `${h.padStart(2, '0')}:${minute.padStart(2, '0')}`);
+                return times.join(', ');
+            }
+            return `${hour.padStart(2, '0')}:${minute.padStart(2, '0')}`;
+        }
+        
+        function formatDate(epoch) {
+            if (!epoch) return 'N/A';
+            return new Date(parseInt(epoch)).toLocaleDateString('en-US', {
+                weekday: 'short', month: 'short', day: 'numeric', year: 'numeric'
+            });
+        }
+        
+        function formatDateShort(epoch) {
+            if (!epoch) return 'N/A';
+            return new Date(parseInt(epoch)).toLocaleDateString('en-US', {
+                month: 'short', day: 'numeric', year: 'numeric'
+            });
+        }
+        
+        function formatDateTime(epoch) {
+            if (!epoch) return '-';
+            return new Date(parseInt(epoch)).toLocaleString('en-US', {
+                month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit'
+            });
+        }
+        
+        function formatTimeOnly(epoch) {
+            if (!epoch) return '-';
+            return new Date(parseInt(epoch)).toLocaleString('en-US', {
+                hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false
+            });
+        }
+        
+        function formatDuration(seconds) {
+            if (!seconds || seconds === 0) return '-';
+            const mins = Math.floor(seconds / 60);
+            const secs = seconds % 60;
+            return mins > 0 ? `${mins}m ${secs}s` : `${secs}s`;
+        }
+        
+        function calculateDuration(startEpoch, endEpoch) {
+            if (!startEpoch || !endEpoch) return null;
+            const start = parseInt(startEpoch);
+            const end = parseInt(endEpoch);
+            const durationMs = end - start;
+            const totalSeconds = Math.floor(durationMs / 1000);
+            return { totalSeconds, formatted: formatDuration(totalSeconds) };
+        }
+        
+        function getStatus(s) {
+            if (s.executionSuccess === true) return 'success';
+            if (s.executionSuccess === false) return 'failed';
+            if (s.executionStartDate && !s.executionFinishDate) return 'running';
+            return 'failed';
+        }
+        
+        // Jobs Functions
+        function updateJobsStats() {
+            const dailyEnabled = JOBS_DATA.filter(j => j.frequency === 'Daily' && j.scheduleEnabled).length;
+            const weeklyEnabled = JOBS_DATA.filter(j => j.frequency === 'Weekly' && j.scheduleEnabled).length;
+            const monthlyEnabled = JOBS_DATA.filter(j => j.frequency === 'Monthly' && j.scheduleEnabled).length;
+            const totalJobs = JOBS_DATA.length;
+            const totalEnabled = JOBS_DATA.filter(j => j.scheduleEnabled).length;
+            
+            // Count Canary and Non-Canary jobs (only enabled)
+            const canaryJobs = JOBS_DATA.filter(j => j.scheduleEnabled && j.curlCommand && j.curlCommand.includes('seller-insights-next.gdn-sg.cld')).length;
+            const nonCanaryJobs = JOBS_DATA.filter(j => j.scheduleEnabled && j.curlCommand && j.curlCommand.includes('seller-insights.gdn-sg.cld')).length;
+            
+            document.getElementById('dailyJobs').textContent = dailyEnabled;
+            document.getElementById('weeklyJobs').textContent = weeklyEnabled;
+            document.getElementById('monthlyJobs').textContent = monthlyEnabled;
+            document.getElementById('totalJobs').textContent = totalJobs;
+            document.getElementById('enabledJobs').textContent = totalEnabled;
+            document.getElementById('canaryJobs').textContent = canaryJobs;
+            document.getElementById('nonCanaryJobs').textContent = nonCanaryJobs;
+        }
+        
+        function renderJobsTable() {
+            const search = document.getElementById('jobSearch').value.toLowerCase();
+            const frequency = document.getElementById('frequencyFilter').value;
+            const status = document.getElementById('jobStatusFilter').value;
+            const environment = document.getElementById('environmentFilter').value;
+            
+            filteredJobs = JOBS_DATA.filter(job => {
+                const matchesSearch = job.name.toLowerCase().includes(search) || 
+                                     job.analyticName.toLowerCase().includes(search);
+                const matchesFrequency = frequency === 'All' || job.frequency === frequency;
+                const matchesStatus = status === 'All' || 
+                                     (status === 'Enabled' && job.scheduleEnabled) ||
+                                     (status === 'Disabled' && !job.scheduleEnabled);
+                
+                // Environment filter
+                let matchesEnvironment = true;
+                if (environment !== 'All') {
+                    if (environment === 'Canary') {
+                        matchesEnvironment = job.curlCommand && job.curlCommand.includes('seller-insights-next.gdn-sg.cld');
+                    } else if (environment === 'Non-Canary') {
+                        matchesEnvironment = job.curlCommand && job.curlCommand.includes('seller-insights.gdn-sg.cld');
+                    }
+                }
+                
+                return matchesSearch && matchesFrequency && matchesStatus && matchesEnvironment;
+            });
+            
+            // Sort the filtered jobs
+            filteredJobs.sort((a, b) => {
+                let aVal, bVal;
+                switch(jobSort.field) {
+                    case 'name':
+                        aVal = a.analyticName.toLowerCase();
+                        bVal = b.analyticName.toLowerCase();
+                        break;
+                    case 'time':
+                        aVal = parseInt(a.hour) * 3600 + parseInt(a.minute) * 60 + parseInt(a.seconds);
+                        bVal = parseInt(b.hour) * 3600 + parseInt(b.minute) * 60 + parseInt(b.seconds);
+                        break;
+                    case 'frequency':
+                        aVal = a.frequency.toLowerCase();
+                        bVal = b.frequency.toLowerCase();
+                        break;
+                    case 'status':
+                        aVal = a.scheduleEnabled ? 1 : 0;
+                        bVal = b.scheduleEnabled ? 1 : 0;
+                        break;
+                    case 'environment':
+                        aVal = (a.curlCommand && a.curlCommand.includes('seller-insights-next.gdn-sg.cld')) ? 'canary' : 'non-canary';
+                        bVal = (b.curlCommand && b.curlCommand.includes('seller-insights-next.gdn-sg.cld')) ? 'canary' : 'non-canary';
+                        break;
+                    default:
+                        return 0;
+                }
+                
+                if (aVal < bVal) return jobSort.direction === 'asc' ? -1 : 1;
+                if (aVal > bVal) return jobSort.direction === 'asc' ? 1 : -1;
+                return 0;
+            });
+            
+            // Update result count display
+            document.getElementById('jobsResultCount').textContent = filteredJobs.length;
+            document.getElementById('jobsTotalCount').textContent = JOBS_DATA.length;
+            
+            const tbody = document.getElementById('jobsTableBody');
+            
+            if (filteredJobs.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="7" class="no-results">No jobs found</td></tr>';
+                // Count is already updated above, so just return
+                return;
+            }
+            
+            tbody.innerHTML = filteredJobs.map(job => {
+                const scheduleTime = formatTime(job.hour, job.minute, job.seconds);
+                const statusBadge = job.scheduleEnabled ? 
+                    '<span class="badge badge-success">Enabled</span>' : 
+                    '<span class="badge badge-secondary">Disabled</span>';
+                
+                // Detect environment from curlCommand
+                let environmentBadge = '<span class="badge badge-secondary">Unknown</span>';
+                if (job.curlCommand) {
+                    if (job.curlCommand.includes('seller-insights-next.gdn-sg.cld')) {
+                        environmentBadge = '<span class="badge badge-warning" style="background: #fef3c7; color: #92400e; font-weight: 700;">🟡 Canary</span>';
+                    } else if (job.curlCommand.includes('seller-insights.gdn-sg.cld')) {
+                        environmentBadge = '<span class="badge badge-info" style="background: #dbeafe; color: #1e40af; font-weight: 700;">🔵 Non-Canary</span>';
+                    }
+                }
+                
+                // Split times into multiple lines if comma-separated
+                const times = scheduleTime.split(', ');
+                const timeDisplay = times.length > 1 ? 
+                    times.map(t => `<div>${t}</div>`).join('') : 
+                    scheduleTime;
+                
+                // Escape quotes in job name for onclick
+                const escapedJobName = job.name.replace(/'/g, "\\'");
+                
+                return `
+                    <tr>
+                        <td><strong title="Job Name: ${job.name}" style="cursor: help;">${job.analyticName}</strong></td>
+                        <td>${timeDisplay}</td>
+                        <td>${job.frequency}</td>
+                        <td>${job.dayInfo || '-'}</td>
+                        <td>${statusBadge}</td>
+                        <td>${environmentBadge}</td>
+                        <td>
+                            <button class="action-btn-icon" onclick="showCurlModal('${escapedJobName}')" title="View Details">
+                                👁️
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+        
+        function renderJobsHeatmap() {
+            const frequencies = ['Daily', 'Weekly', 'Monthly', 'All Jobs'];
+            
+            // Group jobs by hour
+            const jobsByHour = [];
+            for (let h = 0; h < 24; h++) {
+                jobsByHour[h] = {
+                    Daily: { enabled: [], disabled: [] },
+                    Weekly: { enabled: [], disabled: [] },
+                    Monthly: { enabled: [], disabled: [] },
+                    'All Jobs': { enabled: [], disabled: [] }
+                };
+            }
+            
+            // Populate the jobsByHour structure
+            JOBS_DATA.forEach(job => {
+                const hourString = job.hour || '0';
+                const hours = hourString.split(',').map(h => parseInt(h.trim()));
+                
+                hours.forEach(hour => {
+                    const category = job.scheduleEnabled ? 'enabled' : 'disabled';
+                    jobsByHour[hour][job.frequency][category].push(job);
+                    jobsByHour[hour]['All Jobs'][category].push(job);
+                });
+            });
+            
+            // Find max jobs in any hour for opacity scaling
+            let maxJobs = 0;
+            jobsByHour.forEach(hour => {
+                frequencies.forEach(freq => {
+                    const total = hour[freq].enabled.length + hour[freq].disabled.length;
+                    if (total > maxJobs) maxJobs = total;
+                });
+            });
+            
+            let html = '<div class="heatmap-container">';
+            
+            // Add header row with hour labels
+            html += '<div class="heatmap-row">';
+            html += '<div class="heatmap-label" style="font-weight: 600; color: var(--gray-700);">Frequency</div>';
+            for (let h = 0; h < 24; h++) {
+                html += `<div class="heatmap-cell" style="background: transparent; font-weight: 600; font-size: 0.75rem; color: var(--gray-700); padding: 0.25rem 0;">${h}</div>`;
+            }
+            html += '</div>';
+            
+            frequencies.forEach(freq => {
+                html += '<div class="heatmap-row">';
+                html += `<div class="heatmap-label">${freq}</div>`;
+                
+                for (let h = 0; h < 24; h++) {
+                    const hourData = jobsByHour[h][freq];
+                    let enabledCount = hourData.enabled.length;
+                    let disabledCount = hourData.disabled.length;
+                    
+                    const total = enabledCount + disabledCount;
+                    
+                    if (total === 0) {
+                        html += '<div class="heatmap-cell empty" title="No jobs scheduled"></div>';
+                    } else {
+                        // Color based on enabled vs disabled ratio
+                        const enabledRatio = enabledCount / total;
+                        const bgColor = enabledRatio > 0.5 ? '#10b981' : enabledRatio > 0 ? '#f59e0b' : '#9ca3af';
+                        
+                        // Opacity based on count
+                        const opacity = 0.3 + (Math.min(total, maxJobs) / maxJobs) * 0.7;
+                        
+                        html += `<div class="heatmap-cell" style="background: ${bgColor}; opacity: ${opacity}; cursor: pointer;" 
+                                 onclick="showJobsAtHour(${h}, '${freq}')"
+                                 title="Click to see jobs scheduled at ${h.toString().padStart(2, '0')}:00\\n${freq}: ${total} job(s)\\nEnabled: ${enabledCount}, Disabled: ${disabledCount}">
+                                 ${total}
+                                 </div>`;
+                    }
+                }
+                html += '</div>';
+            });
+            
+            html += '</div>';
+            
+            // Add detailed job list section
+            html += `
+                <div id="jobsAtHourDetails" style="margin-top: 1.5rem; padding: 1rem; background: var(--gray-50); border-radius: 0.5rem; display: none;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                        <h4 style="margin: 0; font-size: 1rem; color: var(--gray-900);" id="jobsAtHourTitle">Jobs at Hour</h4>
+                        <button onclick="hideJobsAtHour()" style="background: none; border: none; font-size: 1.5rem; cursor: pointer; color: var(--gray-600);" title="Close">&times;</button>
+                    </div>
+                    <div id="jobsAtHourList"></div>
+                </div>
+            `;
+            
+            document.getElementById('jobsHeatmapContainer').innerHTML = html;
+        }
+        
+        function showJobsAtHour(hour, frequency) {
+            // Filter jobs that are scheduled at this hour (checking comma-separated hours)
+            const jobsByHour = JOBS_DATA.filter(job => {
+                const hourString = job.hour || '0';
+                const hours = hourString.split(',').map(h => parseInt(h.trim()));
+                return hours.includes(hour);
+            });
+            const filteredJobs = frequency === 'All Jobs' ? jobsByHour : jobsByHour.filter(j => j.frequency === frequency);
+            
+            if (filteredJobs.length === 0) {
+                return;
+            }
+            
+            // Sort by enabled status first, then by name
+            filteredJobs.sort((a, b) => {
+                if (a.scheduleEnabled !== b.scheduleEnabled) {
+                    return b.scheduleEnabled ? 1 : -1;
+                }
+                return a.analyticName.localeCompare(b.analyticName);
+            });
+            
+            const detailsSection = document.getElementById('jobsAtHourDetails');
+            const titleElem = document.getElementById('jobsAtHourTitle');
+            const listElem = document.getElementById('jobsAtHourList');
+            
+            titleElem.textContent = `📋 ${frequency} Jobs Scheduled at ${hour.toString().padStart(2, '0')}:00 (${filteredJobs.length} job${filteredJobs.length > 1 ? 's' : ''})`;
+            
+            let html = '<div style="display: grid; gap: 0.5rem;">';
+            filteredJobs.forEach(job => {
+                const statusColor = job.scheduleEnabled ? 'var(--success)' : 'var(--gray-400)';
+                const statusText = job.scheduleEnabled ? 'Enabled' : 'Disabled';
+                const statusIcon = job.scheduleEnabled ? '✓' : '✕';
+                
+                // Parse all scheduled hours for this job
+                const hourString = job.hour || '0';
+                const hours = hourString.split(',').map(h => parseInt(h.trim()));
+                const allTimes = hours.map(h => formatTime(h.toString(), job.minute, job.seconds)).join(', ');
+                const timeLabel = hours.length > 1 ? `${hours.length} times: ${allTimes}` : allTimes;
+                
+                html += `
+                    <div style="display: flex; justify-content: space-between; align-items: center; padding: 0.75rem; background: white; border-radius: 0.375rem; border-left: 3px solid ${statusColor};">
+                        <div style="flex: 1;">
+                            <div style="font-weight: 600; font-size: 0.9rem; color: var(--gray-900);">${job.analyticName}</div>
+                            <div style="font-size: 0.75rem; color: var(--gray-600); margin-top: 0.25rem;">
+                                ⏰ ${timeLabel} • ${job.frequency}${job.dayInfo ? ' • ' + job.dayInfo : ''}
+                            </div>
+                        </div>
+                        <div style="display: flex; gap: 0.5rem; align-items: center;">
+                            <span class="badge ${job.scheduleEnabled ? 'badge-success' : 'badge-danger'}">${statusIcon} ${statusText}</span>
+                        </div>
+                    </div>
+                `;
+            });
+            html += '</div>';
+            
+            listElem.innerHTML = html;
+            detailsSection.style.display = 'block';
+            
+            // Scroll to details section
+            detailsSection.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+        
+        function hideJobsAtHour() {
+            document.getElementById('jobsAtHourDetails').style.display = 'none';
+        }
+        
+        function copyCurlCommandDirect(evt, jobName) {
+            const job = JOBS_DATA.find(j => j.name === jobName);
+            if (!job) {
+                console.error('Job not found:', jobName);
+                alert('❌ Job not found');
+                return;
+            }
+            
+            if (!job.curlCommand) {
+                alert('❌ No curl command available for this job');
+                return;
+            }
+            
+            navigator.clipboard.writeText(job.curlCommand).then(() => {
+                // Show a temporary success message
+                const btn = evt.target;
+                const originalText = btn.textContent;
+                btn.textContent = '✅';
+                btn.style.background = 'var(--success)';
+                btn.style.color = 'white';
+                btn.style.borderColor = 'var(--success)';
+                
+                setTimeout(() => {
+                    btn.textContent = originalText;
+                    btn.style.background = '';
+                    btn.style.color = '';
+                    btn.style.borderColor = '';
+                }, 1500);
+            }).catch((err) => {
+                console.error('Copy failed:', err);
+                alert('❌ Failed to copy command. Please try again.');
+            });
+        }
+        
+        function showCurlModal(jobName) {
+            const job = JOBS_DATA.find(j => j.name === jobName);
+            if (!job) {
+                console.error('Job not found:', jobName);
+                return;
+            }
+            
+            // Extract host and path from curl command
+            const curlCommand = job.curlCommand || '';
+            let host = 'N/A';
+            let path = 'N/A';
+            
+            // Parse URL from curl command (format: curl -X POST 'host/path' or curl -X POST host/path)
+            const urlMatch = curlCommand.match(/curl\s+-X\s+POST\s+'?([^'\s]+)'?/);
+            if (urlMatch && urlMatch[1]) {
+                const url = urlMatch[1];
+                // Check if it's a full URL or just host/path
+                if (url.startsWith('http://') || url.startsWith('https://')) {
+                    try {
+                        const urlObj = new URL(url);
+                        host = urlObj.hostname;
+                        path = urlObj.pathname + urlObj.search;
+                    } catch (e) {
+                        // If URL parsing fails, try simple split
+                        const parts = url.split('/');
+                        host = parts[2] || parts[0];
+                        path = '/' + parts.slice(3).join('/');
+                    }
+                } else {
+                    // No protocol, just host/path
+                    const firstSlash = url.indexOf('/');
+                    if (firstSlash > -1) {
+                        host = url.substring(0, firstSlash);
+                        path = url.substring(firstSlash);
+                    } else {
+                        host = url;
+                        path = '/';
+                    }
+                }
+            }
+            
+            // Update modal content
+            document.getElementById('modalJobName').textContent = job.analyticName;
+            document.getElementById('modalHost').textContent = host;
+            document.getElementById('modalPath').textContent = path;
+            
+            // Auto-detect environment based on host in curlCommand
+            const isCanaryHost = curlCommand.includes('seller-insights-next.gdn-sg.cld');
+            
+            if (isCanaryHost) {
+                document.getElementById('toggleCanary').classList.add('active');
+                document.getElementById('toggleNonCanary').classList.remove('active');
+            } else {
+                document.getElementById('toggleNonCanary').classList.add('active');
+                document.getElementById('toggleCanary').classList.remove('active');
+            }
+            
+            // Reset forceExecute checkbox
+            document.getElementById('forceExecuteCheckbox').checked = false;
+            
+            // Display the curl command with replaced host, requestId, and forceExecute
+            let displayCommand = replaceCurlHost(job.curlCommand, isCanaryHost, job.analyticName, false);
+            
+            // Add Cookie header for canary mode (after the URL)
+            if (isCanaryHost) {
+                displayCommand = displayCommand.replace(
+                    /('https:\/\/[^']+')(\s*\|)?/,
+                    `$1 -H "Cookie: ${CANARY_COOKIE}"$2`
+                );
+            }
+            
+            document.getElementById('modalCurlCommand').textContent = displayCommand;
+            document.getElementById('curlModal').style.display = 'block';
+            window.currentModalJob = job;
+        }
+        
+        function updateCurlCommand() {
+            if (!window.currentModalJob) return;
+            
+            const job = window.currentModalJob;
+            const isCanary = document.getElementById('toggleCanary').classList.contains('active');
+            const forceExecute = document.getElementById('forceExecuteCheckbox').checked;
+            
+            // Get curl command with all parameters
+            let curlCommand = replaceCurlHost(job.curlCommand, isCanary, job.analyticName, forceExecute);
+            
+            // Add Cookie header for canary mode (after the URL)
+            if (isCanary) {
+                // Find the URL part and add cookie after it
+                curlCommand = curlCommand.replace(
+                    /('https:\/\/[^']+')(\s*\|)?/,
+                    `$1 -H "Cookie: ${CANARY_COOKIE}"$2`
+                );
+            }
+            
+            document.getElementById('modalCurlCommand').textContent = curlCommand;
+        }
+        
+        function replaceCurlHost(curlCommand, isCanary, analyticName, forceExecute = false) {
+            if (!curlCommand) return '';
+            
+            // Replace both internal hosts with public-facing URL
+            let modifiedCommand = curlCommand
+                .replace(/seller-insights-next\.gdn-sg\.cld/g, 'seller.blibli.com/backend')
+                .replace(/seller-insights\.gdn-sg\.cld/g, 'seller.blibli.com/backend');
+            
+            // Add https:// prefix if not present - handle both quoted and unquoted URLs
+            // Pattern 1: curl -X POST 'seller.blibli.com/...
+            modifiedCommand = modifiedCommand.replace(
+                /curl -X POST '(seller\.blibli\.com)/,
+                "curl -X POST 'https://$1"
+            );
+            
+            // Pattern 2: curl -X POST seller.blibli.com/...
+            modifiedCommand = modifiedCommand.replace(
+                /curl -X POST (seller\.blibli\.com[^\s']+)/,
+                "curl -X POST 'https://$1'"
+            );
+            
+            // Add requestId and forceExecute parameters
+            if (analyticName) {
+                const timestamp = Date.now();
+                const requestId = `${analyticName}-${timestamp}`;
+                
+                // Extract the URL from the command (handle both quoted and unquoted)
+                // Match: curl -X POST 'url' or curl -X POST url
+                const quotedMatch = modifiedCommand.match(/curl -X POST '([^']+)'/);
+                const unquotedMatch = modifiedCommand.match(/curl -X POST ([^\s|]+)/);
+                
+                if (quotedMatch && quotedMatch[1]) {
+                    let url = quotedMatch[1];
+                    
+                    // Check if URL already has query parameters
+                    if (url.includes('?')) {
+                        url = url + `&requestId=${requestId}&forceExecute=${forceExecute}`;
+                    } else {
+                        url = url + `?requestId=${requestId}&forceExecute=${forceExecute}`;
+                    }
+                    
+                    // Replace the URL in the command
+                    modifiedCommand = modifiedCommand.replace(/curl -X POST '[^']+'/, `curl -X POST '${url}'`);
+                } else if (unquotedMatch && unquotedMatch[1]) {
+                    let url = unquotedMatch[1];
+                    
+                    // Check if URL already has query parameters
+                    if (url.includes('?')) {
+                        url = url + `&requestId=${requestId}&forceExecute=${forceExecute}`;
+                    } else {
+                        url = url + `?requestId=${requestId}&forceExecute=${forceExecute}`;
+                    }
+                    
+                    // Replace the URL in the command - maintain quote format
+                    modifiedCommand = modifiedCommand.replace(/curl -X POST [^\s|]+/, `curl -X POST '${url}'`);
+                }
+            }
+            
+            return modifiedCommand;
+        }
+        
+        function toggleCanaryMode(isCanary) {
+            if (!window.currentModalJob) return;
+            
+            // Update toggle button states
+            if (isCanary) {
+                document.getElementById('toggleCanary').classList.add('active');
+                document.getElementById('toggleNonCanary').classList.remove('active');
+            } else {
+                document.getElementById('toggleNonCanary').classList.add('active');
+                document.getElementById('toggleCanary').classList.remove('active');
+            }
+            
+            // Update the curl command with new settings
+            updateCurlCommand();
+        }
+        
+        function copyCurlCommand() {
+            const command = document.getElementById('modalCurlCommand').textContent;
+            navigator.clipboard.writeText(command).then(() => {
+                alert('✅ Command copied to clipboard!');
+            }).catch(() => {
+                alert('Failed to copy command');
+            });
+        }
+        
+        function closeModal() {
+            document.getElementById('curlModal').style.display = 'none';
+        }
+        
+        // Reports Functions
+        let reportsCharts = {};
+        
+        function displayReportsDateRange() {
+            // Extract all dates from REPORTS_DATA
+            const dates = REPORTS_DATA
+                .map(s => parseInt(s.analyticDate))
+                .filter(d => !isNaN(d) && d > 0);
+            
+            if (dates.length === 0) {
+                return;
+            }
+            
+            // Find min and max dates
+            const minDate = Math.min(...dates);
+            const maxDate = Math.max(...dates);
+            
+            // Format dates
+            const startDate = new Date(minDate).toLocaleDateString('en-US', {
+                month: 'short', day: 'numeric', year: 'numeric'
+            });
+            const endDate = new Date(maxDate).toLocaleDateString('en-US', {
+                month: 'short', day: 'numeric', year: 'numeric'
+            });
+            
+            // Calculate number of days
+            const daysDiff = Math.ceil((maxDate - minDate) / (1000 * 60 * 60 * 24)) + 1;
+            
+            const dateRangeText = ` (${startDate} - ${endDate})`;
+            
+            // Update page titles to include date range
+            pageTitles['reports-overview'] = `Reports Overview${dateRangeText}`;
+            pageTitles['reports-patterns'] = `Pattern Analysis${dateRangeText}`;
+            pageTitles['reports-data'] = `All Scheduler Data${dateRangeText}`;
+            
+            // Update current page title if on a reports page
+            const currentPage = document.querySelector('.page-section.active')?.id?.replace('-section', '');
+            if (currentPage && pageTitles[currentPage]) {
+                document.getElementById('pageTitle').textContent = pageTitles[currentPage];
+            }
+        }
+        
+        function updateInsights() {
+            const totalData = REPORTS_DATA.reduce((sum, s) => sum + parseInt(s.bqTotalData || 0), 0);
+            const uniqueTypes = new Set(REPORTS_DATA.map(s => s.analyticName)).size;
+            const durations = REPORTS_DATA.map(s => calculateDuration(s.executionStartDate, s.executionFinishDate)).filter(d => d);
+            const avgDuration = durations.length ? durations.reduce((sum, d) => sum + d.totalSeconds, 0) / durations.length : 0;
+            
+            document.getElementById('insightsGrid').innerHTML = `
+                <div class="insight-card">
+                    <div class="insight-label">Total Records</div>
+                    <div class="insight-value">${totalData.toLocaleString()}</div>
+                </div>
+                <div class="insight-card">
+                    <div class="insight-label">Unique Types</div>
+                    <div class="insight-value">${uniqueTypes}</div>
+                </div>
+                <div class="insight-card">
+                    <div class="insight-label">Avg Duration</div>
+                    <div class="insight-value">${Math.floor(avgDuration / 60)}m ${Math.floor(avgDuration % 60)}s</div>
+                </div>
+            `;
+        }
+        
+        function updatePerformance() {
+            const withDuration = REPORTS_DATA.map(s => ({
+                name: s.analyticName,
+                duration: calculateDuration(s.executionStartDate, s.executionFinishDate),
+                bqData: parseInt(s.bqTotalData || 0)
+            })).filter(s => s.duration);
+            
+            const slowest = [...withDuration].sort((a, b) => b.duration.totalSeconds - a.duration.totalSeconds).slice(0, 5);
+            const fastest = [...withDuration].sort((a, b) => a.duration.totalSeconds - b.duration.totalSeconds).slice(0, 5);
+            const highest = [...REPORTS_DATA].filter(s => s.bqTotalData).sort((a, b) => parseInt(b.bqTotalData) - parseInt(a.bqTotalData)).slice(0, 5);
+            const failed = REPORTS_DATA.filter(s => getStatus(s) !== 'success');
+            
+            let html = '<div class="performance-card"><h3>🐌 Slowest Runs</h3>';
+            slowest.forEach(s => html += `<div class="perf-item"><span class="perf-item-name">${s.name}</span><span class="perf-item-value">${formatDuration(s.duration)}</span></div>`);
+            html += '</div>';
+            
+            html += '<div class="performance-card"><h3>⚡ Fastest Runs</h3>';
+            fastest.forEach(s => html += `<div class="perf-item"><span class="perf-item-name">${s.name}</span><span class="perf-item-value">${formatDuration(s.duration)}</span></div>`);
+            html += '</div>';
+            
+            html += '<div class="performance-card"><h3>📊 Highest Volume</h3>';
+            highest.forEach(s => html += `<div class="perf-item"><span class="perf-item-name">${s.analyticName}</span><span class="perf-item-value">${parseInt(s.bqTotalData).toLocaleString()}</span></div>`);
+            html += '</div>';
+            
+            if (failed.length > 0) {
+                html += '<div class="performance-card"><h3>⚠️ Issues</h3>';
+                failed.slice(0, 5).forEach(s => html += `<div class="perf-item"><span class="perf-item-name">${s.analyticName}</span><span class="perf-item-value" style="color:var(--danger)">${getStatus(s).toUpperCase()}</span></div>`);
+                html += '</div>';
+            }
+            
+            document.getElementById('performanceGrid').innerHTML = html;
+        }
+        
+        function renderDailyBreakdownChart() {
+            console.log('🔍 Rendering Daily Breakdown Chart...');
+            console.log('  REPORTS_DATA length:', REPORTS_DATA.length);
+            
+            const byDate = {};
+            REPORTS_DATA.forEach(s => {
+                const date = s.analyticDate;
+                if (!byDate[date]) byDate[date] = { total: 0, success: 0, failed: 0 };
+                byDate[date].total++;
+                if (getStatus(s) === 'success') byDate[date].success++;
+                else byDate[date].failed++;
+            });
+            
+            const sorted = Object.keys(byDate).sort((a, b) => parseInt(a) - parseInt(b));
+            console.log('  Dates found:', sorted.length);
+            console.log('  Date data:', byDate);
+            const maxTotal = Math.max(...sorted.map(date => byDate[date].total));
+            console.log('  Max total:', maxTotal);
+            
+            // Calculate bar width based on number of dates
+            const barWidth = Math.max(40, Math.min(70, 1400 / sorted.length));
+            const chartHeight = 180;
+            
+            let html = '<div style="padding: 1rem; background: white; border-radius: 0.5rem;">';
+            
+            // Legend
+            html += '<div style="display: flex; gap: 1.5rem; margin-bottom: 1.5rem; justify-content: center; font-size: 0.875rem;">';
+            html += '<div style="display: flex; align-items: center; gap: 0.5rem;">';
+            html += '<div style="width: 18px; height: 18px; background: #10b981; border-radius: 0.25rem; box-shadow: 0 1px 3px rgba(0,0,0,0.1);"></div>';
+            html += '<span style="font-weight: 500;">Success</span></div>';
+            html += '<div style="display: flex; align-items: center; gap: 0.5rem;">';
+            html += '<div style="width: 18px; height: 18px; background: #ef4444; border-radius: 0.25rem; box-shadow: 0 1px 3px rgba(0,0,0,0.1);"></div>';
+            html += '<span style="font-weight: 500;">Failed</span></div>';
+            html += '</div>';
+            
+            // Chart container with proper spacing
+            html += '<div style="overflow-x: auto; padding-bottom: 4rem;">';
+            html += `<div style="min-width: ${sorted.length * (barWidth + 12)}px; padding: 0 1rem;">`;
+            html += `<div style="display: flex; gap: 12px; align-items: flex-end; height: ${chartHeight}px; border-bottom: 2px solid var(--gray-200); position: relative;">`;
+            
+            sorted.forEach(date => {
+                const data = byDate[date];
+                const totalHeight = chartHeight - 10;
+                const successHeightPx = Math.max(4, Math.round((data.success / maxTotal) * totalHeight));
+                const failedHeightPx = Math.max(4, Math.round((data.failed / maxTotal) * totalHeight));
+                const successPct = ((data.success / data.total) * 100).toFixed(0);
+                const failedPct = ((data.failed / data.total) * 100).toFixed(0);
+                
+                html += `<div style="width: ${barWidth}px; display: flex; flex-direction: column; align-items: center; position: relative;">`;
+                
+                // Values on top
+                html += `<div style="font-size: 0.75rem; font-weight: 600; color: var(--gray-700); margin-bottom: 0.25rem; text-align: center;">
+                    ${data.total}
+                </div>`;
+                
+                // Bar container
+                html += `<div style="width: 100%; display: flex; flex-direction: column; justify-content: flex-end; height: ${chartHeight - 30}px;">`;
+                
+                // Success bar
+                if (data.success > 0) {
+                    html += `<div style="width: 100%; background: linear-gradient(180deg, #10b981 0%, #059669 100%); 
+                             border-radius: 0.375rem 0.375rem 0 0; height: ${successHeightPx}px; 
+                             position: relative; cursor: pointer; transition: transform 0.2s ease; border: 1px solid #059669;"
+                             onmouseover="this.style.transform='scaleY(1.05)'" 
+                             onmouseout="this.style.transform='scaleY(1)'"
+                             title="✓ Success: ${data.success} (${successPct}%)">
+                        ${successHeightPx > 20 ? `<div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: white; font-size: 0.75rem; font-weight: 600;">${data.success}</div>` : ''}
+                    </div>`;
+                }
+                
+                // Failed bar
+                if (data.failed > 0) {
+                    html += `<div style="width: 100%; background: linear-gradient(180deg, #ef4444 0%, #dc2626 100%); 
+                             ${data.success > 0 ? 'border-radius: 0 0 0.375rem 0.375rem;' : 'border-radius: 0.375rem;'} 
+                             height: ${failedHeightPx}px; position: relative; cursor: pointer; 
+                             transition: transform 0.2s ease; border: 1px solid #dc2626;"
+                             onmouseover="this.style.transform='scaleY(1.05)'" 
+                             onmouseout="this.style.transform='scaleY(1)'"
+                             title="✗ Failed: ${data.failed} (${failedPct}%)">
+                        ${failedHeightPx > 20 ? `<div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: white; font-size: 0.75rem; font-weight: 600;">${data.failed}</div>` : ''}
+                    </div>`;
+                }
+                
+                html += '</div>'; // End bar container
+                
+                // Date label below the axis
+                html += `<div style="position: absolute; top: ${chartHeight + 10}px; left: 50%; transform: translateX(-50%); 
+                         font-size: 0.75rem; color: var(--gray-600); text-align: center; white-space: nowrap; font-weight: 500;">
+                    ${formatDateShort(date).replace(', 2025', '')}
+                </div>`;
+                
+                html += '</div>'; // End bar wrapper
+            });
+            
+            html += '</div></div></div></div>';
+            
+            console.log('  Generated HTML length:', html.length);
+            console.log('  Setting innerHTML...');
+            document.getElementById('dailyBreakdownChart').innerHTML = html;
+            console.log('✅ Daily Breakdown Chart rendered');
+        }
+        
+        function populateDateFilter() {
+            const dates = [...new Set(REPORTS_DATA.map(s => s.analyticDate))].sort((a, b) => parseInt(b) - parseInt(a));
+            const select = document.getElementById('dateFilter');
+            dates.forEach(date => {
+                const opt = document.createElement('option');
+                opt.value = date;
+                opt.textContent = formatDateShort(date);
+                select.appendChild(opt);
+            });
+        }
+        
+        function filterReports() {
+            const search = document.getElementById('reportSearch').value.toLowerCase();
+            const date = document.getElementById('dateFilter').value;
+            const status = document.getElementById('reportStatusFilter').value;
+            
+            return REPORTS_DATA.filter(s => {
+                const matchSearch = !search || s.analyticName.toLowerCase().includes(search);
+                const matchDate = !date || s.analyticDate === date;
+                const matchStatus = !status || getStatus(s) === status;
+                return matchSearch && matchDate && matchStatus;
+            });
+        }
+        
+        function sortReports(reports, column, direction) {
+            return [...reports].sort((a, b) => {
+                let valA, valB;
+                switch(column) {
+                    case 'date': valA = parseInt(a.analyticDate); valB = parseInt(b.analyticDate); break;
+                    case 'name': valA = a.analyticName.toLowerCase(); valB = b.analyticName.toLowerCase(); break;
+                    case 'status': valA = getStatus(a); valB = getStatus(b); break;
+                    case 'bqData': valA = parseInt(a.bqTotalData || 0); valB = parseInt(b.bqTotalData || 0); break;
+                    case 'start': valA = parseInt(a.executionStartDate || 0); valB = parseInt(b.executionStartDate || 0); break;
+                    case 'end': valA = parseInt(a.executionFinishDate || 0); valB = parseInt(b.executionFinishDate || 0); break;
+                    case 'duration':
+                        const dA = calculateDuration(a.executionStartDate, a.executionFinishDate);
+                        const dB = calculateDuration(b.executionStartDate, b.executionFinishDate);
+                        valA = dA ? dA.totalSeconds : 0;
+                        valB = dB ? dB.totalSeconds : 0;
+                        break;
+                    default: return 0;
+                }
+                if (valA < valB) return direction === 'asc' ? -1 : 1;
+                if (valA > valB) return direction === 'asc' ? 1 : -1;
+                return 0;
+            });
+        }
+        
+        function renderReportsTable() {
+            filteredReports = filterReports();
+            if (reportSort.column) {
+                filteredReports = sortReports(filteredReports, reportSort.column, reportSort.direction);
+            }
+            
+            const tbody = document.getElementById('reportsTableBody');
+            
+            if (filteredReports.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="7" class="no-results">No results found</td></tr>';
+                return;
+            }
+            
+            tbody.innerHTML = filteredReports.map(s => {
+                const status = getStatus(s);
+                const duration = calculateDuration(s.executionStartDate, s.executionFinishDate);
+                return `
+                    <tr>
+                        <td><span class="badge badge-info">${formatDateShort(s.analyticDate)}</span></td>
+                        <td><strong>${s.analyticName}</strong></td>
+                        <td><span class="badge badge-${status}">${status}</span></td>
+                        <td>${s.bqTotalData ? parseInt(s.bqTotalData).toLocaleString() : '-'}</td>
+                        <td>${formatDateTime(s.executionStartDate)}</td>
+                        <td>${formatDateTime(s.executionFinishDate)}</td>
+                        <td>${formatDuration(duration)}</td>
+                    </tr>
+                `;
+            }).join('');
+        }
+        
+        // Today's Report Functions
+        function toIntSafe(v) {
+            const num = parseInt(v, 10);
+            return isNaN(num) ? 0 : num;
+        }
+        
+        function renderFailedSchedulers(failedJobs) {
+            const failedSection = document.getElementById('todayFailedSection');
+            const failedList = document.getElementById('todayFailedList');
+            
+            if (failedJobs.length === 0) {
+                failedSection.style.display = 'none';
+                return;
+            }
+            
+            failedSection.style.display = 'block';
+            
+            // Group failures by analytic name
+            const failuresByName = {};
+            failedJobs.forEach(job => {
+                const name = job.analyticName || 'Unknown';
+                if (!failuresByName[name]) {
+                    failuresByName[name] = [];
+                }
+                failuresByName[name].push(job);
+            });
+            
+            let html = '';
+            let index = 0;
+            
+            Object.keys(failuresByName).sort().forEach(analyticName => {
+                const failures = failuresByName[analyticName];
+                
+                // Find matching Rundeck job
+                const matchedJob = JOBS_DATA.find(j => j.analyticName === analyticName);
+                
+                // Get scheduled hours for this job
+                let scheduledHours = [];
+                let scheduledTimes = [];
+                if (matchedJob) {
+                    const hourString = matchedJob.hour || '0';
+                    scheduledHours = hourString.split(',').map(h => parseInt(h.trim()));
+                    scheduledTimes = scheduledHours.map(h => formatTime(h.toString(), matchedJob.minute, matchedJob.seconds));
+                }
+                
+                // Get the hours when failures occurred
+                const failedHours = failures.map(f => {
+                    if (f.executionStartDate) {
+                        return new Date(parseInt(f.executionStartDate)).getHours();
+                    }
+                    return null;
+                }).filter(h => h !== null);
+                
+                // Check if all scheduled slots failed
+                const allSlotsFailed = matchedJob && scheduledHours.length > 0 && 
+                    scheduledHours.every(hour => failedHours.includes(hour));
+                
+                // Display each failure
+                failures.forEach((job) => {
+                    index++;
+                    const executionTime = job.executionStartDate 
+                        ? new Date(parseInt(job.executionStartDate)).toLocaleTimeString('en-US', { 
+                            hour: '2-digit', 
+                            minute: '2-digit', 
+                            second: '2-digit',
+                            hour12: false 
+                        })
+                        : 'N/A';
+                    
+                    const executionHour = job.executionStartDate 
+                        ? new Date(parseInt(job.executionStartDate)).getHours()
+                        : null;
+                    
+                    const executionDate = job.executionStartDate 
+                        ? new Date(parseInt(job.executionStartDate)).toLocaleDateString('en-US', {
+                            month: 'short',
+                            day: 'numeric',
+                            year: 'numeric'
+                        })
+                        : 'N/A';
+                    
+                    // Determine which slot this failure belongs to
+                    let slotPosition = -1;
+                    let isFirstSlot = false;
+                    let isLastSlot = false;
+                    let remainingAttempts = 0;
+                    let failedAttempts = 0;
+                    let retryStatusMessage = '';
+                    let severityBadge = '';
+                    let borderColor = 'var(--danger)';
+                    
+                    if (matchedJob && scheduledHours.length > 0 && executionHour !== null) {
+                        // Find which slot this failure occurred in
+                        slotPosition = scheduledHours.indexOf(executionHour);
+                        
+                        if (slotPosition !== -1) {
+                            isFirstSlot = slotPosition === 0;
+                            isLastSlot = slotPosition === scheduledHours.length - 1;
+                            failedAttempts = slotPosition + 1;
+                            remainingAttempts = scheduledHours.length - failedAttempts;
+                            
+                            if (isFirstSlot && scheduledHours.length > 1) {
+                                // First slot failed - still have retries
+                                retryStatusMessage = `<span style="color: var(--warning); font-weight: 600;">⚠️ First attempt failed - ${remainingAttempts} retry slot${remainingAttempts > 1 ? 's' : ''} remaining (${scheduledHours.slice(1).map((h, i) => scheduledTimes[slotPosition + 1 + i]).join(', ')})</span>`;
+                                severityBadge = '';
+                                borderColor = '#f59e0b'; // Orange for warning
+                            } else if (isLastSlot) {
+                                // Last slot failed - no more retries
+                                retryStatusMessage = `<span style="color: #b91c1c; font-weight: 700;">🚨 FINAL ATTEMPT FAILED - No more retry slots for today</span>`;
+                                severityBadge = '<span style="background: #b91c1c; color: white; padding: 0.25rem 0.5rem; border-radius: 0.25rem; font-size: 0.7rem; font-weight: 600; margin-left: 0.5rem;">🚨 FINAL FAILURE</span>';
+                                borderColor = '#b91c1c'; // Dark red for critical
+                            } else {
+                                // Middle slot failed
+                                retryStatusMessage = `<span style="color: var(--warning); font-weight: 600;">⚠️ Retry attempt ${failedAttempts} failed - ${remainingAttempts} attempt${remainingAttempts > 1 ? 's' : ''} remaining (${scheduledHours.slice(slotPosition + 1).map((h, i) => scheduledTimes[slotPosition + 1 + i]).join(', ')})</span>`;
+                                severityBadge = '<span style="background: var(--warning); color: white; padding: 0.25rem 0.5rem; border-radius: 0.25rem; font-size: 0.7rem; font-weight: 600; margin-left: 0.5rem;">⚠️ RETRY FAILED</span>';
+                                borderColor = '#f59e0b'; // Orange
+                            }
+                        }
+                    } else if (allSlotsFailed) {
+                        borderColor = '#b91c1c';
+                        severityBadge = '<span style="background: #b91c1c; color: white; padding: 0.25rem 0.5rem; border-radius: 0.25rem; font-size: 0.7rem; font-weight: 600; margin-left: 0.5rem;">⚠️ ALL SLOTS FAILED</span>';
+                    }
+                    
+                    html += `
+                        <div style="display: flex; align-items: center; padding: 1rem; background: white; border-radius: 0.5rem; border-left: 4px solid ${borderColor}; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+                            <div style="flex: 1;">
+                                <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem; flex-wrap: wrap;">
+                                    <span style="background: var(--danger); color: white; padding: 0.25rem 0.5rem; border-radius: 0.25rem; font-size: 0.75rem; font-weight: 600;">#${index}</span>
+                                    <span style="font-weight: 700; font-size: 1rem; color: var(--gray-900);">${job.analyticName || 'Unknown'}</span>
+                                    ${severityBadge}
+                                </div>
+                                <div style="display: flex; gap: 1.5rem; font-size: 0.875rem; color: var(--gray-600); flex-wrap: wrap;">
+                                    <div style="display: flex; align-items: center; gap: 0.375rem;">
+                                        <span>🕐</span>
+                                        <span><strong>Failed at:</strong> ${executionTime}</span>
+                                    </div>
+                                    <div style="display: flex; align-items: center; gap: 0.375rem;">
+                                        <span>📅</span>
+                                        <span>${executionDate}</span>
+                                    </div>
+                                    ${job.analyticTotalData ? `
+                                    <div style="display: flex; align-items: center; gap: 0.375rem;">
+                                        <span>📊</span>
+                                        <span>${parseInt(job.analyticTotalData).toLocaleString()} rows</span>
+                                    </div>
+                                    ` : ''}
+                                </div>
+                                ${matchedJob ? `
+                                <div style="margin-top: 0.75rem; padding-top: 0.75rem; border-top: 1px solid var(--gray-200);">
+                                    <div style="font-size: 0.8rem; color: var(--gray-700); margin-bottom: 0.375rem;">
+                                        <strong>Rundeck Schedule:</strong> ${scheduledTimes.join(', ')} • ${matchedJob.frequency}${matchedJob.dayInfo ? ' • ' + matchedJob.dayInfo : ''}
+                                    </div>
+                                    <div style="font-size: 0.8rem; color: var(--gray-600);">
+                                        <strong>Retry Status:</strong> 
+                                        ${retryStatusMessage || (allSlotsFailed 
+                                            ? `<span style="color: #b91c1c; font-weight: 600;">Failed at all ${scheduledHours.length} scheduled time slots</span>` 
+                                            : `<span style="color: var(--warning);">Failed at ${failedHours.length} of ${scheduledHours.length} scheduled slots</span>`
+                                        )}
+                                    </div>
+                                </div>
+                                ` : '<div style="margin-top: 0.5rem; font-size: 0.8rem; color: var(--gray-500);"><em>No matching Rundeck job found</em></div>'}
+                            </div>
+                            <div>
+                                <span class="badge badge-danger" style="font-size: 0.875rem; padding: 0.5rem 0.75rem;">❌ Failed</span>
+                            </div>
+                        </div>
+                    `;
+                });
+            });
+            
+            failedList.innerHTML = html;
+        }
+        
+        function initTodayReport() {
+            const succeededJobs = TODAY_DATA.filter(j => j.executionSuccess === true);
+            const failedJobs = TODAY_DATA.filter(j => j.executionSuccess === false || j.executionSuccess === undefined);
+            const totalJobs = TODAY_DATA.length;
+            const totalRowsProcessed = succeededJobs.reduce((sum, job) => sum + toIntSafe(job.analyticTotalData), 0);
+            const largestJobSize = TODAY_DATA.reduce((max, job) => {
+                const size = toIntSafe(job.analyticTotalData);
+                return size > max ? size : max;
+            }, 0);
+            
+            document.getElementById('todaySucceeded').textContent = succeededJobs.length;
+            document.getElementById('todayFailed').textContent = failedJobs.length;
+            document.getElementById('todayTotal').textContent = totalJobs;
+            document.getElementById('todayTotalRows').textContent = totalRowsProcessed.toLocaleString();
+            document.getElementById('todayLargestJob').textContent = largestJobSize.toLocaleString();
+            
+            // Render failed schedulers section
+            renderFailedSchedulers(failedJobs);
+            
+            // Today's table
+            renderTodayTable(TODAY_DATA);
+            
+            document.getElementById('todaySearchInput').addEventListener('input', (e) => {
+                const val = e.target.value.toLowerCase().trim();
+                const filtered = TODAY_DATA.filter(job => (job.analyticName || '').toLowerCase().includes(val));
+                renderTodayTable(filtered);
+            });
+            
+            document.querySelectorAll('#todaySchedulerTable th.sortable').forEach(th => {
+                th.addEventListener('click', () => {
+                    const key = th.getAttribute('data-key');
+                    const currentDir = th.classList.contains('sort-asc') ? 'desc' : 'asc';
+                    
+                    document.querySelectorAll('#todaySchedulerTable th').forEach(h => {
+                        h.classList.remove('sort-asc', 'sort-desc');
+                    });
+                    th.classList.add(`sort-${currentDir}`);
+                    
+                    const sorted = [...TODAY_DATA].sort((a, b) => {
+                        let aVal = a[key];
+                        let bVal = b[key];
+                        
+                        if (key === 'executionSuccess') {
+                            aVal = aVal === true ? 1 : 0;
+                            bVal = bVal === true ? 1 : 0;
+                        }
+                        if (key === 'analyticTotalData' || key === 'bqTotalData') {
+                            aVal = toIntSafe(aVal);
+                            bVal = toIntSafe(bVal);
+                        }
+                        if (key === 'executionStartDate' || key === 'executionFinishDate') {
+                            aVal = parseInt(aVal) || 0;
+                            bVal = parseInt(bVal) || 0;
+                        }
+                        if (key === 'duration') {
+                            // Calculate duration in seconds for sorting
+                            const aDuration = calculateDuration(a.executionStartDate, a.executionFinishDate);
+                            const bDuration = calculateDuration(b.executionStartDate, b.executionFinishDate);
+                            aVal = aDuration ? aDuration.totalSeconds : 0;
+                            bVal = bDuration ? bDuration.totalSeconds : 0;
+                        }
+                        if (key === 'analyticName') {
+                            aVal = (aVal || '').toLowerCase();
+                            bVal = (bVal || '').toLowerCase();
+                        }
+                        
+                        if (aVal < bVal) return currentDir === 'asc' ? -1 : 1;
+                        if (aVal > bVal) return currentDir === 'asc' ? 1 : -1;
+                        return 0;
+                    });
+                    renderTodayTable(sorted);
+                });
+            });
+        }
+        
+        function renderTodayTable(data) {
+            const tbody = document.getElementById('todayTableBody');
+            
+            if (data.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="8" class="no-results">No results found</td></tr>';
+                return;
+            }
+            
+            tbody.innerHTML = data.map(job => {
+                const statusText = job.executionSuccess === true ? 'Success' : 'Fail';
+                const statusClass = job.executionSuccess === true ? 'status-success' : 'status-fail';
+                const startTime = formatTimeOnly(job.executionStartDate);
+                const endTime = formatTimeOnly(job.executionFinishDate);
+                const bqData = job.bqTotalData !== undefined ? job.bqTotalData : '-';
+                const savedData = job.analyticTotalData !== undefined ? job.analyticTotalData : '-';
+                
+                // Calculate duration
+                const duration = calculateDuration(job.executionStartDate, job.executionFinishDate);
+                const durationDisplay = duration ? duration.formatted : '-';
+                
+                // Get time slots from matched job and highlight successful slot
+                let timeSlotsDisplay = '<span style="color: var(--gray-400);">—</span>';
+                const matchedJob = matchJobToScheduler(job.analyticName);
+                
+                if (matchedJob) {
+                    const hourString = matchedJob.hour || '0';
+                    const hours = hourString.split(',').map(h => h.trim());
+                    const scheduledMinute = parseInt(matchedJob.minute || '0');
+                    
+                    // Get actual start time to determine which slot was successful
+                    let successSlotIndex = -1;
+                    if (job.executionStartDate && job.executionSuccess) {
+                        const startDate = new Date(parseInt(job.executionStartDate));
+                        const startHour = startDate.getHours();
+                        const startMinute = startDate.getMinutes();
+                        const startTimeInMinutes = startHour * 60 + startMinute;
+                        
+                        // Find closest matching slot
+                        let minDiff = Infinity;
+                        hours.forEach((h, index) => {
+                            const slotHour = parseInt(h);
+                            const slotTimeInMinutes = slotHour * 60 + scheduledMinute;
+                            const diff = Math.abs(startTimeInMinutes - slotTimeInMinutes);
+                            
+                            if (diff < 30 && diff < minDiff) {
+                                minDiff = diff;
+                                successSlotIndex = index;
+                            }
+                        });
+                    }
+                    
+                    // Build time slots display with highlighting
+                    if (hours.length > 1) {
+                        timeSlotsDisplay = '<div style="display: flex; flex-direction: column; gap: 2px;">' + 
+                            hours.map((h, index) => {
+                                const slotTime = formatTime(h, matchedJob.minute || '0', matchedJob.seconds || '0');
+                                const isSuccessSlot = index === successSlotIndex;
+                                
+                                if (isSuccessSlot) {
+                                    return `<div style="background: #d1fae5; color: #065f46; padding: 2px 6px; border-radius: 3px; font-weight: 600; font-size: 0.75rem;">${slotTime} ✓</div>`;
+                                } else {
+                                    return `<div style="color: var(--gray-600); font-size: 0.75rem;">${slotTime}</div>`;
+                                }
+                            }).join('') + 
+                        '</div>';
+                    } else {
+                        const slotTime = formatTime(matchedJob.hour || '0', matchedJob.minute || '0', matchedJob.seconds || '0');
+                        if (job.executionSuccess) {
+                            timeSlotsDisplay = `<div style="background: #d1fae5; color: #065f46; padding: 2px 6px; border-radius: 3px; font-weight: 600; font-size: 0.75rem; display: inline-block;">${slotTime} ✓</div>`;
+                        } else {
+                            timeSlotsDisplay = `<div style="color: var(--gray-600); font-size: 0.75rem;">${slotTime}</div>`;
+                        }
+                    }
+                }
+                
+                // Check if BQ Data and Saved Data don't match
+                const bqValue = toIntSafe(job.bqTotalData);
+                const savedValue = toIntSafe(job.analyticTotalData);
+                const hasMismatch = bqValue > 0 && savedValue > 0 && bqValue !== savedValue;
+                const rowClass = hasMismatch ? 'data-mismatch' : '';
+                
+                return `
+                    <tr class="${rowClass}" data-duration="${duration ? duration.totalSeconds : 0}">
+                        <td>${job.analyticName || ''}</td>
+                        <td><span class="${statusClass}">${statusText}</span></td>
+                        <td>${timeSlotsDisplay}</td>
+                        <td>${startTime}</td>
+                        <td>${endTime}</td>
+                        <td>${durationDisplay}</td>
+                        <td>${bqData}</td>
+                        <td>${savedData}</td>
+                    </tr>
+                `;
+            }).join('');
+        }
+        
+        // Pattern Analysis Functions
+        let patternData = [];
+        let schedulerDurations = {};
+        let patternCharts = {};
+        let currentPatternSort = { column: 'time', direction: 'desc' };
+        
+        function matchJobToScheduler(schedulerName) {
+            // First try: exact match on analyticName
+            let matchedJob = JOBS_DATA.find(job => job.analyticName === schedulerName);
+            
+            if (matchedJob) return matchedJob;
+            
+            // Second try: case-insensitive match on analyticName
+            matchedJob = JOBS_DATA.find(job => 
+                job.analyticName.toUpperCase() === schedulerName.toUpperCase()
+            );
+            
+            if (matchedJob) return matchedJob;
+            
+            // Third try: fuzzy matching on job name (fallback)
+            const nameUpper = schedulerName.toUpperCase();
+            matchedJob = JOBS_DATA.find(job => {
+                const jobNameUpper = job.name.toUpperCase();
+                const schedulerKey = nameUpper.replace(/_/g, '').replace(/\s+/g, '');
+                const jobKey = jobNameUpper.replace(/SA_\d+_/g, '').replace(/_/g, '').replace(/\s+/g, '');
+                return jobKey.includes(schedulerKey) || schedulerKey.includes(jobKey);
+            });
+            
+            return matchedJob;
+        }
+        
+        function determineAttemptStatusByTime(scheduler) {
+            // Get all runs for this scheduler on this date, sorted by execution start time
+            const runsOnDate = REPORTS_DATA.filter(s => 
+                s.analyticName === scheduler.analyticName && 
+                s.analyticDate === scheduler.analyticDate
+            ).sort((a, b) => parseInt(a.executionStartDate || 0) - parseInt(b.executionStartDate || 0));
+            
+            if (runsOnDate.length === 0) return { status: 'Unknown', attempt: 1 };
+            
+            // Find position of current scheduler in the sorted list
+            const currentIndex = runsOnDate.findIndex(r => r._id === scheduler._id);
+            const attemptNumber = currentIndex + 1;
+            
+            // Check status
+            const currentStatus = getStatus(scheduler);
+            
+            if (attemptNumber === 1) {
+                return { 
+                    status: currentStatus === 'success' ? 'First Try Success' : 'First Try Failed',
+                    attempt: 1 
+                };
+            } else {
+                // This is a retry
+                if (currentStatus === 'success') {
+                    return { status: `Retry Success (Attempt ${attemptNumber})`, attempt: attemptNumber };
+                } else {
+                    return { status: `Retry Failed (Attempt ${attemptNumber})`, attempt: attemptNumber };
+                }
+            }
+        }
+        
+        function initPatternAnalysis() {
+            // Calculate durations for each scheduler
+            schedulerDurations = {};
+            REPORTS_DATA.forEach(s => {
+                const duration = calculateDuration(s.executionStartDate, s.executionFinishDate);
+                if (duration && s.analyticName) {
+                    if (!schedulerDurations[s.analyticName]) {
+                        schedulerDurations[s.analyticName] = [];
+                    }
+                    schedulerDurations[s.analyticName].push(duration.totalSeconds);
+                }
+            });
+            
+            // Build pattern data with job matching and attempt detection
+            patternData = REPORTS_DATA.map(scheduler => {
+                const matchedJob = matchJobToScheduler(scheduler.analyticName);
+                const attemptInfo = determineAttemptStatusByTime(scheduler);
+                return {
+                    ...scheduler,
+                    matchedJob: matchedJob ? matchedJob.name : 'No Match',
+                    jobRetry: matchedJob ? matchedJob.retry : '-',
+                    attemptStatus: attemptInfo.status,
+                    attemptNumber: attemptInfo.attempt
+                };
+            });
+            
+            // Update stats
+            const totalSchedulers = new Set(REPORTS_DATA.map(s => s.analyticName)).size;
+            const totalExecutions = REPORTS_DATA.length;
+            const successfulExecutions = REPORTS_DATA.filter(s => getStatus(s) === 'success').length;
+            const successRate = totalExecutions > 0 ? ((successfulExecutions / totalExecutions) * 100).toFixed(1) : 0;
+            
+            // Calculate peak hour
+            const hourCounts = {};
+            REPORTS_DATA.forEach(s => {
+                if (s.executionStartDate) {
+                    const hour = new Date(parseInt(s.executionStartDate)).getHours();
+                    hourCounts[hour] = (hourCounts[hour] || 0) + 1;
+                }
+            });
+            const peakHour = Object.keys(hourCounts).length > 0
+                ? Object.keys(hourCounts).reduce((a, b) => hourCounts[a] > hourCounts[b] ? a : b)
+                : '--';
+            const peakHourFormatted = peakHour !== '--' ? `${peakHour.padStart(2, '0')}:00` : '--:--';
+            const peakHourCount = peakHour !== '--' ? hourCounts[peakHour] : 0;
+            
+            // Update DOM
+            document.getElementById('patternTotalSchedulers').textContent = totalSchedulers;
+            document.getElementById('patternSchedulersTrend').textContent = `Unique jobs`;
+            
+            document.getElementById('patternSuccessRate').textContent = `${successRate}%`;
+            document.getElementById('patternSuccessTrend').textContent = `${successfulExecutions}/${totalExecutions} passed`;
+            
+            document.getElementById('patternPeakHour').textContent = peakHourFormatted;
+            document.getElementById('patternPeakTrend').textContent = peakHour !== '--' ? `${peakHourCount} executions` : `No data`;
+            
+            // Render visualizations
+            renderDurationChart();
+            renderHeatmap('All');
+            renderPatternMatchTable(patternData);
+        }
+        
+        function renderDurationChart() {
+            const durationStats = Object.keys(schedulerDurations).map(name => {
+                const durations = schedulerDurations[name];
+                const avg = durations.reduce((sum, d) => sum + d, 0) / durations.length;
+                return { name, avg };
+            }).sort((a, b) => b.avg - a.avg);
+            
+            const maxDuration = Math.max(...durationStats.map(s => s.avg));
+            
+            let html = '<div style="padding: 20px;">';
+            durationStats.forEach(stat => {
+                const widthPct = (stat.avg / maxDuration) * 100;
+                const minutes = Math.floor(stat.avg / 60);
+                const seconds = Math.floor(stat.avg % 60);
+                
+                html += `
+                    <div style="margin-bottom: 10px;">
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 3px; font-size: 12px;">
+                            <span style="font-weight: 500;">${stat.name}</span>
+                            <span style="color: #666;">${minutes}m ${seconds}s</span>
+                        </div>
+                        <div style="background: #e5e7eb; border-radius: 4px; height: 24px; position: relative;">
+                            <div style="background: linear-gradient(90deg, #4f46e5, #6366f1); height: 100%; border-radius: 4px; width: ${widthPct}%; transition: width 0.3s;" title="${stat.name}: ${minutes}m ${seconds}s"></div>
+                        </div>
+                    </div>
+                `;
+            });
+            html += '</div>';
+            
+            document.getElementById('durationChart').innerHTML = html;
+        }
+        
+        function renderAttemptChart() {
+            const firstTry = patternData.filter(p => p.attemptStatus === 'First Try Success').length;
+            const firstFail = patternData.filter(p => p.attemptStatus === 'First Try Failed').length;
+            const retrySuccess = patternData.filter(p => p.attemptStatus.includes('Retry Success')).length;
+            const retryFail = patternData.filter(p => p.attemptStatus.includes('Retry Failed')).length;
+            
+            const total = patternData.length;
+            const data = [
+                { label: 'First Try Success', count: firstTry, color: '#10b981', icon: '✓' },
+                { label: 'First Try Failed', count: firstFail, color: '#ef4444', icon: '✗' },
+                { label: 'Retry Success', count: retrySuccess, color: '#f59e0b', icon: '↻' },
+                { label: 'Retry Failed', count: retryFail, color: '#9ca3af', icon: '⊗' }
+            ];
+            
+            let html = '<div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; padding: 20px;">';
+            data.forEach(item => {
+                const percentage = ((item.count / total) * 100).toFixed(1);
+                html += `
+                    <div style="background: white; border-left: 4px solid ${item.color}; padding: 15px; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+                        <div style="font-size: 28px; margin-bottom: 5px;">${item.icon}</div>
+                        <div style="font-size: 14px; color: #666; margin-bottom: 5px;">${item.label}</div>
+                        <div style="font-size: 24px; font-weight: bold; color: ${item.color};">${item.count}</div>
+                        <div style="font-size: 12px; color: #999;">${percentage}% of total</div>
+                    </div>
+                `;
+            });
+            html += '</div>';
+            
+            document.getElementById('attemptChart').innerHTML = html;
+        }
+        
+        function renderSuccessRateChart() {
+            // Calculate success rate by scheduler
+            const schedulerStats = {};
+            patternData.forEach(p => {
+                if (!schedulerStats[p.analyticName]) {
+                    schedulerStats[p.analyticName] = { success: 0, total: 0 };
+                }
+                schedulerStats[p.analyticName].total++;
+                if (p.attemptStatus.includes('Success')) {
+                    schedulerStats[p.analyticName].success++;
+                }
+            });
+            
+            const successRates = Object.keys(schedulerStats).map(name => ({
+                name,
+                rate: (schedulerStats[name].success / schedulerStats[name].total) * 100,
+                total: schedulerStats[name].total
+            })).sort((a, b) => b.total - a.total).slice(0, 15);
+            
+            const ctx = document.getElementById('successRateChart').getContext('2d');
+            if (patternCharts.successRate) patternCharts.successRate.destroy();
+            
+            patternCharts.successRate = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: successRates.map(s => s.name.length > 25 ? s.name.substring(0, 25) + '...' : s.name),
+                    datasets: [{
+                        label: 'Success Rate (%)',
+                        data: successRates.map(s => s.rate),
+                        backgroundColor: successRates.map(s => s.rate >= 90 ? 'rgba(16, 185, 129, 0.8)' : s.rate >= 70 ? 'rgba(245, 158, 11, 0.8)' : 'rgba(239, 68, 68, 0.8)'),
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: (ctx) => `Success Rate: ${ctx.parsed.y.toFixed(1)}% (${successRates[ctx.dataIndex].total} runs)`
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 100,
+                            ticks: {
+                                callback: (value) => value + '%'
+                            }
+                        }
+                    }
+                }
+            });
+        }
+        
+        let currentHeatmapFrequency = 'All';
+        
+        function filterHeatmap(frequency) {
+            currentHeatmapFrequency = frequency;
+            
+            // Update button styles
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                btn.style.background = 'white';
+                btn.style.color = 'var(--gray-700)';
+            });
+            const activeBtn = document.getElementById(`heatmap-${frequency.toLowerCase()}`);
+            if (activeBtn) {
+                activeBtn.style.background = 'var(--primary)';
+                activeBtn.style.color = 'white';
+            }
+            
+            // Re-render heatmap with filter
+            renderHeatmap(frequency);
+        }
+        
+        function renderHeatmap(frequencyFilter = 'All') {
+            // Filter pattern data by frequency
+            let filteredData = patternData;
+            if (frequencyFilter !== 'All') {
+                filteredData = patternData.filter(p => {
+                    const matchedJob = matchJobToScheduler(p.analyticName);
+                    return matchedJob && matchedJob.frequency === frequencyFilter;
+                });
+            }
+            
+            if (filteredData.length === 0) {
+                document.getElementById('heatmapContainer').innerHTML = 
+                    `<div class="no-results">No ${frequencyFilter} schedulers found</div>`;
+                return;
+            }
+            
+            // Group schedulers by hour of day
+            const schedulersByHour = {};
+            
+            // Get all schedulers sorted by frequency
+            const schedulerCounts = {};
+            filteredData.forEach(p => {
+                schedulerCounts[p.analyticName] = (schedulerCounts[p.analyticName] || 0) + 1;
+            });
+            const topSchedulers = Object.keys(schedulerCounts)
+                .sort((a, b) => schedulerCounts[b] - schedulerCounts[a]);
+            
+            topSchedulers.forEach(scheduler => {
+                schedulersByHour[scheduler] = Array(24).fill(null).map(() => ({ success: 0, retry: 0, failed: 0 }));
+            });
+            
+            filteredData.filter(p => topSchedulers.includes(p.analyticName)).forEach(p => {
+                if (p.executionStartDate) {
+                    const hour = new Date(parseInt(p.executionStartDate)).getHours();
+                    if (p.attemptStatus === 'First Try Success') {
+                        schedulersByHour[p.analyticName][hour].success++;
+                    } else if (p.attemptStatus.includes('Retry')) {
+                        schedulersByHour[p.analyticName][hour].retry++;
+                    } else {
+                        schedulersByHour[p.analyticName][hour].failed++;
+                    }
+                }
+            });
+            
+            // Render heatmap
+            let html = '<div class="heatmap-grid">';
+            
+            // Header row with hours
+            html += '<div class="heatmap-row">';
+            html += '<div class="heatmap-label">Scheduler</div>';
+            for (let h = 0; h < 24; h++) {
+                html += `<div class="heatmap-label" style="text-align: center;">${h.toString().padStart(2, '0')}</div>`;
+            }
+            html += '</div>';
+            
+            // Data rows
+            topSchedulers.forEach(scheduler => {
+                html += '<div class="heatmap-row">';
+                html += `<div class="heatmap-label" style="font-size: 0.7rem;">${scheduler.length > 25 ? scheduler.substring(0, 25) + '...' : scheduler}</div>`;
+                
+                for (let h = 0; h < 24; h++) {
+                    const data = schedulersByHour[scheduler][h];
+                    const total = data.success + data.retry + data.failed;
+                    
+                    if (total === 0) {
+                        html += '<div class="heatmap-cell empty" title="No activity"></div>';
+                    } else {
+                        let bgColor = '#10b981'; // green
+                        if (data.failed > 0) bgColor = '#ef4444'; // red
+                        else if (data.retry > 0) bgColor = '#f59e0b'; // orange
+                        
+                        const opacity = 0.3 + (Math.min(total, 10) / 10) * 0.7;
+                        html += `<div class="heatmap-cell" style="background: ${bgColor}; opacity: ${opacity};" 
+                                 title="${scheduler} at ${h}:00\nSuccess: ${data.success}, Retry: ${data.retry}, Failed: ${data.failed}">${total}</div>`;
+                    }
+                }
+                html += '</div>';
+            });
+            
+            html += '</div>';
+            document.getElementById('heatmapContainer').innerHTML = html;
+        }
+        
+        function populateTimelineDates() {
+            const select = document.getElementById('timelineDate');
+            const dates = [...new Set(REPORTS_DATA.map(s => s.analyticDate))].sort((a, b) => parseInt(b) - parseInt(a));
+            select.innerHTML = '<option value="">Select a date...</option>' + 
+                dates.map(d => `<option value="${d}">${formatDate(d)}</option>`).join('');
+        }
+        
+        function toggleTimeline() {
+            const timelineSection = document.getElementById('timelineSection');
+            const timelineContent = document.getElementById('timelineContent');
+            
+            if (timelineContent.style.display === 'none') {
+                timelineContent.style.display = 'block';
+                timelineSection.querySelector('button').innerHTML = '×';
+                timelineSection.querySelector('button').title = 'Close';
+            } else {
+                timelineContent.style.display = 'none';
+                timelineSection.querySelector('button').innerHTML = '+';
+                timelineSection.querySelector('button').title = 'Open';
+            }
+        }
+        
+        function renderTimeline() {
+            const selectedDate = document.getElementById('timelineDate').value;
+            const container = document.getElementById('timelineContainer');
+            
+            if (!selectedDate) {
+                container.innerHTML = '<div class="no-results" style="padding: 1.5rem;">Select a date to view execution timeline</div>';
+                return;
+            }
+            
+            // Get all runs for this date
+            const runsOnDate = patternData.filter(p => p.analyticDate === selectedDate);
+            
+            // Group by scheduler
+            const schedulerRuns = {};
+            runsOnDate.forEach(run => {
+                if (!schedulerRuns[run.analyticName]) {
+                    schedulerRuns[run.analyticName] = [];
+                }
+                schedulerRuns[run.analyticName].push(run);
+            });
+            
+            // Render timeline
+            let html = '<div class="timeline-container" style="padding: 1.5rem;">';
+            
+            // Hour labels
+            html += '<div class="timeline-hours" style="padding-left: 200px;">';
+            for (let h = 0; h < 24; h++) {
+                html += `<div class="timeline-hour">${h.toString().padStart(2, '0')}:00</div>`;
+            }
+            html += '</div>';
+            
+            // Timeline rows - now using Rundeck job scheduled times
+            Object.keys(schedulerRuns).sort().forEach(schedulerName => {
+                const matchedJob = matchJobToScheduler(schedulerName);
+                
+                html += '<div class="timeline-row">';
+                html += `<div class="timeline-label" title="${schedulerName}">${schedulerName.length > 25 ? schedulerName.substring(0, 25) + '...' : schedulerName}</div>`;
+                html += '<div class="timeline-track">';
+                
+                if (matchedJob) {
+                    // Get scheduled time slots from Rundeck job
+                    const hours = matchedJob.hour ? matchedJob.hour.split(',').map(h => h.trim()) : [];
+                    const minutes = matchedJob.minute ? matchedJob.minute.split(',').map(m => m.trim()) : ['0'];
+                    
+                    // For each scheduled time slot
+                    hours.forEach(hour => {
+                        minutes.forEach(minute => {
+                            const schedHour = parseInt(hour);
+                            const schedMinute = parseInt(minute);
+                            const leftPercent = ((schedHour * 60 + schedMinute) / (24 * 60)) * 100;
+                            
+                            // Find execution at this time slot (within 5 minute window)
+                            const execution = schedulerRuns[schedulerName].find(run => {
+                                if (run.executionStartDate) {
+                                    const startDate = new Date(parseInt(run.executionStartDate));
+                                    const runHour = startDate.getHours();
+                                    const runMinute = startDate.getMinutes();
+                                    // Check if run time is within 5 minutes of scheduled time
+                                    return Math.abs(runHour - schedHour) === 0 && 
+                                           Math.abs(runMinute - schedMinute) <= 5;
+                                }
+                                return false;
+                            });
+                            
+                            let statusClass = 'pending';
+                            let title = `${schedulerName}\nScheduled: ${hour.padStart(2, '0')}:${minute.padStart(2, '0')}`;
+                            let label = '⏱';
+                            
+                            if (execution) {
+                                const duration = calculateDuration(execution.executionStartDate, execution.executionFinishDate);
+                                statusClass = execution.attemptStatus.includes('Success') ? 'success' : 
+                                            execution.attemptStatus.includes('Retry') ? 'retry' : 'failed';
+                                title = `${schedulerName}\nScheduled: ${hour.padStart(2, '0')}:${minute.padStart(2, '0')}\nActual: ${formatDateTime(execution.executionStartDate)}\n${execution.attemptStatus}\nDuration: ${duration ? formatDuration(duration) : 'N/A'}`;
+                                label = execution.attemptNumber;
+                            }
+                            
+                            html += `<div class="timeline-event ${statusClass}" 
+                                     style="left: ${leftPercent}%; width: 0.8%;"
+                                     title="${title}">
+                                     ${label}
+                                     </div>`;
+                        });
+                    });
+                } else {
+                    // No matched job - show actual executions
+                    schedulerRuns[schedulerName].sort((a, b) => 
+                        parseInt(a.executionStartDate || 0) - parseInt(b.executionStartDate || 0)
+                    ).forEach(run => {
+                        if (run.executionStartDate) {
+                            const startDate = new Date(parseInt(run.executionStartDate));
+                            const hour = startDate.getHours();
+                            const minute = startDate.getMinutes();
+                            const leftPercent = ((hour * 60 + minute) / (24 * 60)) * 100;
+                            
+                            const duration = calculateDuration(run.executionStartDate, run.executionFinishDate);
+                            const statusClass = run.attemptStatus.includes('Success') ? 'success' : 
+                                              run.attemptStatus.includes('Retry') ? 'retry' : 'failed';
+                            
+                            html += `<div class="timeline-event ${statusClass}" 
+                                     style="left: ${leftPercent}%; width: 0.8%;"
+                                     title="${schedulerName}\nStart: ${formatDateTime(run.executionStartDate)}\n${run.attemptStatus}\nDuration: ${duration ? formatDuration(duration) : 'N/A'}">
+                                     ${run.attemptNumber}
+                                     </div>`;
+                        }
+                    });
+                }
+                
+                html += '</div></div>';
+            });
+            
+            html += '</div>';
+            container.innerHTML = html;
+        }
+        
+        function sortPatternTable(column) {
+            if (currentPatternSort.column === column) {
+                currentPatternSort.direction = currentPatternSort.direction === 'asc' ? 'desc' : 'asc';
+            } else {
+                currentPatternSort.column = column;
+                currentPatternSort.direction = 'desc';
+            }
+            
+            // Get currently filtered data
+            const searchTerm = document.getElementById('patternSearchInput').value.toLowerCase();
+            const selectedDate = document.getElementById('patternDateFilter').value;
+            
+            let dataToSort = [...patternData];
+            
+            // Apply filters before sorting
+            if (searchTerm) {
+                dataToSort = dataToSort.filter(item => 
+                    item.analyticName.toLowerCase().includes(searchTerm)
+                );
+            }
+            if (selectedDate) {
+                dataToSort = dataToSort.filter(item => item.analyticDate === selectedDate);
+            }
+            
+            const sorted = dataToSort.sort((a, b) => {
+                let valA, valB;
+                switch (column) {
+                    case 'analyticName':
+                        valA = a.analyticName || '';
+                        valB = b.analyticName || '';
+                        break;
+                    case 'date':
+                        valA = parseInt(a.analyticDate || 0);
+                        valB = parseInt(b.analyticDate || 0);
+                        break;
+                    case 'timeSlot':
+                        // Sort by first scheduled time slot
+                        const jobA = matchJobToScheduler(a.analyticName);
+                        const jobB = matchJobToScheduler(b.analyticName);
+                        valA = jobA && jobA.hour ? parseInt(jobA.hour.split(',')[0]) * 60 + parseInt(jobA.minute ? jobA.minute.split(',')[0] : 0) : 9999;
+                        valB = jobB && jobB.hour ? parseInt(jobB.hour.split(',')[0]) * 60 + parseInt(jobB.minute ? jobB.minute.split(',')[0] : 0) : 9999;
+                        break;
+                    case 'successSlot':
+                        // Sort by success time
+                        const successA = REPORTS_DATA.find(s => s.analyticName === a.analyticName && s.analyticDate === a.analyticDate && getStatus(s) === 'success');
+                        const successB = REPORTS_DATA.find(s => s.analyticName === b.analyticName && s.analyticDate === b.analyticDate && getStatus(s) === 'success');
+                        valA = successA && successA.executionStartDate ? parseInt(successA.executionStartDate) : 0;
+                        valB = successB && successB.executionStartDate ? parseInt(successB.executionStartDate) : 0;
+                        break;
+                    case 'status':
+                        valA = a.attemptStatus || '';
+                        valB = b.attemptStatus || '';
+                        break;
+                    case 'duration':
+                        const durA = calculateDuration(a.executionStartDate, a.executionFinishDate);
+                        const durB = calculateDuration(b.executionStartDate, b.executionFinishDate);
+                        valA = durA ? durA.totalSeconds : 0;
+                        valB = durB ? durB.totalSeconds : 0;
+                        break;
+                    case 'data':
+                        valA = parseInt(a.analyticTotalData || 0);
+                        valB = parseInt(b.analyticTotalData || 0);
+                        break;
+                    default:
+                        return 0;
+                }
+                
+                if (typeof valA === 'string') {
+                    return currentPatternSort.direction === 'asc' 
+                        ? valA.localeCompare(valB) 
+                        : valB.localeCompare(valA);
+                } else {
+                    return currentPatternSort.direction === 'asc' 
+                        ? valA - valB 
+                        : valB - valA;
+                }
+            });
+            
+            renderPatternMatchTable(sorted);
+        }
+        
+        function renderPatternMatchTable(data = patternData) {
+            const tbody = document.getElementById('patternMatchBody');
+            
+            if (data.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="7" class="no-results">No data to display</td></tr>';
+                return;
+            }
+            
+            tbody.innerHTML = data.map(scheduler => {
+                const matchedJob = matchJobToScheduler(scheduler.analyticName);
+                const duration = calculateDuration(scheduler.executionStartDate, scheduler.executionFinishDate);
+                const status = getStatus(scheduler);
+                
+                // Get scheduled time slots from Rundeck job - display similar to Rundeck Jobs table
+                let timeSlotsDisplay = '<span style="color: var(--gray-400);">—</span>';
+                if (matchedJob) {
+                    const hourString = matchedJob.hour || '0';
+                    const hours = hourString.split(',').map(h => h.trim());
+                    const minute = matchedJob.minute || '0';
+                    
+                    if (hours.length > 1) {
+                        // Multiple scheduled times - show on separate lines like in Rundeck Jobs table
+                        timeSlotsDisplay = `<div>${hours.map(h => formatTime(h, minute, matchedJob.seconds || '0')).join('<br>')}</div>`;
+                    } else {
+                        // Single scheduled time
+                        timeSlotsDisplay = `<span class="schedule-time">${formatTime(matchedJob.hour || '0', minute, matchedJob.seconds || '0')}</span>`;
+                    }
+                }
+                
+                // Get success time slot - find when this scheduler succeeded for this date
+                let successTimeSlot = '<span style="color: var(--gray-400);">—</span>';
+                const successRun = REPORTS_DATA.find(s => 
+                    s.analyticName === scheduler.analyticName && 
+                    s.analyticDate === scheduler.analyticDate && 
+                    getStatus(s) === 'success'
+                );
+                
+                if (successRun && successRun.executionStartDate && matchedJob) {
+                    const successDate = new Date(parseInt(successRun.executionStartDate));
+                    const successHour = successDate.getHours();
+                    const successMinute = successDate.getMinutes();
+                    const successHourStr = successHour.toString().padStart(2, '0');
+                    const successMinuteStr = successMinute.toString().padStart(2, '0');
+                    
+                    // Determine which slot this success time corresponds to
+                    let slotLabel = '';
+                    const hourString = matchedJob.hour || '0';
+                    const hours = hourString.split(',').map(h => h.trim());
+                    const scheduledMinute = parseInt(matchedJob.minute || '0');
+                    
+                    if (hours.length > 1) {
+                        // Multiple slots - find which one
+                        const successTimeInMinutes = successHour * 60 + successMinute;
+                        let closestSlotIndex = -1;
+                        let minDiff = Infinity;
+                        
+                        hours.forEach((h, index) => {
+                            const slotHour = parseInt(h);
+                            const slotTimeInMinutes = slotHour * 60 + scheduledMinute;
+                            const diff = Math.abs(successTimeInMinutes - slotTimeInMinutes);
+                            
+                            // Consider within 30 minutes of scheduled time as matching that slot
+                            if (diff < 30 && diff < minDiff) {
+                                minDiff = diff;
+                                closestSlotIndex = index;
+                            }
+                        });
+                        
+                        if (closestSlotIndex !== -1) {
+                            const slotNumber = closestSlotIndex + 1;
+                            const totalSlots = hours.length;
+                            
+                            // Determine ordinal suffix
+                            let suffix = 'th';
+                            if (slotNumber === 1) suffix = 'st';
+                            else if (slotNumber === 2) suffix = 'nd';
+                            else if (slotNumber === 3) suffix = 'rd';
+                            
+                            // Check if it's the last slot
+                            if (slotNumber === totalSlots) {
+                                slotLabel = `<div style="font-size: 0.7rem; color: var(--gray-600); margin-top: 2px;">${slotNumber}${suffix} / Last slot</div>`;
+                            } else {
+                                slotLabel = `<div style="font-size: 0.7rem; color: var(--gray-600); margin-top: 2px;">${slotNumber}${suffix} slot</div>`;
+                            }
+                        }
+                    } else {
+                        // Single slot - just mention it's the only slot
+                        slotLabel = `<div style="font-size: 0.7rem; color: var(--gray-600); margin-top: 2px;">Only slot</div>`;
+                    }
+                    
+                    successTimeSlot = `<div><span class="badge badge-success">${successHourStr}:${successMinuteStr}</span>${slotLabel}</div>`;
+                }
+                
+                return `
+                    <tr>
+                        <td><strong>${scheduler.analyticName}</strong></td>
+                        <td>${formatDate(scheduler.analyticDate)}</td>
+                        <td>${timeSlotsDisplay}</td>
+                        <td>${successTimeSlot}</td>
+                        <td><span class="badge badge-${status}">${status}</span></td>
+                        <td>${duration ? duration.formatted : 'N/A'}</td>
+                        <td>${scheduler.analyticTotalData ? parseInt(scheduler.analyticTotalData).toLocaleString() : 'N/A'}</td>
+                    </tr>
+                `;
+            }).join('');
+        }
+        
+        // Filter pattern match table with both search and date
+        function filterPatternTable() {
+            const searchTerm = document.getElementById('patternSearchInput').value.toLowerCase();
+            const selectedDate = document.getElementById('patternDateFilter').value;
+            
+            let filtered = patternData;
+            
+            // Apply search filter
+            if (searchTerm) {
+                filtered = filtered.filter(item => 
+                    item.analyticName.toLowerCase().includes(searchTerm)
+                );
+            }
+            
+            // Apply date filter
+            if (selectedDate) {
+                filtered = filtered.filter(item => item.analyticDate === selectedDate);
+            }
+            
+            renderPatternMatchTable(filtered);
+        }
+        
+        // Search for pattern match table
+        function searchPatternMatch() {
+            filterPatternTable();
+        }
+        
+        // Populate date filter for pattern analysis
+        function populatePatternDateFilter() {
+            const dates = [...new Set(REPORTS_DATA.map(s => s.analyticDate))].sort((a, b) => parseInt(b) - parseInt(a));
+            const select = document.getElementById('patternDateFilter');
+            dates.forEach(date => {
+                const opt = document.createElement('option');
+                opt.value = date;
+                opt.textContent = formatDate(date);
+                select.appendChild(opt);
+            });
+        }
+        
+        // Initialize
+        function init() {
+            document.getElementById('currentDate').textContent = new Date().toLocaleDateString('en-US', {
+                month: 'short', day: 'numeric', year: 'numeric'
+            });
+            
+            // Jobs
+            updateJobsStats();
+            renderJobsTable();
+            renderJobsHeatmap();
+            
+            // Add search event listener for pattern analysis
+            const patternSearch = document.getElementById('patternSearchInput');
+            if (patternSearch) {
+                patternSearch.addEventListener('input', searchPatternMatch);
+            }
+            
+            // Today's Report
+            initTodayReport();
+            
+            // Reports
+            displayReportsDateRange();
+            renderDailyBreakdownChart();
+            
+            // Pattern Analysis
+            initPatternAnalysis();
+            populatePatternDateFilter();
+        }
+        
+        // Initialize on DOM load
+        document.addEventListener('DOMContentLoaded', async function() {
+            // Load data from external JSON files first
+            const dataLoaded = await loadData();
+            
+            if (!dataLoaded) {
+                console.error('Failed to load data. Dashboard cannot initialize.');
+                return;
+            }
+            
+            // Initialize dashboard after data is loaded
+            init();
+            
+            // Event Listeners
+            document.getElementById('jobSearch').addEventListener('input', renderJobsTable);
+            document.getElementById('frequencyFilter').addEventListener('change', renderJobsTable);
+            document.getElementById('jobStatusFilter').addEventListener('change', renderJobsTable);
+            document.getElementById('environmentFilter').addEventListener('change', renderJobsTable);
+            
+            document.querySelectorAll('#jobs-section th.sortable').forEach(th => {
+                th.addEventListener('click', () => {
+                    const field = th.dataset.sort;
+                    if (jobSort.field === field) {
+                        jobSort.direction = jobSort.direction === 'asc' ? 'desc' : 'asc';
+                    } else {
+                        jobSort.field = field;
+                        jobSort.direction = 'asc';
+                    }
+                    renderJobsTable();
+                    
+                    // Update sort indicators
+                    document.querySelectorAll('#jobs-section th').forEach(t => t.classList.remove('sort-asc', 'sort-desc'));
+                    th.classList.add(`sort-${jobSort.direction}`);
+                });
+            });
+            
+            document.getElementById('patternSearchInput').addEventListener('input', searchPatternMatch);
+            
+            window.onclick = (event) => {
+                const modal = document.getElementById('curlModal');
+                if (event.target === modal) closeModal();
+            };
+        });
+    </script>
+</body>
+</html>
+
