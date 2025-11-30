@@ -1118,6 +1118,11 @@
             font-weight: 700;
         }
         
+        .status-in-progress {
+            color: var(--info);
+            font-weight: 700;
+        }
+        
         .data-mismatch {
             background-color: #fff3cd !important;
         }
@@ -1363,6 +1368,10 @@
                             <div class="stat-label">Pending Jobs</div>
                             <div class="stat-value" id="todayPending">0</div>
                         </div>
+                        <div class="stat-card" style="border-left-color: var(--info);">
+                            <div class="stat-label">In Progress Jobs</div>
+                            <div class="stat-value" id="todayInProgress">0</div>
+                        </div>
                         <div class="stat-card success">
                             <div class="stat-label">Succeeded Jobs</div>
                             <div class="stat-value" id="todaySucceeded">0</div>
@@ -1386,10 +1395,30 @@
                     </div>
                     
                     <div class="table-container">
-                        <div style="padding: 1rem 1rem 0;">
-                            <input type="search" id="todaySearchInput" placeholder="Search analytic name..." 
-                                   style="width: 100%; max-width: 400px; padding: 0.5rem 0.75rem; border: 1px solid var(--gray-300); 
-                                   border-radius: 0.375rem; font-size: 0.875rem; margin-bottom: 1rem;">
+                        <div class="filters" style="padding: 1rem;">
+                            <div class="filter-group">
+                                <label>🔍 Search</label>
+                                <input type="text" id="todaySearchInput" placeholder="Search analytic name...">
+                            </div>
+                            <div class="filter-group">
+                                <label>📊 Status</label>
+                                <select id="todayStatusFilter">
+                                    <option value="All">All</option>
+                                    <option value="Pending">Pending</option>
+                                    <option value="In Progress">In Progress</option>
+                                    <option value="Success">Success</option>
+                                    <option value="Failed">Failed</option>
+                                </select>
+                            </div>
+                            <div class="filter-group">
+                                <label>📅 Frequency</label>
+                                <select id="todayFrequencyFilter">
+                                    <option value="All">All</option>
+                                    <option value="Daily">Daily</option>
+                                    <option value="Weekly">Weekly</option>
+                                    <option value="Monthly">Monthly</option>
+                                </select>
+                            </div>
                         </div>
                         <div class="table-wrapper">
                             <table id="todaySchedulerTable">
@@ -1397,6 +1426,7 @@
                                     <tr>
                                         <th class="sortable" data-key="analyticName">Analytic Name</th>
                                         <th class="sortable" data-key="executionSuccess">Status</th>
+                                        <th>Frequency</th>
                                         <th>Time Slots</th>
                                         <th class="sortable" data-key="executionStartDate">Start Time</th>
                                         <th class="sortable" data-key="executionFinishDate">End Time</th>
@@ -1406,7 +1436,7 @@
                                     </tr>
                                 </thead>
                                 <tbody id="todayTableBody">
-                                    <tr><td colspan="8" class="no-results">Loading...</td></tr>
+                                    <tr><td colspan="9" class="no-results">Loading...</td></tr>
                                 </tbody>
                             </table>
                         </div>
@@ -3033,9 +3063,20 @@ Option 4 - Node.js (if installed):
             // Get jobs scheduled for today with their execution data
             const todayScheduledData = getTodayScheduledJobs();
             
+            // Categorize jobs based on execution status
             const succeededJobs = todayScheduledData.filter(j => j.executionSuccess === true);
             const failedJobs = todayScheduledData.filter(j => j.executionSuccess === false);
-            const pendingJobs = todayScheduledData.filter(j => j.executionSuccess === undefined);
+            
+            // In Progress: has start time but no finish time
+            const inProgressJobs = todayScheduledData.filter(j => 
+                j.executionStartDate && !j.executionFinishDate
+            );
+            
+            // Pending: no start time (hasn't started yet)
+            const pendingJobs = todayScheduledData.filter(j => 
+                !j.executionStartDate && j.executionSuccess === undefined
+            );
+            
             const totalJobs = todayScheduledData.length;
             
             // Calculate success rate (only for jobs that have completed execution)
@@ -3048,6 +3089,7 @@ Option 4 - Node.js (if installed):
             document.getElementById('todayFailed').textContent = failedJobs.length;
             document.getElementById('todayTotal').textContent = totalJobs;
             document.getElementById('todayPending').textContent = pendingJobs.length;
+            document.getElementById('todayInProgress').textContent = inProgressJobs.length;
             document.getElementById('todaySuccessRate').textContent = `${successRate}%`;
             
             // Render failed schedulers section (only jobs with execution data that failed)
@@ -3058,14 +3100,55 @@ Option 4 - Node.js (if installed):
             
             // Store todayScheduledData for search/filter
             window.todayScheduledData = todayScheduledData;
+            window.todayFilteredData = todayScheduledData; // Store current filtered data for sorting
             
-            // Set up search input handler (replace any existing handler)
-            const searchInput = document.getElementById('todaySearchInput');
-            searchInput.oninput = (e) => {
-                const val = e.target.value.toLowerCase().trim();
-                const filtered = todayScheduledData.filter(job => (job.analyticName || '').toLowerCase().includes(val));
+            // Function to apply all filters
+            function applyTodayFilters() {
+                const searchVal = document.getElementById('todaySearchInput').value.toLowerCase().trim();
+                const statusFilter = document.getElementById('todayStatusFilter').value;
+                const frequencyFilter = document.getElementById('todayFrequencyFilter').value;
+                
+                let filtered = todayScheduledData.filter(job => {
+                    // Search filter
+                    const matchesSearch = (job.analyticName || '').toLowerCase().includes(searchVal);
+                    if (!matchesSearch) return false;
+                    
+                    // Status filter
+                    if (statusFilter !== 'All') {
+                        const isPending = !job.executionStartDate && job.executionSuccess === undefined;
+                        const isInProgress = job.executionStartDate && !job.executionFinishDate;
+                        const isSuccess = job.executionSuccess === true;
+                        const isFailed = job.executionSuccess === false;
+                        
+                        if (statusFilter === 'Pending' && !isPending) return false;
+                        if (statusFilter === 'In Progress' && !isInProgress) return false;
+                        if (statusFilter === 'Success' && !isSuccess) return false;
+                        if (statusFilter === 'Failed' && !isFailed) return false;
+                    }
+                    
+                    // Frequency filter
+                    if (frequencyFilter !== 'All') {
+                        const scheduledJob = job.scheduledJob || matchJobToScheduler(job.analyticName);
+                        if (!scheduledJob || scheduledJob.frequency !== frequencyFilter) {
+                            return false;
+                        }
+                    }
+                    
+                    return true;
+                });
+                
+                window.todayFilteredData = filtered; // Update filtered data
                 renderTodayTable(filtered);
-            };
+            }
+            
+            // Set up filter handlers
+            const searchInput = document.getElementById('todaySearchInput');
+            const statusFilter = document.getElementById('todayStatusFilter');
+            const frequencyFilter = document.getElementById('todayFrequencyFilter');
+            
+            searchInput.oninput = applyTodayFilters;
+            statusFilter.onchange = applyTodayFilters;
+            frequencyFilter.onchange = applyTodayFilters;
             
             // Set up sort handlers (replace any existing handlers)
             document.querySelectorAll('#todaySchedulerTable th.sortable').forEach(th => {
@@ -3078,7 +3161,8 @@ Option 4 - Node.js (if installed):
                     });
                     th.classList.add(`sort-${currentDir}`);
                     
-                    const sorted = [...(window.todayScheduledData || [])].sort((a, b) => {
+                    // Use current filtered data for sorting
+                    const sorted = [...(window.todayFilteredData || window.todayScheduledData || [])].sort((a, b) => {
                         let aVal = a[key];
                         let bVal = b[key];
                         
@@ -3119,15 +3203,31 @@ Option 4 - Node.js (if installed):
             const tbody = document.getElementById('todayTableBody');
             
             if (data.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="8" class="no-results">No results found</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="9" class="no-results">No results found</td></tr>';
                 return;
             }
             
             tbody.innerHTML = data.map(job => {
-                // Handle pending jobs (scheduled but no execution data yet)
-                const isPending = job.executionSuccess === undefined;
-                const statusText = isPending ? 'Pending' : (job.executionSuccess === true ? 'Success' : 'Fail');
-                const statusClass = isPending ? 'status-pending' : (job.executionSuccess === true ? 'status-success' : 'status-fail');
+                // Determine job status: Pending, In Progress, Success, or Fail
+                const isPending = !job.executionStartDate && job.executionSuccess === undefined;
+                const isInProgress = job.executionStartDate && !job.executionFinishDate;
+                const isSuccess = job.executionSuccess === true;
+                const isFailed = job.executionSuccess === false;
+                
+                let statusText, statusClass;
+                if (isPending) {
+                    statusText = 'Pending';
+                    statusClass = 'status-pending';
+                } else if (isInProgress) {
+                    statusText = 'In Progress';
+                    statusClass = 'status-in-progress';
+                } else if (isSuccess) {
+                    statusText = 'Success';
+                    statusClass = 'status-success';
+                } else {
+                    statusText = 'Fail';
+                    statusClass = 'status-fail';
+                }
                 const startTime = job.executionStartDate ? formatTimeOnly(job.executionStartDate) : '-';
                 const endTime = job.executionFinishDate ? formatTimeOnly(job.executionFinishDate) : '-';
                 const bqData = job.bqTotalData !== undefined ? job.bqTotalData : '-';
@@ -3143,6 +3243,9 @@ Option 4 - Node.js (if installed):
                 let timeSlotsDisplay = '<span style="color: var(--gray-400);">—</span>';
                 // Use scheduledJob if available (from getTodayScheduledJobs), otherwise fall back to matchJobToScheduler
                 const matchedJob = job.scheduledJob || matchJobToScheduler(job.analyticName);
+                
+                // Get frequency from matched job
+                const frequency = matchedJob ? matchedJob.frequency || '-' : '-';
                 
                 if (matchedJob) {
                     const hourString = matchedJob.hour || '0';
@@ -3205,6 +3308,7 @@ Option 4 - Node.js (if installed):
                     <tr class="${rowClass}" data-duration="${duration ? duration.totalSeconds : 0}">
                         <td>${job.analyticName || ''}</td>
                         <td><span class="${statusClass}">${statusText}</span></td>
+                        <td>${frequency}</td>
                         <td>${timeSlotsDisplay}</td>
                         <td>${startTime}</td>
                         <td>${endTime}</td>

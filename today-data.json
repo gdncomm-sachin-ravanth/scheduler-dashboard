@@ -58,5 +58,19 @@
         "executionFinishDate": "1764537022830",
         "executionStartDate": "1764536404566",
         "executionSuccess": true
+    },
+    {
+        "_class": "com.gdn.partners.seller.insights.repository.model.scheduler.Scheduler",
+        "_id": "692cb75a188aad5d75836fa5",
+        "analyticDate": "1764522000000",
+        "analyticName": "PRODUCT_RECOMMENDED_SKU",
+        "executionStartDate": "1764538202649"
+    },
+    {
+        "_class": "com.gdn.partners.seller.insights.repository.model.scheduler.Scheduler",
+        "_id": "692cb75a36f9dc7587c2dbee",
+        "analyticDate": "1764522000000",
+        "analyticName": "SELLER_RANKING",
+        "executionStartDate": "1764538202737"
     }
 ]
