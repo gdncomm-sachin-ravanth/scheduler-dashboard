@@ -26,7 +26,7 @@ def get_current_day_start_timestamp():
 def build_curl_command(today_timestamp):
     """
     Build the curl command for fetching today's data.
-    Similar to curl-command-today.txt but with dynamic analyticDate.
+    Constructs the command dynamically with today's start timestamp.
     
     Args:
         today_timestamp: Today's start timestamp in epoch milliseconds (WIB timezone)
@@ -34,7 +34,7 @@ def build_curl_command(today_timestamp):
     Returns:
         Complete curl command as a string
     """
-    # Base URL and headers from curl-command-today.txt
+    # Base URL and headers
     url = "https://database-explorer.gdn-app.com/backend/data-explorer/api/v1/databases/exec/163"
     
     # Headers

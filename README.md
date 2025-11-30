@@ -58,7 +58,7 @@ The `fetch_today_data.py` script specifically fetches only today's scheduler dat
 ### Description
 
 This script:
-- Constructs a curl command dynamically (similar to `curl-command-today.txt`)
+- Constructs a curl command dynamically with today's timestamp
 - Updates the `analyticDate` value in the query to today's start timestamp (00:00:00) in WIB timezone (UTC+7)
 - Fetches only records matching today's date from the API
 - Saves the results directly to `today-data.json`
