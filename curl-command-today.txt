@@ -14,4 +14,4 @@ curl 'https://database-explorer.gdn-app.com/backend/data-explorer/api/v1/databas
   -H 'sec-fetch-mode: cors' \
   -H 'sec-fetch-site: same-origin' \
   -H 'user-agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36' \
-  --data-raw '{"query":"db.scheduler.find({\n  analyticDate: {\n    $gte: Date.now() - 14 * 24 * 60 * 60 * 1000,\n    $lte: Date.now()\n  }\n})","limit":500,"offset":0}'
+  --data-raw '{"query":"db.scheduler.find({\n  analyticDate: 1764435600000\n})","limit":500,"offset":0}'

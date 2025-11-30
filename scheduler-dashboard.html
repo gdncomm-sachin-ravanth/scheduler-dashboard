@@ -1014,8 +1014,13 @@
         <main class="main-content">
             <div class="top-bar">
                 <h2 id="pageTitle">Today's Report</h2>
-                <div class="top-bar-meta">
-                    <span id="currentDate"></span>
+                <div style="display: flex; align-items: center; gap: 1rem;">
+                    <button id="refreshDataBtn" class="btn btn-primary" onclick="refreshData()" 
+                            style="display: none;">
+                        <span id="refreshIcon">🔄</span>
+                        <span id="refreshText">Refresh today data</span>
+                    </button>
+                    <span id="lastUpdatedTime" style="display: none; font-size: 0.875rem; color: var(--gray-600); font-style: italic;"></span>
                 </div>
             </div>
             
@@ -1452,6 +1457,152 @@ Option 4 - Node.js (if installed):
             }
         }
         
+        // Function to update last updated time display
+        function updateLastUpdatedTime(isTodayReport = false) {
+            const lastUpdatedEl = document.getElementById('lastUpdatedTime');
+            if (!lastUpdatedEl) return;
+            
+            const now = new Date();
+            const timeStr = now.toLocaleTimeString('en-US', {
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit',
+                hour12: false
+            });
+            const dateStr = now.toLocaleDateString('en-US', {
+                month: 'short',
+                day: 'numeric'
+            });
+            
+            lastUpdatedEl.textContent = `Last updated: ${dateStr} ${timeStr}`;
+            
+            // Show the element if on Today's Report page
+            if (isTodayReport) {
+                lastUpdatedEl.style.display = 'inline';
+            }
+            
+            // Store in localStorage for persistence
+            const storageKey = isTodayReport ? 'todayDataLastUpdated' : 'dataLastUpdated';
+            localStorage.setItem(storageKey, now.toISOString());
+        }
+        
+        // Function to load and display last updated time
+        function loadLastUpdatedTime(isTodayReport = false) {
+            const lastUpdatedEl = document.getElementById('lastUpdatedTime');
+            if (!lastUpdatedEl || !isTodayReport) {
+                if (lastUpdatedEl) {
+                    lastUpdatedEl.style.display = 'none';
+                }
+                return;
+            }
+            
+            const storageKey = 'todayDataLastUpdated';
+            const lastUpdatedStr = localStorage.getItem(storageKey);
+            
+            if (lastUpdatedStr) {
+                const lastUpdated = new Date(lastUpdatedStr);
+                const timeStr = lastUpdated.toLocaleTimeString('en-US', {
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    second: '2-digit',
+                    hour12: false
+                });
+                const dateStr = lastUpdated.toLocaleDateString('en-US', {
+                    month: 'short',
+                    day: 'numeric'
+                });
+                
+                lastUpdatedEl.textContent = `Last updated: ${dateStr} ${timeStr}`;
+                lastUpdatedEl.style.display = 'inline';
+            } else {
+                // Show "-" when no last updated time exists
+                lastUpdatedEl.textContent = 'Last updated: -';
+                lastUpdatedEl.style.display = 'inline';
+                
+                // Prompt user to refresh data
+                setTimeout(() => {
+                    const shouldRefresh = confirm('Today\'s data has not been refreshed yet. Would you like to refresh it now?');
+                    if (shouldRefresh) {
+                        refreshData();
+                    }
+                }, 500); // Small delay to let the page finish loading
+            }
+        }
+        
+        // Function to refresh data by triggering the Python script
+        async function refreshData() {
+            const btn = document.getElementById('refreshDataBtn');
+            const icon = document.getElementById('refreshIcon');
+            const text = document.getElementById('refreshText');
+            
+            // Check if we're on Today's Report page
+            const isTodayReport = document.getElementById('today-report-section')?.classList.contains('active');
+            const endpoint = '/api/refresh-today';
+            const defaultText = 'Refresh today data';
+            
+            // Disable button and show loading state
+            btn.disabled = true;
+            icon.textContent = '⏳';
+            text.textContent = 'Refreshing...';
+            
+            try {
+                const response = await fetch(endpoint, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    // Update last updated time
+                    updateLastUpdatedTime(true);
+                    
+                    // Show success message
+                    icon.textContent = '✅';
+                    text.textContent = `Refreshed! (${result.today_records || 0} records)`;
+                    
+                    // Reload data after a short delay
+                    setTimeout(async () => {
+                        const dataLoaded = await loadData();
+                        if (dataLoaded) {
+                            // Re-initialize dashboard with new data
+                            init();
+                            icon.textContent = '🔄';
+                            text.textContent = defaultText;
+                        } else {
+                            icon.textContent = '❌';
+                            text.textContent = 'Refresh Failed';
+                        }
+                        btn.disabled = false;
+                    }, 500);
+                } else {
+                    // Show error message
+                    icon.textContent = '❌';
+                    text.textContent = 'Refresh Failed';
+                    alert(`Failed to refresh data:\n${result.message}\n\n${result.error || ''}`);
+                    
+                    setTimeout(() => {
+                        icon.textContent = '🔄';
+                        text.textContent = defaultText;
+                        btn.disabled = false;
+                    }, 3000);
+                }
+            } catch (error) {
+                console.error('Error refreshing data:', error);
+                icon.textContent = '❌';
+                text.textContent = 'Error';
+                alert(`Error refreshing data: ${error.message}\n\nMake sure you're using the Python server (python3 server.py) instead of a basic HTTP server.`);
+                
+                setTimeout(() => {
+                    icon.textContent = '🔄';
+                    text.textContent = defaultText;
+                    btn.disabled = false;
+                }, 3000);
+            }
+        }
+        
         // Global variables
         let filteredJobs = [];
         let filteredReports = [];
@@ -1478,6 +1629,30 @@ Option 4 - Node.js (if installed):
             
             // Update title
             document.getElementById('pageTitle').textContent = pageTitles[page] || 'Dashboard';
+            
+            // Show/hide refresh button based on page
+            const refreshBtn = document.getElementById('refreshDataBtn');
+            const refreshText = document.getElementById('refreshText');
+            
+            if (refreshBtn) {
+                // Show button only on Today's Report page
+                if (page === 'today-report') {
+                    refreshBtn.style.display = 'inline-flex';
+                    if (refreshText) {
+                        refreshText.textContent = 'Refresh today data';
+                    }
+                    // Show last updated time
+                    loadLastUpdatedTime(true);
+                } else {
+                    // Hide button on all other pages (including Rundeck Jobs)
+                    refreshBtn.style.display = 'none';
+                    // Hide last updated time
+                    const lastUpdatedEl = document.getElementById('lastUpdatedTime');
+                    if (lastUpdatedEl) {
+                        lastUpdatedEl.style.display = 'none';
+                    }
+                }
+            }
         }
         
         // Utility Functions
@@ -3390,9 +3565,27 @@ Option 4 - Node.js (if installed):
         
         // Initialize
         function init() {
-            document.getElementById('currentDate').textContent = new Date().toLocaleDateString('en-US', {
-                month: 'short', day: 'numeric', year: 'numeric'
-            });
+            // Set initial refresh button visibility based on active page
+            const refreshBtn = document.getElementById('refreshDataBtn');
+            if (refreshBtn) {
+                const isTodayReport = document.getElementById('today-report-section')?.classList.contains('active');
+                if (isTodayReport) {
+                    refreshBtn.style.display = 'inline-flex';
+                    const refreshText = document.getElementById('refreshText');
+                    if (refreshText) {
+                        refreshText.textContent = 'Refresh today data';
+                    }
+                    // Load last updated time for Today's Report page
+                    loadLastUpdatedTime(true);
+                } else {
+                    refreshBtn.style.display = 'none';
+                    // Hide last updated time on other pages
+                    const lastUpdatedEl = document.getElementById('lastUpdatedTime');
+                    if (lastUpdatedEl) {
+                        lastUpdatedEl.style.display = 'none';
+                    }
+                }
+            }
             
             // Jobs
             updateJobsStats();
