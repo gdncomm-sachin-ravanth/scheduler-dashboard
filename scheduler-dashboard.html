@@ -276,6 +276,190 @@
             font-size: 0.8125rem;
         }
         
+        /* Refresh Button Styles */
+        #refreshDataBtn {
+            background: linear-gradient(135deg, var(--primary) 0%, #6366f1 100%);
+            color: white;
+            border: none;
+            border-radius: 0.5rem;
+            padding: 0.625rem 1.25rem;
+            font-size: 0.875rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            box-shadow: 0 2px 4px rgba(79, 70, 229, 0.2);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        #refreshDataBtn::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.3);
+            transform: translate(-50%, -50%);
+            transition: width 0.6s, height 0.6s;
+        }
+        
+        #refreshDataBtn:hover::before {
+            width: 300px;
+            height: 300px;
+        }
+        
+        #refreshDataBtn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3);
+            background: linear-gradient(135deg, var(--primary-dark) 0%, #5b5ff0 100%);
+        }
+        
+        #refreshDataBtn:active {
+            transform: translateY(0);
+            box-shadow: 0 2px 4px rgba(79, 70, 229, 0.2);
+        }
+        
+        #refreshDataBtn:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        #refreshIcon {
+            font-size: 1rem;
+            transition: transform 0.3s ease;
+            display: inline-block;
+        }
+        
+        #refreshDataBtn:hover:not(:disabled) #refreshIcon {
+            transform: rotate(180deg);
+        }
+        
+        #refreshDataBtn:disabled #refreshIcon {
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        
+        #refreshText {
+            position: relative;
+            z-index: 1;
+        }
+        
+        /* Toast Notification Styles */
+        .toast-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 10000;
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+            pointer-events: none;
+        }
+        
+        .toast {
+            background: white;
+            border-radius: 0.5rem;
+            padding: 1rem 1.25rem;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.2), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            min-width: 300px;
+            max-width: 400px;
+            pointer-events: auto;
+            animation: slideInRight 0.3s ease-out;
+            border-left: 4px solid var(--success);
+        }
+        
+        .toast.error {
+            border-left-color: var(--danger);
+        }
+        
+        .toast.warning {
+            border-left-color: var(--warning);
+        }
+        
+        .toast.info {
+            border-left-color: var(--info);
+        }
+        
+        .toast-icon {
+            font-size: 1.5rem;
+            flex-shrink: 0;
+        }
+        
+        .toast-content {
+            flex: 1;
+        }
+        
+        .toast-title {
+            font-weight: 600;
+            font-size: 0.875rem;
+            color: var(--gray-900);
+            margin-bottom: 0.25rem;
+        }
+        
+        .toast-message {
+            font-size: 0.8125rem;
+            color: var(--gray-600);
+        }
+        
+        .toast-close {
+            background: none;
+            border: none;
+            font-size: 1.25rem;
+            color: var(--gray-400);
+            cursor: pointer;
+            padding: 0;
+            width: 20px;
+            height: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            transition: color 0.2s;
+        }
+        
+        .toast-close:hover {
+            color: var(--gray-600);
+        }
+        
+        @keyframes slideInRight {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+        
+        @keyframes slideOutRight {
+            from {
+                transform: translateX(0);
+                opacity: 1;
+            }
+            to {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+        }
+        
+        .toast.hiding {
+            animation: slideOutRight 0.3s ease-in forwards;
+        }
+        
         /* Table */
         .table-container {
             background: white;
@@ -929,6 +1113,11 @@
             font-weight: 700;
         }
         
+        .status-pending {
+            color: var(--warning);
+            font-weight: 700;
+        }
+        
         .data-mismatch {
             background-color: #fff3cd !important;
         }
@@ -1015,12 +1204,14 @@
             <div class="top-bar">
                 <h2 id="pageTitle">Today's Report</h2>
                 <div style="display: flex; align-items: center; gap: 1rem;">
-                    <button id="refreshDataBtn" class="btn btn-primary" onclick="refreshData()" 
-                            style="display: none;">
-                        <span id="refreshIcon">🔄</span>
-                        <span id="refreshText">Refresh today data</span>
-                    </button>
-                    <span id="lastUpdatedTime" style="display: none; font-size: 0.875rem; color: var(--gray-600); font-style: italic;"></span>
+                    <div id="refreshButtonContainer" style="display: none; align-items: center; gap: 1rem;">
+                        <button id="refreshDataBtn" onclick="refreshData()" 
+                                style="display: none;">
+                            <span id="refreshIcon">🔄</span>
+                            <span id="refreshText">Refresh today data</span>
+                        </button>
+                        <span id="lastUpdatedTime" style="display: none; font-size: 0.875rem; color: var(--gray-600); font-style: italic; padding-left: 0.5rem; border-left: 1px solid var(--gray-300);"></span>
+                    </div>
                 </div>
             </div>
             
@@ -1164,6 +1355,14 @@
                 <!-- Today's Report Section -->
                 <section id="today-report-section" class="page-section active">
                     <div class="stats">
+                        <div class="stat-card info">
+                            <div class="stat-label">Total Jobs</div>
+                            <div class="stat-value" id="todayTotal">0</div>
+                        </div>
+                        <div class="stat-card warning">
+                            <div class="stat-label">Pending Jobs</div>
+                            <div class="stat-value" id="todayPending">0</div>
+                        </div>
                         <div class="stat-card success">
                             <div class="stat-label">Succeeded Jobs</div>
                             <div class="stat-value" id="todaySucceeded">0</div>
@@ -1172,17 +1371,9 @@
                             <div class="stat-label">Failed Jobs</div>
                             <div class="stat-value" id="todayFailed">0</div>
                         </div>
-                        <div class="stat-card info">
-                            <div class="stat-label">Total Jobs</div>
-                            <div class="stat-value" id="todayTotal">0</div>
-                        </div>
-                        <div class="stat-card">
-                            <div class="stat-label">Total Rows (Success)</div>
-                            <div class="stat-value" id="todayTotalRows">0</div>
-                        </div>
-                        <div class="stat-card warning">
-                            <div class="stat-label">Largest Job Size</div>
-                            <div class="stat-value" id="todayLargestJob">0</div>
+                        <div class="stat-card success">
+                            <div class="stat-label">Success Rate</div>
+                            <div class="stat-value" id="todaySuccessRate">0%</div>
                         </div>
                     </div>
                     
@@ -1402,6 +1593,9 @@
         </div>
     </div>
     
+    <!-- Toast Container -->
+    <div id="toastContainer" class="toast-container"></div>
+    
     <script>
         // Canary Cookie Value
         const CANARY_COOKIE = '__bwa_user_id=657116261.U.3972438181951890.1660647073; _vwo_uuid_v2=DFBEE5736AFAB4C1BEDEB33E3710EC953|c38d9dc86f328ff3a67df0f80cd24218; _fbp=fb.1.1687412890719.927626789; afUserId=5c97cc6f-85ff-4f76-95b6-4bcd119e31ab-p; Static-Base-Url="https://www.static-src.com"; Has-Login-History=true; _ga_71BLJD18MP=deleted; _ga_71BLJD18MP=deleted; _gcl_au=1.1.1734537722.1742533786; IR_gbd=blibli.com; cebs=1; _vwo_uuid=D9325CACBD354ADF462D059C17D37F5FB; _vis_opt_s=1%7C; _vis_opt_test_cookie=1; _vwo_ssm=1; _vwo_ds=3%3At_0%2Ca_0%3A0%241742533786%3A36.37716957%3A%3A%3A%3A0; Blibli-Device-Id=U.1c5c9c80-20e8-4024-9893-70c46223a23f; Blibli-Device-Id-Signature=4427c723a38072a10880b842dae7abb0247cdcc3; QrCodeGenerationTutuorial=["cc824edd-05b4-479a-a2d5-48afdb43d34e"]; creationTutorialVisitedUser=["cc824edd-05b4-479a-a2d5-48afdb43d34e"]; userPicTickerVisitedUserPdp=["cc824edd-05b4-479a-a2d5-48afdb43d34e"]; multipPpTutorialVisitedUser=["cc824edd-05b4-479a-a2d5-48afdb43d34e"]; __gtm_cam=; __gtm_src=affiliates; _vis_opt_exp_516_exclude=1; productOptimisationBanner=["cc824edd-05b4-479a-a2d5-48afdb43d34e"]; _vis_opt_exp_497_exclude=1; __gtm_med=1299619_Love Savings Group; AF_SYNC=1747919929657; Announcement-Has-Been-Read=true; IR_PI=5ed22751-10c0-11ee-baa1-810287776b27%7C1747941199745; _gid=GA1.2.2082243399.1748235048; _ce.clock_data=-105%2C49.206.115.41%2C1%2C8b2bf32448aaaa1415d4b0b61938828d%2CEdge%2CIN; IR_19024=1748235052297%7C4120732%7C1748235052297%7C17m2Fhxz0xyPTOpUw2UFa3IqUksWXP2gZSo8yE0%7C; forterToken=5bc29b922ef74b7cb68e9d45f2c79313_1748235054462__UDF43-m4_25ck_; Partners-Device-Id=d9c56577-9703-4db7-8373-b2f0203366f4; Partners-Sso-Type=OpenID; Partners-Username=sachin.ravanth@gdn-commerce.com; Partners-User-Id=cc824edd-05b4-479a-a2d5-48afdb43d34e; Partners-Signature=A300E614886D5198D5C8E579274121DABD8A7CCE19EDE66F81E85F78D9155E6B; Blibli-Extras-MerchantId=RAM-70107; _ga_G3ZP2F3MW9=GS2.1.s1748235053$o159$g0$t1748235757$j60$l0$h924341940$dkwfhkqXNc8Ls5n4IGULYI8iU_Nxw77ybng; __cf_bm=8jlubjmONqecTPnNx.JxbkwSCptNZQQKrS1t241LJ4o-1748237701-1.0.1.1-Y.DHWcgR6jGeNTmR9GoiEJSevQ0E6gPW1UbwQRVXdE_yAkBoutbbIoQYBy7.JIbAkbpSMF6UWo5Zlw7gvw55TEkCfanHUS5qLrN9VH9X28w; _vwo_sn=5410220%3A%3A%3A%3A1; _gat_UA-21718848-28=1; cf_clearance=CutPv.gIAHYIhFLaNpjFhXQoWFVBoBhk_rzJbG1uPFs-1748238168-1.2.1.1-Klf9lIxSdlSnlmeQq06dC6PjMa0igG3Ma0Vpoa2HhRlK1T.yps312XQCrgycPKxWWlGAbP3z4ooEi9T51BvX5089109SLEmc9n8l3qWsFeYiJ2PrDwZVhl9nftfyzU4jOd9gBUOpciNwnNYUW6A07WsdYSrvwNvEF1JicB4kBqWnDPbwL1xlqe8idP0XQfaWAZlm6jFzt7l5I3SeqeG10Nl.Krn3Zsor.AqmVmNXNzHmN1Cr8uiIvs.ww_wsxRHoa0_rkf8ufRgjQfu6UqA2gvO6oR_f8pGDM55uC6E41KW9LtA5AbnL_4RBxn8a1qzNmO1Kn2sjRrRMM6zdqTy1w624qBdNYrA7T2EIOw.qp8s; __bwa_session_id=1432166451.S.4429960498796943.1748238169; __bwa_user_session_sequence=295; _ce.s=v~70f9e88dc7ec439badd9661a8335477de7f61609~vpv~18~v11.rlc~1693457238074~lcw~1748235428984~ir~1~v11.fhb~1747287849213~v11.lhb~1747316495275~lva~1748235048600~vir~returning~v11ls~fe3f1ee0-39ec-11f0-b758-677d31b88d50~gtrk.la~mazrls36~v11.cs~295312~v11.s~fe3f1ee0-39ec-11f0-b758-677d31b88d50~v11.vs~70f9e88dc7ec439badd9661a8335477de7f61609~v11.ss~1748235048913~lcw~1748238169635; moe_uuid=3a165403-455f-4aaa-b7e5-16fd60df6d64; Partners-Canary-Flag=true; SESSION=58d4a391-f2e2-4478-b792-85af446f245c; _ga_71BLJD18MP=GS2.1.s1748237853$o239$g1$t1748238220$j0$l0$h0; _ga=GA1.2.1253831296.1660647073; __bwa_session_action_sequence=3; cebsp_=650; JSESSIONID=55F36300E695CD5BF01F19EB8350B244; __cf_bm=BDQF7VJx25tLFqe8jSIzz36jX5fWEQxMqi9rdk.SJw4-1748238220-1.0.1.1-QMVunfVeCd4GAE06PE4aNQM.hFGEpYjp00TPFNsNGbN8xuzK3ggFLZosCpqwTMOMdk5U2G848NFkk3x2pOyw_m8mEk3mWNlbgrKITO6OV0Q';
@@ -1529,6 +1723,43 @@ Option 4 - Node.js (if installed):
             }
         }
         
+        // Toast notification function
+        function showToast(title, message, type = 'success', duration = 4000) {
+            const container = document.getElementById('toastContainer');
+            if (!container) return;
+            
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            
+            const icons = {
+                success: '✅',
+                error: '❌',
+                warning: '⚠️',
+                info: 'ℹ️'
+            };
+            
+            toast.innerHTML = `
+                <span class="toast-icon">${icons[type] || icons.success}</span>
+                <div class="toast-content">
+                    <div class="toast-title">${title}</div>
+                    <div class="toast-message">${message}</div>
+                </div>
+                <button class="toast-close" onclick="this.closest('.toast').remove()">×</button>
+            `;
+            
+            container.appendChild(toast);
+            
+            // Auto-remove after duration
+            setTimeout(() => {
+                toast.classList.add('hiding');
+                setTimeout(() => {
+                    if (toast.parentNode) {
+                        toast.remove();
+                    }
+                }, 300);
+            }, duration);
+        }
+        
         // Function to refresh data by triggering the Python script
         async function refreshData() {
             const btn = document.getElementById('refreshDataBtn');
@@ -1559,9 +1790,19 @@ Option 4 - Node.js (if installed):
                     // Update last updated time
                     updateLastUpdatedTime(true);
                     
-                    // Show success message
+                    const recordCount = result.today_records || 0;
+                    
+                    // Show toast notification
+                    showToast(
+                        'Data Refreshed Successfully',
+                        `${recordCount} job${recordCount !== 1 ? 's' : ''} updated`,
+                        'success',
+                        5000
+                    );
+                    
+                    // Show success message on button
                     icon.textContent = '✅';
-                    text.textContent = `Refreshed! (${result.today_records || 0} records)`;
+                    text.textContent = `Refreshed! (${recordCount} records)`;
                     
                     // Reload data after a short delay
                     setTimeout(async () => {
@@ -1578,10 +1819,17 @@ Option 4 - Node.js (if installed):
                         btn.disabled = false;
                     }, 500);
                 } else {
-                    // Show error message
+                    // Show error toast
+                    showToast(
+                        'Refresh Failed',
+                        result.message || 'Failed to refresh today\'s data',
+                        'error',
+                        6000
+                    );
+                    
+                    // Show error message on button
                     icon.textContent = '❌';
                     text.textContent = 'Refresh Failed';
-                    alert(`Failed to refresh data:\n${result.message}\n\n${result.error || ''}`);
                     
                     setTimeout(() => {
                         icon.textContent = '🔄';
@@ -1591,9 +1839,17 @@ Option 4 - Node.js (if installed):
                 }
             } catch (error) {
                 console.error('Error refreshing data:', error);
+                
+                // Show error toast
+                showToast(
+                    'Connection Error',
+                    'Make sure you\'re using the Python server (python3 server.py)',
+                    'error',
+                    6000
+                );
+                
                 icon.textContent = '❌';
                 text.textContent = 'Error';
-                alert(`Error refreshing data: ${error.message}\n\nMake sure you're using the Python server (python3 server.py) instead of a basic HTTP server.`);
                 
                 setTimeout(() => {
                     icon.textContent = '🔄';
@@ -1641,15 +1897,20 @@ Option 4 - Node.js (if installed):
                     if (refreshText) {
                         refreshText.textContent = 'Refresh today data';
                     }
+                    // Show refresh button container
+                    const refreshContainer = document.getElementById('refreshButtonContainer');
+                    if (refreshContainer) {
+                        refreshContainer.style.display = 'flex';
+                    }
                     // Show last updated time
                     loadLastUpdatedTime(true);
                 } else {
                     // Hide button on all other pages (including Rundeck Jobs)
                     refreshBtn.style.display = 'none';
-                    // Hide last updated time
-                    const lastUpdatedEl = document.getElementById('lastUpdatedTime');
-                    if (lastUpdatedEl) {
-                        lastUpdatedEl.style.display = 'none';
+                    // Hide refresh button container
+                    const refreshContainer = document.getElementById('refreshButtonContainer');
+                    if (refreshContainer) {
+                        refreshContainer.style.display = 'none';
                     }
                 }
             }
@@ -2682,36 +2943,133 @@ Option 4 - Node.js (if installed):
             failedList.innerHTML = html;
         }
         
+        // Function to check if a job runs today based on frequency and dayInfo
+        function jobRunsToday(job) {
+            if (!job.scheduleEnabled) {
+                return false;
+            }
+            
+            const today = new Date();
+            const dayOfWeek = today.getDay(); // 0 = Sunday, 1 = Monday, ..., 6 = Saturday
+            const dayOfMonth = today.getDate(); // 1-31
+            const dayNames = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT'];
+            const todayDayName = dayNames[dayOfWeek];
+            
+            if (job.frequency === 'Daily') {
+                // Daily jobs run every day (dayInfo is usually empty)
+                return true;
+            } else if (job.frequency === 'Weekly') {
+                // Weekly jobs: check if today's day is in dayInfo
+                if (!job.dayInfo || job.dayInfo.trim() === '') {
+                    return false;
+                }
+                const days = job.dayInfo.split(',').map(d => d.trim().toUpperCase());
+                return days.includes(todayDayName);
+            } else if (job.frequency === 'Monthly') {
+                // Monthly jobs: check if today's day of month is in dayInfo (format: "Day 1,2,3" or "Day 1")
+                if (!job.dayInfo || job.dayInfo.trim() === '') {
+                    return false;
+                }
+                // Extract day numbers from "Day 1,2,3" format
+                const dayMatch = job.dayInfo.match(/Day\s*([\d,\s]+)/i);
+                if (!dayMatch) {
+                    return false;
+                }
+                const dayNumbers = dayMatch[1].split(',').map(d => parseInt(d.trim())).filter(d => !isNaN(d));
+                return dayNumbers.includes(dayOfMonth);
+            }
+            
+            return false;
+        }
+        
+        // Function to get jobs that run today and match them with today's data
+        function getTodayScheduledJobs() {
+            // Filter jobs that run today
+            const jobsRunningToday = JOBS_DATA.filter(job => jobRunsToday(job));
+            
+            // Create a map of analyticName to job data for quick lookup
+            const jobsMap = new Map();
+            jobsRunningToday.forEach(job => {
+                jobsMap.set(job.analyticName, job);
+            });
+            
+            // Create a map of analyticName to today's execution data
+            const todayDataMap = new Map();
+            TODAY_DATA.forEach(data => {
+                const analyticName = data.analyticName;
+                if (!todayDataMap.has(analyticName)) {
+                    todayDataMap.set(analyticName, []);
+                }
+                todayDataMap.get(analyticName).push(data);
+            });
+            
+            // Build result: combine scheduled jobs with their execution data
+            const result = [];
+            jobsRunningToday.forEach(job => {
+                const executionData = todayDataMap.get(job.analyticName) || [];
+                
+                if (executionData.length > 0) {
+                    // If there's execution data, add each execution as a row
+                    executionData.forEach(data => {
+                        result.push({
+                            ...data,
+                            scheduledJob: job // Keep reference to the scheduled job
+                        });
+                    });
+                } else {
+                    // If no execution data yet, still show the scheduled job (pending)
+                    result.push({
+                        analyticName: job.analyticName,
+                        executionSuccess: undefined,
+                        scheduledJob: job
+                    });
+                }
+            });
+            
+            return result;
+        }
+        
         function initTodayReport() {
-            const succeededJobs = TODAY_DATA.filter(j => j.executionSuccess === true);
-            const failedJobs = TODAY_DATA.filter(j => j.executionSuccess === false || j.executionSuccess === undefined);
-            const totalJobs = TODAY_DATA.length;
-            const totalRowsProcessed = succeededJobs.reduce((sum, job) => sum + toIntSafe(job.analyticTotalData), 0);
-            const largestJobSize = TODAY_DATA.reduce((max, job) => {
-                const size = toIntSafe(job.analyticTotalData);
-                return size > max ? size : max;
-            }, 0);
+            // Get jobs scheduled for today with their execution data
+            const todayScheduledData = getTodayScheduledJobs();
+            
+            const succeededJobs = todayScheduledData.filter(j => j.executionSuccess === true);
+            const failedJobs = todayScheduledData.filter(j => j.executionSuccess === false);
+            const pendingJobs = todayScheduledData.filter(j => j.executionSuccess === undefined);
+            const totalJobs = todayScheduledData.length;
+            
+            // Calculate success rate (only for jobs that have completed execution)
+            const completedJobs = succeededJobs.length + failedJobs.length;
+            const successRate = completedJobs > 0 
+                ? Math.round((succeededJobs.length / completedJobs) * 100) 
+                : 0;
             
             document.getElementById('todaySucceeded').textContent = succeededJobs.length;
             document.getElementById('todayFailed').textContent = failedJobs.length;
             document.getElementById('todayTotal').textContent = totalJobs;
-            document.getElementById('todayTotalRows').textContent = totalRowsProcessed.toLocaleString();
-            document.getElementById('todayLargestJob').textContent = largestJobSize.toLocaleString();
+            document.getElementById('todayPending').textContent = pendingJobs.length;
+            document.getElementById('todaySuccessRate').textContent = `${successRate}%`;
             
-            // Render failed schedulers section
+            // Render failed schedulers section (only jobs with execution data that failed)
             renderFailedSchedulers(failedJobs);
             
-            // Today's table
-            renderTodayTable(TODAY_DATA);
+            // Today's table - show scheduled jobs with their execution data
+            renderTodayTable(todayScheduledData);
             
-            document.getElementById('todaySearchInput').addEventListener('input', (e) => {
+            // Store todayScheduledData for search/filter
+            window.todayScheduledData = todayScheduledData;
+            
+            // Set up search input handler (replace any existing handler)
+            const searchInput = document.getElementById('todaySearchInput');
+            searchInput.oninput = (e) => {
                 const val = e.target.value.toLowerCase().trim();
-                const filtered = TODAY_DATA.filter(job => (job.analyticName || '').toLowerCase().includes(val));
+                const filtered = todayScheduledData.filter(job => (job.analyticName || '').toLowerCase().includes(val));
                 renderTodayTable(filtered);
-            });
+            };
             
+            // Set up sort handlers (replace any existing handlers)
             document.querySelectorAll('#todaySchedulerTable th.sortable').forEach(th => {
-                th.addEventListener('click', () => {
+                th.onclick = () => {
                     const key = th.getAttribute('data-key');
                     const currentDir = th.classList.contains('sort-asc') ? 'desc' : 'asc';
                     
@@ -2720,7 +3078,7 @@ Option 4 - Node.js (if installed):
                     });
                     th.classList.add(`sort-${currentDir}`);
                     
-                    const sorted = [...TODAY_DATA].sort((a, b) => {
+                    const sorted = [...(window.todayScheduledData || [])].sort((a, b) => {
                         let aVal = a[key];
                         let bVal = b[key];
                         
@@ -2753,7 +3111,7 @@ Option 4 - Node.js (if installed):
                         return 0;
                     });
                     renderTodayTable(sorted);
-                });
+                };
             });
         }
         
@@ -2766,20 +3124,25 @@ Option 4 - Node.js (if installed):
             }
             
             tbody.innerHTML = data.map(job => {
-                const statusText = job.executionSuccess === true ? 'Success' : 'Fail';
-                const statusClass = job.executionSuccess === true ? 'status-success' : 'status-fail';
-                const startTime = formatTimeOnly(job.executionStartDate);
-                const endTime = formatTimeOnly(job.executionFinishDate);
+                // Handle pending jobs (scheduled but no execution data yet)
+                const isPending = job.executionSuccess === undefined;
+                const statusText = isPending ? 'Pending' : (job.executionSuccess === true ? 'Success' : 'Fail');
+                const statusClass = isPending ? 'status-pending' : (job.executionSuccess === true ? 'status-success' : 'status-fail');
+                const startTime = job.executionStartDate ? formatTimeOnly(job.executionStartDate) : '-';
+                const endTime = job.executionFinishDate ? formatTimeOnly(job.executionFinishDate) : '-';
                 const bqData = job.bqTotalData !== undefined ? job.bqTotalData : '-';
                 const savedData = job.analyticTotalData !== undefined ? job.analyticTotalData : '-';
                 
                 // Calculate duration
-                const duration = calculateDuration(job.executionStartDate, job.executionFinishDate);
+                const duration = job.executionStartDate && job.executionFinishDate 
+                    ? calculateDuration(job.executionStartDate, job.executionFinishDate) 
+                    : null;
                 const durationDisplay = duration ? duration.formatted : '-';
                 
                 // Get time slots from matched job and highlight successful slot
                 let timeSlotsDisplay = '<span style="color: var(--gray-400);">—</span>';
-                const matchedJob = matchJobToScheduler(job.analyticName);
+                // Use scheduledJob if available (from getTodayScheduledJobs), otherwise fall back to matchJobToScheduler
+                const matchedJob = job.scheduledJob || matchJobToScheduler(job.analyticName);
                 
                 if (matchedJob) {
                     const hourString = matchedJob.hour || '0';
@@ -3575,14 +3938,19 @@ Option 4 - Node.js (if installed):
                     if (refreshText) {
                         refreshText.textContent = 'Refresh today data';
                     }
+                    // Show refresh button container
+                    const refreshContainer = document.getElementById('refreshButtonContainer');
+                    if (refreshContainer) {
+                        refreshContainer.style.display = 'flex';
+                    }
                     // Load last updated time for Today's Report page
                     loadLastUpdatedTime(true);
                 } else {
                     refreshBtn.style.display = 'none';
-                    // Hide last updated time on other pages
-                    const lastUpdatedEl = document.getElementById('lastUpdatedTime');
-                    if (lastUpdatedEl) {
-                        lastUpdatedEl.style.display = 'none';
+                    // Hide refresh button container on other pages
+                    const refreshContainer = document.getElementById('refreshButtonContainer');
+                    if (refreshContainer) {
+                        refreshContainer.style.display = 'none';
                     }
                 }
             }
