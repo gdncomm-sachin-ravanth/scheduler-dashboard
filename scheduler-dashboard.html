@@ -1211,7 +1211,7 @@
                 <div style="display: flex; align-items: center; gap: 1rem;">
                     <div id="refreshButtonContainer" style="display: none; align-items: center; gap: 1rem;">
                         <button id="refreshDataBtn" onclick="refreshData()" 
-                                style="display: none;">
+                                style="display: none;" disabled>
                             <span id="refreshIcon">🔄</span>
                             <span id="refreshText">Refresh today data</span>
                         </button>
@@ -1814,6 +1814,10 @@ Option 4 - Node.js (if installed):
                     }
                 });
                 
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
                 const result = await response.json();
                 
                 if (result.success) {
@@ -1849,6 +1853,17 @@ Option 4 - Node.js (if installed):
                         btn.disabled = false;
                     }, 500);
                 } else {
+                    // Clear data on error
+                    TODAY_DATA = [];
+                    initTodayReport();
+                    
+                    // Clear last updated time
+                    const lastUpdatedEl = document.getElementById('lastUpdatedTime');
+                    if (lastUpdatedEl) {
+                        lastUpdatedEl.style.display = 'none';
+                        lastUpdatedEl.textContent = '';
+                    }
+                    
                     // Show error toast
                     showToast(
                         'Refresh Failed',
@@ -1869,6 +1884,17 @@ Option 4 - Node.js (if installed):
                 }
             } catch (error) {
                 console.error('Error refreshing data:', error);
+                
+                // Clear data on error
+                TODAY_DATA = [];
+                initTodayReport();
+                
+                // Clear last updated time
+                const lastUpdatedEl = document.getElementById('lastUpdatedTime');
+                if (lastUpdatedEl) {
+                    lastUpdatedEl.style.display = 'none';
+                    lastUpdatedEl.textContent = '';
+                }
                 
                 // Show error toast
                 showToast(
