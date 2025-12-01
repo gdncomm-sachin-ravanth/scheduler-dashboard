@@ -6,6 +6,7 @@ Constructs a curl command dynamically with today's start timestamp in WIB timezo
 
 import json
 import subprocess
+import argparse
 from datetime import datetime, timezone, timedelta
 from pathlib import Path
 
@@ -23,13 +24,14 @@ def get_current_day_start_timestamp():
     return timestamp_ms
 
 
-def build_curl_command(today_timestamp):
+def build_curl_command(today_timestamp, sso_token=None):
     """
     Build the curl command for fetching today's data.
     Constructs the command dynamically with today's start timestamp.
     
     Args:
         today_timestamp: Today's start timestamp in epoch milliseconds (WIB timezone)
+        sso_token: Optional SSO token. If not provided, uses default token.
     
     Returns:
         Complete curl command as a string
@@ -37,12 +39,16 @@ def build_curl_command(today_timestamp):
     # Base URL and headers
     url = "https://database-explorer.gdn-app.com/backend/data-explorer/api/v1/databases/exec/163"
     
+    # Use provided token or default
+    default_token = 'aKqjbQJLZUP4VvLhHdW9'
+    token = sso_token if sso_token else default_token
+    
     # Headers
     headers = {
         'accept': 'application/json',
         'accept-language': 'en-GB,en-US;q=0.9,en;q=0.8',
         'content-type': 'application/json',
-        'infra-sso-token': 'aKqjbQJLZUP4VvLhHdW9',
+        'infra-sso-token': token,
         'origin': 'https://database-explorer.gdn-app.com',
         'priority': 'u=1, i',
         'referer': 'https://database-explorer.gdn-app.com/db/mongo/163',
@@ -55,8 +61,9 @@ def build_curl_command(today_timestamp):
         'user-agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/142.0.0.0 Safari/537.36'
     }
     
-    # Cookie string
-    cookie = '_vwo_uuid=D177B6EF6C914DACA5DC2405ADC253862; _vwo_ssm=1; _vis_opt_exp_82_combi=1; _vis_opt_s=4%7C; _vis_opt_test_cookie=1; _vwo_uuid_v2=D94AE4557E15DE7349AC497F04E7CB7F5|3dc24c7459862dc6bb3f62870701583c; _gcl_au=1.1.712251690.1762516136; moe_c_s=1; moe_h_a_s=0; _fbp=fb.1.1762516137254.816794765661547553; _tt_enable_cookie=1; _ttp=01KA87EQM2SC0CNM3H72DYQZPZ_.tt.1; _vwo_ds=3%3Aa_0%2Ct_0%3A0%241746703211%3A98.69085096%3A%3A%3A%3A0%3A1763360332%3A1762520776%3A3; _cfuvid=YtZLDfiWOUHued7cRRjOi44h4rwi94LAYawRBEdlgMk-1763360345918-0.0.1.1-604800000; _vis_opt_exp_82_goal_1=48; moe_i_m=q1Yqjc9UsgJSmSlKVkqmBoYmBoaW5pZKtbUA; moe_u_d=TYxNCsMgFAbv8q0VNP7leRl5-hQKgS7SdBO8e5usshoGhjnByCeOl1z4IiMY642lRFA4Cn-QbYpuNT6axTo_p8Je3tu_H7ztXUEKi_Sn3zdQ4tipVR0akfbGDU3inaawJK6j2bVWzB8; moe_s_n=RYo7DsIwDIbv4jmR3Np_cHMVhKw0yYAQMKQb4u4QFsbv8aLhN8pUWltNZIm7FURFqXHrQOxJsaem1SpT-M7DD8rLKYmxKgRI095_1pgDVb_6MfF8maX__82wslmghz99UJb3Bw; _ga_M865CMWYXJ=GS2.1.s1763804450$o5$g1$t1763808052$j60$l0$h0; forterToken=13aad943c08a44e68068049e4c6cb089_1763812130347_870_UDF43-m4_25ck; _ga_GRV0RQ2EZR=GS2.1.s1763874648$o6$g1$t1763874742$j40$l0$h0; _ga_F56DM94W5T=GS2.1.s1764163070$o31$g1$t1764163085$j45$l0$h0; _ga=GA1.2.542273956.1762515882; ttcsid=1764163069920::CT7GjRAcQryJiwfu-4sp.26.1764163086067.0; ttcsid_D3S8VSJC77UACP4037BG=1764163069919::VblhbiNSmSrOyZH37j4D.26.1764163086067.0; moe_uuid=90ce80e3-eece-4135-b97a-478ca2497c40; infra-sso-token=aKqjbQJLZUP4VvLhHdW9'
+    # Cookie string - update token in cookie as well
+    cookie_base = '_vwo_uuid=D177B6EF6C914DACA5DC2405ADC253862; _vwo_ssm=1; _vis_opt_exp_82_combi=1; _vis_opt_s=4%7C; _vis_opt_test_cookie=1; _vwo_uuid_v2=D94AE4557E15DE7349AC497F04E7CB7F5|3dc24c7459862dc6bb3f62870701583c; _gcl_au=1.1.712251690.1762516136; moe_c_s=1; moe_h_a_s=0; _fbp=fb.1.1762516137254.816794765661547553; _tt_enable_cookie=1; _ttp=01KA87EQM2SC0CNM3H72DYQZPZ_.tt.1; _vwo_ds=3%3Aa_0%2Ct_0%3A0%241746703211%3A98.69085096%3A%3A%3A%3A0%3A1763360332%3A1762520776%3A3; _cfuvid=YtZLDfiWOUHued7cRRjOi44h4rwi94LAYawRBEdlgMk-1763360345918-0.0.1.1-604800000; _vis_opt_exp_82_goal_1=48; moe_i_m=q1Yqjc9UsgJSmSlKVkqmBoYmBoaW5pZKtbUA; moe_u_d=TYxNCsMgFAbv8q0VNP7leRl5-hQKgS7SdBO8e5usshoGhjnByCeOl1z4IiMY642lRFA4Cn-QbYpuNT6axTo_p8Je3tu_H7ztXUEKi_Sn3zdQ4tipVR0akfbGDU3inaawJK6j2bVWzB8; moe_s_n=RYo7DsIwDIbv4jmR3Np_cHMVhKw0yYAQMKQb4u4QFsbv8aLhN8pUWltNZIm7FURFqXHrQOxJsaem1SpT-M7DD8rLKYmxKgRI095_1pgDVb_6MfF8maX__82wslmghz99UJb3Bw; _ga_M865CMWYXJ=GS2.1.s1763804450$o5$g1$t1763808052$j60$l0$h0; forterToken=13aad943c08a44e68068049e4c6cb089_1763812130347_870_UDF43-m4_25ck; _ga_GRV0RQ2EZR=GS2.1.s1763874648$o6$g1$t1763874742$j40$l0$h0; _ga_F56DM94W5T=GS2.1.s1764163070$o31$g1$t1764163085$j45$l0$h0; _ga=GA1.2.542273956.1762515882; ttcsid=1764163069920::CT7GjRAcQryJiwfu-4sp.26.1764163086067.0; ttcsid_D3S8VSJC77UACP4037BG=1764163069919::VblhbiNSmSrOyZH37j4D.26.1764163086067.0; moe_uuid=90ce80e3-eece-4135-b97a-478ca2497c40'
+    cookie = f'{cookie_base}; infra-sso-token={token}'
     
     # Build the JSON payload with dynamic analyticDate
     payload = {
@@ -83,12 +90,13 @@ def build_curl_command(today_timestamp):
     return ' \\\n'.join(curl_parts)
 
 
-def fetch_today_data(today_timestamp):
+def fetch_today_data(today_timestamp, sso_token=None):
     """
     Fetch today's scheduler data from the API using a dynamically constructed curl command.
     
     Args:
         today_timestamp: Today's start timestamp in epoch milliseconds (WIB timezone)
+        sso_token: Optional SSO token. If not provided, uses default token.
     
     Returns:
         JSON response data
@@ -96,7 +104,7 @@ def fetch_today_data(today_timestamp):
     print(f"Fetching data for today (analyticDate: {today_timestamp})")
     
     # Build curl command
-    curl_command = build_curl_command(today_timestamp)
+    curl_command = build_curl_command(today_timestamp, sso_token)
     
     print("Executing curl command...")
     
@@ -126,6 +134,11 @@ def fetch_today_data(today_timestamp):
 
 def main():
     """Main function to fetch and save today's scheduler data."""
+    # Parse command line arguments
+    parser = argparse.ArgumentParser(description='Fetch today\'s scheduler data')
+    parser.add_argument('--token', type=str, help='SSO token to use for authentication')
+    args = parser.parse_args()
+    
     script_dir = Path(__file__).parent
     
     # File path
@@ -143,7 +156,7 @@ def main():
     
     # Fetch data from API
     try:
-        response_data = fetch_today_data(today_timestamp)
+        response_data = fetch_today_data(today_timestamp, args.token)
     except subprocess.CalledProcessError as e:
         print(f"Error executing curl command:")
         print(f"  Return code: {e.returncode}")

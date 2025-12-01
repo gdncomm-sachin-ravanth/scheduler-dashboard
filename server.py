@@ -73,17 +73,108 @@ class DashboardHandler(BaseHTTPRequestHandler):
         if path == '/api/refresh-today':
             self.handle_refresh_today()
             return
+        elif path == '/api/update-sso-token':
+            self.handle_update_sso_token()
+            return
         else:
             self.send_error(404, "Not found")
             return
     
+    def get_sso_token(self):
+        """Get the stored SSO token from file."""
+        token_file = Path(__file__).parent / '.sso_token'
+        if token_file.exists():
+            try:
+                return token_file.read_text().strip()
+            except:
+                pass
+        return None
+    
+    def save_sso_token(self, token):
+        """Save the SSO token to file."""
+        token_file = Path(__file__).parent / '.sso_token'
+        try:
+            token_file.write_text(token)
+            return True
+        except Exception as e:
+            print(f"Error saving SSO token: {e}")
+            return False
+    
+    def handle_update_sso_token(self):
+        """Handle the update SSO token API endpoint."""
+        try:
+            # Read request body
+            content_length = int(self.headers.get('Content-Length', 0))
+            body = self.rfile.read(content_length)
+            data = json.loads(body.decode('utf-8'))
+            
+            token = data.get('token', '').strip()
+            if not token:
+                response = {
+                    'success': False,
+                    'message': 'Token is required'
+                }
+                self.send_response(400)
+                self.send_header('Content-Type', 'application/json')
+                self.send_header('Access-Control-Allow-Origin', '*')
+                self.end_headers()
+                self.wfile.write(json.dumps(response).encode('utf-8'))
+                return
+            
+            # Save token
+            if self.save_sso_token(token):
+                response = {
+                    'success': True,
+                    'message': 'SSO token updated successfully'
+                }
+                self.send_response(200)
+            else:
+                response = {
+                    'success': False,
+                    'message': 'Failed to save SSO token'
+                }
+                self.send_response(500)
+            
+            self.send_header('Content-Type', 'application/json')
+            self.send_header('Access-Control-Allow-Origin', '*')
+            self.end_headers()
+            self.wfile.write(json.dumps(response).encode('utf-8'))
+            
+        except json.JSONDecodeError:
+            response = {
+                'success': False,
+                'message': 'Invalid JSON in request body'
+            }
+            self.send_response(400)
+            self.send_header('Content-Type', 'application/json')
+            self.send_header('Access-Control-Allow-Origin', '*')
+            self.end_headers()
+            self.wfile.write(json.dumps(response).encode('utf-8'))
+        except Exception as e:
+            response = {
+                'success': False,
+                'message': f'Error: {str(e)}'
+            }
+            self.send_response(500)
+            self.send_header('Content-Type', 'application/json')
+            self.send_header('Access-Control-Allow-Origin', '*')
+            self.end_headers()
+            self.wfile.write(json.dumps(response).encode('utf-8'))
+    
     def handle_refresh_today(self):
         """Handle the refresh today API endpoint."""
         try:
+            # Get SSO token if available
+            sso_token = self.get_sso_token()
+            
             # Execute the fetch today script
             script_path = Path(__file__).parent / 'fetch_today_data.py'
+            cmd = ['python3', str(script_path)]
+            if sso_token:
+                cmd.extend(['--token', sso_token])
+            
             result = subprocess.run(
-                ['python3', str(script_path)],
+                cmd,
                 capture_output=True,
                 text=True,
                 timeout=120  # 2 minute timeout
