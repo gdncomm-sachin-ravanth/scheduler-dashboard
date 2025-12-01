@@ -1623,6 +1623,37 @@
         </div>
     </div>
     
+    <!-- SSO Token Modal -->
+    <div id="ssoTokenModal" class="modal">
+        <div class="modal-content" style="max-width: 500px;">
+            <div class="modal-header">
+                <h3>🔑 Update SSO Token</h3>
+                <button class="close" onclick="closeSsoTokenModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p style="margin-bottom: 1rem; color: var(--gray-700);">
+                    The current SSO token is invalid. Please enter a new token to continue.
+                </p>
+                <div style="margin-bottom: 1rem;">
+                    <label for="ssoTokenInput" style="display: block; font-weight: 600; color: var(--gray-700); margin-bottom: 0.5rem;">
+                        SSO Token:
+                    </label>
+                    <input 
+                        type="text" 
+                        id="ssoTokenInput" 
+                        placeholder="Enter new SSO token"
+                        style="width: 100%; padding: 0.75rem; border: 2px solid var(--gray-300); border-radius: 0.5rem; font-family: monospace; font-size: 0.875rem;"
+                        onkeypress="if(event.key === 'Enter') updateSsoToken()"
+                    />
+                </div>
+                <div style="display: flex; gap: 0.75rem; justify-content: flex-end;">
+                    <button class="btn btn-secondary btn-sm" onclick="closeSsoTokenModal()">Cancel</button>
+                    <button class="btn btn-primary btn-sm" onclick="updateSsoToken()">Update Token</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
     <!-- Toast Container -->
     <div id="toastContainer" class="toast-container"></div>
     
@@ -1864,13 +1895,29 @@ Option 4 - Node.js (if installed):
                         lastUpdatedEl.style.display = 'inline';
                     }
                     
-                    // Show error toast
-                    showToast(
-                        'Refresh Failed',
-                        result.message || 'Failed to refresh today\'s data',
-                        'error',
-                        6000
-                    );
+                    // Check if error is related to invalid token
+                    const errorMessage = result.message || '';
+                    const errorOutput = result.output || '';
+                    const errorText = result.error || '';
+                    const isTokenError = errorMessage.includes('Invalid cookie or header token') ||
+                                        errorMessage.includes('Invalid Cookie or header token') ||
+                                        errorOutput.includes('Invalid cookie or header token') ||
+                                        errorOutput.includes('Invalid Cookie or header token') ||
+                                        errorText.includes('Invalid cookie or header token') ||
+                                        errorText.includes('Invalid Cookie or header token');
+                    
+                    if (isTokenError) {
+                        // Show SSO token modal
+                        showSsoTokenModal();
+                    } else {
+                        // Show error toast
+                        showToast(
+                            'Refresh Failed',
+                            result.message || 'Failed to refresh today\'s data',
+                            'error',
+                            6000
+                        );
+                    }
                     
                     // Show error message on button
                     icon.textContent = '❌';
@@ -1896,13 +1943,23 @@ Option 4 - Node.js (if installed):
                     lastUpdatedEl.style.display = 'inline';
                 }
                 
-                // Show error toast
-                showToast(
-                    'Connection Error',
-                    'Make sure you\'re using the Python server (python3 server.py)',
-                    'error',
-                    6000
-                );
+                // Check if error message contains token error (unlikely in catch, but check anyway)
+                const errorMessage = error.message || error.toString() || '';
+                const isTokenError = errorMessage.includes('Invalid cookie or header token') ||
+                                    errorMessage.includes('Invalid Cookie or header token');
+                
+                if (isTokenError) {
+                    // Show SSO token modal
+                    showSsoTokenModal();
+                } else {
+                    // Show error toast
+                    showToast(
+                        'Connection Error',
+                        'Make sure you\'re using the Python server (python3 server.py)',
+                        'error',
+                        6000
+                    );
+                }
                 
                 icon.textContent = '❌';
                 text.textContent = 'Error';
@@ -2547,6 +2604,78 @@ Option 4 - Node.js (if installed):
         
         function closeModal() {
             document.getElementById('curlModal').style.display = 'none';
+        }
+        
+        // SSO Token Modal Functions
+        function showSsoTokenModal() {
+            const modal = document.getElementById('ssoTokenModal');
+            if (modal) {
+                modal.style.display = 'block';
+                // Focus on input
+                setTimeout(() => {
+                    const input = document.getElementById('ssoTokenInput');
+                    if (input) input.focus();
+                }, 100);
+            }
+        }
+        
+        function closeSsoTokenModal() {
+            const modal = document.getElementById('ssoTokenModal');
+            if (modal) {
+                modal.style.display = 'none';
+                // Clear input
+                const input = document.getElementById('ssoTokenInput');
+                if (input) input.value = '';
+            }
+        }
+        
+        async function updateSsoToken() {
+            const input = document.getElementById('ssoTokenInput');
+            const token = input?.value?.trim();
+            
+            if (!token) {
+                showToast('Error', 'Please enter a valid SSO token', 'error', 4000);
+                return;
+            }
+            
+            try {
+                const response = await fetch('/api/update-sso-token', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ token: token })
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    showToast('Success', 'SSO token updated successfully', 'success', 3000);
+                    closeSsoTokenModal();
+                    
+                    // Automatically retry refresh
+                    setTimeout(() => {
+                        refreshData();
+                    }, 500);
+                } else {
+                    showToast('Error', result.message || 'Failed to update SSO token', 'error', 4000);
+                }
+            } catch (error) {
+                console.error('Error updating SSO token:', error);
+                showToast('Error', 'Failed to update SSO token. Please try again.', 'error', 4000);
+            }
+        }
+        
+        // Close modal when clicking outside
+        window.onclick = function(event) {
+            const ssoModal = document.getElementById('ssoTokenModal');
+            if (event.target === ssoModal) {
+                closeSsoTokenModal();
+            }
         }
         
         // Reports Functions
