@@ -1211,7 +1211,7 @@
                 <div style="display: flex; align-items: center; gap: 1rem;">
                     <div id="refreshButtonContainer" style="display: none; align-items: center; gap: 1rem;">
                         <button id="refreshDataBtn" onclick="refreshData()" 
-                                style="display: none;" disabled>
+                                style="display: none;">
                             <span id="refreshIcon">🔄</span>
                             <span id="refreshText">Refresh today data</span>
                         </button>
@@ -1857,11 +1857,11 @@ Option 4 - Node.js (if installed):
                     TODAY_DATA = [];
                     initTodayReport();
                     
-                    // Clear last updated time
+                    // Show last updated time as "-"
                     const lastUpdatedEl = document.getElementById('lastUpdatedTime');
                     if (lastUpdatedEl) {
-                        lastUpdatedEl.style.display = 'none';
-                        lastUpdatedEl.textContent = '';
+                        lastUpdatedEl.textContent = 'Last updated: -';
+                        lastUpdatedEl.style.display = 'inline';
                     }
                     
                     // Show error toast
@@ -1889,11 +1889,11 @@ Option 4 - Node.js (if installed):
                 TODAY_DATA = [];
                 initTodayReport();
                 
-                // Clear last updated time
+                // Show last updated time as "-"
                 const lastUpdatedEl = document.getElementById('lastUpdatedTime');
                 if (lastUpdatedEl) {
-                    lastUpdatedEl.style.display = 'none';
-                    lastUpdatedEl.textContent = '';
+                    lastUpdatedEl.textContent = 'Last updated: -';
+                    lastUpdatedEl.style.display = 'inline';
                 }
                 
                 // Show error toast
