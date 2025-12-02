@@ -173,6 +173,21 @@
             border-radius: 0.5rem;
             box-shadow: 0 1px 3px rgba(0,0,0,0.1);
             border-left: 3px solid var(--primary);
+            transition: all 0.2s ease;
+        }
+        
+        .stat-card.clickable {
+            cursor: pointer;
+        }
+        
+        .stat-card.clickable:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 6px rgba(0,0,0,0.15);
+        }
+        
+        .stat-card.clickable.active {
+            background: var(--gray-50);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
         }
         
         .stat-card.success { border-left-color: var(--success); }
@@ -1435,29 +1450,25 @@
                 <!-- Today's Report Section -->
                 <section id="today-report-section" class="page-section active">
                     <div class="stats">
-                        <div class="stat-card info">
+                        <div class="stat-card info clickable" id="todayCardTotal" onclick="filterTodayByCard('All')" title="Click to show all jobs">
                             <div class="stat-label">Total Jobs</div>
                             <div class="stat-value" id="todayTotal">0</div>
                         </div>
-                        <div class="stat-card warning">
+                        <div class="stat-card warning clickable" id="todayCardPending" onclick="filterTodayByCard('Pending')" title="Click to filter pending jobs">
                             <div class="stat-label">Pending Jobs</div>
                             <div class="stat-value" id="todayPending">0</div>
                         </div>
-                        <div class="stat-card" style="border-left-color: var(--info);">
+                        <div class="stat-card clickable" id="todayCardInProgress" onclick="filterTodayByCard('In Progress')" style="border-left-color: var(--info);" title="Click to filter in-progress jobs">
                             <div class="stat-label">In Progress Jobs</div>
                             <div class="stat-value" id="todayInProgress">0</div>
                         </div>
-                        <div class="stat-card success">
+                        <div class="stat-card success clickable" id="todayCardSuccess" onclick="filterTodayByCard('Success')" title="Click to filter succeeded jobs">
                             <div class="stat-label">Succeeded Jobs</div>
                             <div class="stat-value" id="todaySucceeded">0</div>
                         </div>
-                        <div class="stat-card danger">
+                        <div class="stat-card danger clickable" id="todayCardFailed" onclick="filterTodayByCard('Failed')" title="Click to filter failed jobs">
                             <div class="stat-label">Failed Jobs</div>
                             <div class="stat-value" id="todayFailed">0</div>
-                        </div>
-                        <div class="stat-card success">
-                            <div class="stat-label">Success Rate</div>
-                            <div class="stat-value" id="todaySuccessRate">0%</div>
                         </div>
                     </div>
                     
@@ -3470,18 +3481,17 @@ Option 4 - Node.js (if installed):
             
             const totalJobs = todayScheduledData.length;
             
-            // Calculate success rate (only for jobs that have completed execution)
-            const completedJobs = succeededJobs.length + failedJobs.length;
-            const successRate = completedJobs > 0 
-                ? Math.round((succeededJobs.length / completedJobs) * 100) 
-                : 0;
-            
             document.getElementById('todaySucceeded').textContent = succeededJobs.length;
             document.getElementById('todayFailed').textContent = failedJobs.length;
             document.getElementById('todayTotal').textContent = totalJobs;
             document.getElementById('todayPending').textContent = pendingJobs.length;
             document.getElementById('todayInProgress').textContent = inProgressJobs.length;
-            document.getElementById('todaySuccessRate').textContent = `${successRate}%`;
+            
+            // Set initial card active state based on current filter
+            const initialStatusFilter = document.getElementById('todayStatusFilter');
+            if (initialStatusFilter) {
+                updateCardActiveState(initialStatusFilter.value);
+            }
             
             // Render failed schedulers section (only jobs with execution data that failed)
             renderFailedSchedulers(failedJobs);
@@ -3538,8 +3548,13 @@ Option 4 - Node.js (if installed):
             const frequencyFilter = document.getElementById('todayFrequencyFilter');
             
             searchInput.oninput = applyTodayFilters;
-            statusFilter.onchange = applyTodayFilters;
             frequencyFilter.onchange = applyTodayFilters;
+            
+            // Update card active state when status filter changes manually
+            statusFilter.onchange = function() {
+                updateCardActiveState(statusFilter.value);
+                applyTodayFilters();
+            };
             
             // Set up sort handlers (replace any existing handlers)
             document.querySelectorAll('#todaySchedulerTable th.sortable').forEach(th => {
@@ -3588,6 +3603,81 @@ Option 4 - Node.js (if installed):
                     renderTodayTable(sorted);
                 };
             });
+        }
+        
+        function updateCardActiveState(statusValue) {
+            // Remove active class from all cards
+            document.querySelectorAll('.stat-card.clickable').forEach(card => {
+                card.classList.remove('active');
+            });
+            
+            // Add active class to the corresponding card
+            let cardId;
+            if (statusValue === 'All') {
+                cardId = 'todayCardTotal';
+            } else if (statusValue === 'Pending') {
+                cardId = 'todayCardPending';
+            } else if (statusValue === 'In Progress') {
+                cardId = 'todayCardInProgress';
+            } else if (statusValue === 'Success') {
+                cardId = 'todayCardSuccess';
+            } else if (statusValue === 'Failed') {
+                cardId = 'todayCardFailed';
+            }
+            
+            if (cardId) {
+                const card = document.getElementById(cardId);
+                if (card) {
+                    card.classList.add('active');
+                }
+            }
+        }
+        
+        function filterTodayByCard(statusValue) {
+            // Update the status filter dropdown
+            const statusFilter = document.getElementById('todayStatusFilter');
+            if (statusFilter) {
+                statusFilter.value = statusValue;
+                updateCardActiveState(statusValue);
+                
+                // Trigger the filter function
+                const searchInput = document.getElementById('todaySearchInput');
+                const frequencyFilter = document.getElementById('todayFrequencyFilter');
+                const searchVal = searchInput ? searchInput.value.toLowerCase().trim() : '';
+                const freqVal = frequencyFilter ? frequencyFilter.value : 'All';
+                
+                let filtered = window.todayScheduledData.filter(job => {
+                    // Search filter
+                    const matchesSearch = (job.analyticName || '').toLowerCase().includes(searchVal);
+                    if (!matchesSearch) return false;
+                    
+                    // Status filter
+                    if (statusValue !== 'All') {
+                        const isPending = !job.executionStartDate && job.executionSuccess === undefined;
+                        const isInProgress = job.executionStartDate && !job.executionFinishDate;
+                        const isSuccess = job.executionSuccess === true;
+                        const isFailed = job.executionSuccess === false;
+                        
+                        if (statusValue === 'Pending' && !isPending) return false;
+                        if (statusValue === 'In Progress' && !isInProgress) return false;
+                        if (statusValue === 'Success' && !isSuccess) return false;
+                        if (statusValue === 'Failed' && !isFailed) return false;
+                    }
+                    
+                    // Frequency filter
+                    if (freqVal !== 'All') {
+                        const scheduledJob = job.scheduledJob || matchJobToScheduler(job.analyticName);
+                        if (!scheduledJob || scheduledJob.frequency !== freqVal) {
+                            return false;
+                        }
+                    }
+                    
+                    return true;
+                });
+                
+                window.todayFilteredData = filtered;
+                renderTodayTable(filtered);
+            }
         }
         
         function renderTodayTable(data) {
