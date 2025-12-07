@@ -1981,10 +1981,19 @@ Option 4 - Node.js (if installed):
                         lastUpdatedEl.style.display = 'inline';
                     }
                     
-                    // Check if error is related to invalid token
+                    // Check for different types of errors
                     const errorMessage = result.message || '';
                     const errorOutput = result.output || '';
                     const errorText = result.error || '';
+                    const fullErrorText = (errorMessage + ' ' + errorOutput + ' ' + errorText).toLowerCase();
+                    
+                    // Check if error is related to VPN/network connectivity
+                    const isVpnError = fullErrorText.includes('could not resolve host') ||
+                                     fullErrorText.includes('could not resolve host: database-explorer.gdn-app.com') ||
+                                     fullErrorText.includes('return code: 6') ||
+                                     fullErrorText.includes('curl: (6)');
+                    
+                    // Check if error is related to invalid token
                     const isTokenError = errorMessage.includes('Invalid cookie or header token') ||
                                         errorMessage.includes('Invalid Cookie or header token') ||
                                         errorOutput.includes('Invalid cookie or header token') ||
@@ -1992,11 +2001,19 @@ Option 4 - Node.js (if installed):
                                         errorText.includes('Invalid cookie or header token') ||
                                         errorText.includes('Invalid Cookie or header token');
                     
-                    if (isTokenError) {
+                    if (isVpnError) {
+                        // Show VPN connection error toast
+                        showToast(
+                            'VPN Connection Required',
+                            'Could not connect to database. Please check your VPN connection and try again.',
+                            'error',
+                            8000
+                        );
+                    } else if (isTokenError) {
                         // Show SSO token modal
                         showSsoTokenModal();
                     } else {
-                        // Show error toast
+                        // Show generic error toast
                         showToast(
                             'Refresh Failed',
                             result.message || 'Failed to refresh today\'s data',
@@ -2030,15 +2047,27 @@ Option 4 - Node.js (if installed):
                 }
                 
                 // Check if error message contains token error (unlikely in catch, but check anyway)
-                const errorMessage = error.message || error.toString() || '';
-                const isTokenError = errorMessage.includes('Invalid cookie or header token') ||
-                                    errorMessage.includes('Invalid Cookie or header token');
+                const errorMessage = (error.message || error.toString() || '').toLowerCase();
+                const isTokenError = errorMessage.includes('invalid cookie or header token');
+                
+                // Check for network/VPN errors in catch block (e.g., fetch failures)
+                const isNetworkError = errorMessage.includes('failed to fetch') ||
+                                      errorMessage.includes('networkerror') ||
+                                      errorMessage.includes('network error');
                 
                 if (isTokenError) {
                     // Show SSO token modal
                     showSsoTokenModal();
+                } else if (isNetworkError) {
+                    // Show VPN connection error toast
+                    showToast(
+                        'Network Connection Error',
+                        'Unable to connect to server. Please check your VPN connection and try again.',
+                        'error',
+                        8000
+                    );
                 } else {
-                    // Show error toast
+                    // Show generic error toast
                     showToast(
                         'Connection Error',
                         'Make sure you\'re using the Python server (python3 server.py)',
