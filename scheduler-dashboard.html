@@ -1453,22 +1453,42 @@
                         <div class="stat-card info clickable" id="todayCardTotal" onclick="filterTodayByCard('All')" title="Click to show all jobs">
                             <div class="stat-label">Total Jobs</div>
                             <div class="stat-value" id="todayTotal">0</div>
+                            <div style="display: flex; gap: 0.75rem; margin-top: 0.5rem; font-size: 0.7rem;">
+                                <div style="color: #92400e;">🟡 <span id="todayTotalCanary">0</span></div>
+                                <div style="color: #1e40af;">🔵 <span id="todayTotalNonCanary">0</span></div>
+                            </div>
                         </div>
                         <div class="stat-card warning clickable" id="todayCardPending" onclick="filterTodayByCard('Pending')" title="Click to filter pending jobs">
                             <div class="stat-label">Pending Jobs</div>
                             <div class="stat-value" id="todayPending">0</div>
+                            <div style="display: flex; gap: 0.75rem; margin-top: 0.5rem; font-size: 0.7rem;">
+                                <div style="color: #92400e;">🟡 <span id="todayPendingCanary">0</span></div>
+                                <div style="color: #1e40af;">🔵 <span id="todayPendingNonCanary">0</span></div>
+                            </div>
                         </div>
                         <div class="stat-card clickable" id="todayCardInProgress" onclick="filterTodayByCard('In Progress')" style="border-left-color: var(--info);" title="Click to filter in-progress jobs">
                             <div class="stat-label">In Progress Jobs</div>
                             <div class="stat-value" id="todayInProgress">0</div>
+                            <div style="display: flex; gap: 0.75rem; margin-top: 0.5rem; font-size: 0.7rem;">
+                                <div style="color: #92400e;">🟡 <span id="todayInProgressCanary">0</span></div>
+                                <div style="color: #1e40af;">🔵 <span id="todayInProgressNonCanary">0</span></div>
+                            </div>
                         </div>
                         <div class="stat-card success clickable" id="todayCardSuccess" onclick="filterTodayByCard('Success')" title="Click to filter succeeded jobs">
                             <div class="stat-label">Succeeded Jobs</div>
                             <div class="stat-value" id="todaySucceeded">0</div>
+                            <div style="display: flex; gap: 0.75rem; margin-top: 0.5rem; font-size: 0.7rem;">
+                                <div style="color: #92400e;">🟡 <span id="todaySucceededCanary">0</span></div>
+                                <div style="color: #1e40af;">🔵 <span id="todaySucceededNonCanary">0</span></div>
+                            </div>
                         </div>
                         <div class="stat-card danger clickable" id="todayCardFailed" onclick="filterTodayByCard('Failed')" title="Click to filter failed jobs">
                             <div class="stat-label">Failed Jobs</div>
                             <div class="stat-value" id="todayFailed">0</div>
+                            <div style="display: flex; gap: 0.75rem; margin-top: 0.5rem; font-size: 0.7rem;">
+                                <div style="color: #92400e;">🟡 <span id="todayFailedCanary">0</span></div>
+                                <div style="color: #1e40af;">🔵 <span id="todayFailedNonCanary">0</span></div>
+                            </div>
                         </div>
                     </div>
                     
@@ -1505,6 +1525,14 @@
                                     <option value="Monthly">Monthly</option>
                                 </select>
                             </div>
+                            <div class="filter-group">
+                                <label>🌐 Environment</label>
+                                <select id="todayEnvironmentFilter">
+                                    <option value="All">All</option>
+                                    <option value="Canary">🟡 Canary</option>
+                                    <option value="Non-Canary">🔵 Non-Canary</option>
+                                </select>
+                            </div>
                         </div>
                         <div class="table-wrapper">
                             <table id="todaySchedulerTable">
@@ -1513,6 +1541,7 @@
                                         <th class="sortable" data-key="analyticName">Analytic Name</th>
                                         <th class="sortable" data-key="executionSuccess">Status</th>
                                         <th>Frequency</th>
+                                        <th>Environment</th>
                                         <th>Time Slots</th>
                                         <th class="sortable" data-key="executionStartDate">Start Time</th>
                                         <th class="sortable" data-key="executionFinishDate">End Time</th>
@@ -1522,7 +1551,7 @@
                                     </tr>
                                 </thead>
                                 <tbody id="todayTableBody">
-                                    <tr><td colspan="9" class="no-results">Loading...</td></tr>
+                                    <tr><td colspan="10" class="no-results">Loading...</td></tr>
                                 </tbody>
                             </table>
                         </div>
@@ -3443,6 +3472,14 @@ Option 4 - Node.js (if installed):
             return false;
         }
         
+        // Helper function to get environment from job
+        function getTodayJobEnvironment(job) {
+            if (!job || !job.curlCommand) return 'Unknown';
+            if (job.curlCommand.includes('seller-insights-next.gdn-sg.cld')) return 'Canary';
+            if (job.curlCommand.includes('seller-insights.gdn-sg.cld')) return 'Non-Canary';
+            return 'Unknown';
+        }
+        
         // Function to get jobs that run today and match them with today's data
         function getTodayScheduledJobs() {
             // Filter jobs that run today
@@ -3468,13 +3505,15 @@ Option 4 - Node.js (if installed):
             const result = [];
             jobsRunningToday.forEach(job => {
                 const executionData = todayDataMap.get(job.analyticName) || [];
+                const environment = getTodayJobEnvironment(job);
                 
                 if (executionData.length > 0) {
                     // If there's execution data, add each execution as a row
                     executionData.forEach(data => {
                         result.push({
                             ...data,
-                            scheduledJob: job // Keep reference to the scheduled job
+                            scheduledJob: job, // Keep reference to the scheduled job
+                            environment: environment // Add environment info
                         });
                     });
                 } else {
@@ -3482,7 +3521,8 @@ Option 4 - Node.js (if installed):
                     result.push({
                         analyticName: job.analyticName,
                         executionSuccess: undefined,
-                        scheduledJob: job
+                        scheduledJob: job,
+                        environment: environment // Add environment info
                     });
                 }
             });
@@ -3510,11 +3550,45 @@ Option 4 - Node.js (if installed):
             
             const totalJobs = todayScheduledData.length;
             
+            // Helper function to get environment from job
+            const getJobEnv = (job) => {
+                return job.environment || getTodayJobEnvironment(job.scheduledJob || matchJobToScheduler(job.analyticName));
+            };
+            
+            // Calculate Canary/Non-Canary counts for each category
+            const totalCanary = todayScheduledData.filter(j => getJobEnv(j) === 'Canary').length;
+            const totalNonCanary = todayScheduledData.filter(j => getJobEnv(j) === 'Non-Canary').length;
+            
+            const pendingCanary = pendingJobs.filter(j => getJobEnv(j) === 'Canary').length;
+            const pendingNonCanary = pendingJobs.filter(j => getJobEnv(j) === 'Non-Canary').length;
+            
+            const inProgressCanary = inProgressJobs.filter(j => getJobEnv(j) === 'Canary').length;
+            const inProgressNonCanary = inProgressJobs.filter(j => getJobEnv(j) === 'Non-Canary').length;
+            
+            const succeededCanary = succeededJobs.filter(j => getJobEnv(j) === 'Canary').length;
+            const succeededNonCanary = succeededJobs.filter(j => getJobEnv(j) === 'Non-Canary').length;
+            
+            const failedCanary = failedJobs.filter(j => getJobEnv(j) === 'Canary').length;
+            const failedNonCanary = failedJobs.filter(j => getJobEnv(j) === 'Non-Canary').length;
+            
+            // Update main counts
             document.getElementById('todaySucceeded').textContent = succeededJobs.length;
             document.getElementById('todayFailed').textContent = failedJobs.length;
             document.getElementById('todayTotal').textContent = totalJobs;
             document.getElementById('todayPending').textContent = pendingJobs.length;
             document.getElementById('todayInProgress').textContent = inProgressJobs.length;
+            
+            // Update Canary/Non-Canary counts
+            document.getElementById('todayTotalCanary').textContent = totalCanary;
+            document.getElementById('todayTotalNonCanary').textContent = totalNonCanary;
+            document.getElementById('todayPendingCanary').textContent = pendingCanary;
+            document.getElementById('todayPendingNonCanary').textContent = pendingNonCanary;
+            document.getElementById('todayInProgressCanary').textContent = inProgressCanary;
+            document.getElementById('todayInProgressNonCanary').textContent = inProgressNonCanary;
+            document.getElementById('todaySucceededCanary').textContent = succeededCanary;
+            document.getElementById('todaySucceededNonCanary').textContent = succeededNonCanary;
+            document.getElementById('todayFailedCanary').textContent = failedCanary;
+            document.getElementById('todayFailedNonCanary').textContent = failedNonCanary;
             
             // Set initial card active state based on current filter
             const initialStatusFilter = document.getElementById('todayStatusFilter');
@@ -3537,6 +3611,7 @@ Option 4 - Node.js (if installed):
                 const searchVal = document.getElementById('todaySearchInput').value.toLowerCase().trim();
                 const statusFilter = document.getElementById('todayStatusFilter').value;
                 const frequencyFilter = document.getElementById('todayFrequencyFilter').value;
+                const environmentFilter = document.getElementById('todayEnvironmentFilter').value;
                 
                 let filtered = todayScheduledData.filter(job => {
                     // Search filter
@@ -3564,6 +3639,14 @@ Option 4 - Node.js (if installed):
                         }
                     }
                     
+                    // Environment filter
+                    if (environmentFilter !== 'All') {
+                        const jobEnvironment = job.environment || getTodayJobEnvironment(job.scheduledJob || matchJobToScheduler(job.analyticName));
+                        if (jobEnvironment !== environmentFilter) {
+                            return false;
+                        }
+                    }
+                    
                     return true;
                 });
                 
@@ -3575,9 +3658,11 @@ Option 4 - Node.js (if installed):
             const searchInput = document.getElementById('todaySearchInput');
             const statusFilter = document.getElementById('todayStatusFilter');
             const frequencyFilter = document.getElementById('todayFrequencyFilter');
+            const environmentFilter = document.getElementById('todayEnvironmentFilter');
             
             searchInput.oninput = applyTodayFilters;
             frequencyFilter.onchange = applyTodayFilters;
+            environmentFilter.onchange = applyTodayFilters;
             
             // Update card active state when status filter changes manually
             statusFilter.onchange = function() {
@@ -3672,8 +3757,10 @@ Option 4 - Node.js (if installed):
                 // Trigger the filter function
                 const searchInput = document.getElementById('todaySearchInput');
                 const frequencyFilter = document.getElementById('todayFrequencyFilter');
+                const environmentFilter = document.getElementById('todayEnvironmentFilter');
                 const searchVal = searchInput ? searchInput.value.toLowerCase().trim() : '';
                 const freqVal = frequencyFilter ? frequencyFilter.value : 'All';
+                const envVal = environmentFilter ? environmentFilter.value : 'All';
                 
                 let filtered = window.todayScheduledData.filter(job => {
                     // Search filter
@@ -3701,6 +3788,14 @@ Option 4 - Node.js (if installed):
                         }
                     }
                     
+                    // Environment filter
+                    if (envVal !== 'All') {
+                        const jobEnvironment = job.environment || getTodayJobEnvironment(job.scheduledJob || matchJobToScheduler(job.analyticName));
+                        if (jobEnvironment !== envVal) {
+                            return false;
+                        }
+                    }
+                    
                     return true;
                 });
                 
@@ -3713,7 +3808,7 @@ Option 4 - Node.js (if installed):
             const tbody = document.getElementById('todayTableBody');
             
             if (data.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="9" class="no-results">No results found</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="10" class="no-results">No results found</td></tr>';
                 return;
             }
             
@@ -3756,6 +3851,15 @@ Option 4 - Node.js (if installed):
                 
                 // Get frequency from matched job
                 const frequency = matchedJob ? matchedJob.frequency || '-' : '-';
+                
+                // Get environment badge
+                const jobEnvironment = job.environment || getTodayJobEnvironment(matchedJob);
+                let environmentBadge = '<span class="badge badge-secondary">Unknown</span>';
+                if (jobEnvironment === 'Canary') {
+                    environmentBadge = '<span class="badge badge-warning" style="background: #fef3c7; color: #92400e; font-weight: 700;">🟡 Canary</span>';
+                } else if (jobEnvironment === 'Non-Canary') {
+                    environmentBadge = '<span class="badge badge-info" style="background: #dbeafe; color: #1e40af; font-weight: 700;">🔵 Non-Canary</span>';
+                }
                 
                 if (matchedJob) {
                     const hourString = matchedJob.hour || '0';
@@ -3819,6 +3923,7 @@ Option 4 - Node.js (if installed):
                         <td>${job.analyticName || ''}</td>
                         <td><span class="${statusClass}">${statusText}</span></td>
                         <td>${frequency}</td>
+                        <td>${environmentBadge}</td>
                         <td>${timeSlotsDisplay}</td>
                         <td>${startTime}</td>
                         <td>${endTime}</td>
