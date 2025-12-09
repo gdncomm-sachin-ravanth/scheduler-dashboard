@@ -1560,10 +1560,47 @@
                 
                 <!-- Reports Overview Section -->
                 <section id="reports-overview-section" class="page-section">
+                    <!-- Date Range Filter -->
+                    <div style="margin-bottom: 1.5rem; padding: 1rem; background: white; border-radius: 0.5rem; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+                        <div style="display: flex; align-items: center; gap: 1rem; flex-wrap: wrap;">
+                            <label for="pastDataFilter" style="font-weight: 600; color: var(--gray-700); font-size: 0.875rem;">
+                                📅 Date Range Filter:
+                            </label>
+                            <select id="pastDataFilter" onchange="filterPastData()" 
+                                    style="padding: 0.5rem 0.75rem; border: 1px solid var(--gray-300); border-radius: 0.375rem; 
+                                    font-size: 0.875rem; background: white; min-width: 180px; cursor: pointer;">
+                                <option value="YESTERDAY" selected>YESTERDAY</option>
+                                <option value="LAST_7_DAYS">LAST 7 DAYS</option>
+                                <option value="LAST_14_DAYS">LAST 14 DAYS</option>
+                            </select>
+                            <button id="refreshPastDataBtn" onclick="refreshPastData()" 
+                                    style="padding: 0.5rem 1rem; border: 1px solid var(--gray-300); border-radius: 0.375rem; 
+                                    background: var(--primary); color: white; cursor: pointer; font-size: 0.875rem; font-weight: 500;
+                                    display: flex; align-items: center; gap: 0.5rem;">
+                                <span id="refreshPastDataIcon">🔄</span>
+                                <span id="refreshPastDataText">Refresh</span>
+                            </button>
+                            <span id="pastDataLastUpdatedTime" style="font-size: 0.875rem; color: var(--gray-600); font-style: italic; padding-left: 0.5rem; border-left: 1px solid var(--gray-300);"></span>
+                            <span id="pastDataStatus" style="font-size: 0.875rem; color: var(--gray-600);"></span>
+                        </div>
+                    </div>
+                    
                     <!-- Daily Breakdown Chart -->
                     <div class="chart-container" style="min-height: auto;">
-                        <div class="chart-title">📊 Daily Breakdown - Success vs Failed</div>
-                        <div id="dailyBreakdownChart" style="overflow-x: auto;"></div>
+                        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem; flex-wrap: wrap; gap: 1rem;">
+                            <div class="chart-title">📊 Daily Breakdown - Success vs Failed</div>
+                            <div style="display: flex; align-items: center; gap: 1.5rem; flex-wrap: wrap;">
+                                <div style="display: flex; align-items: center; gap: 0.5rem;">
+                                    <div style="width: 14px; height: 14px; background: linear-gradient(135deg, #10b981 0%, #059669 100%); border-radius: 0.25rem; box-shadow: 0 1px 2px rgba(16, 185, 129, 0.3);"></div>
+                                    <span style="font-weight: 500; font-size: 0.8125rem; color: var(--gray-700);">Success Schedulers</span>
+                                </div>
+                                <div style="display: flex; align-items: center; gap: 0.5rem;">
+                                    <div style="width: 14px; height: 14px; background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); border-radius: 0.25rem; box-shadow: 0 1px 2px rgba(239, 68, 68, 0.3);"></div>
+                                    <span style="font-weight: 500; font-size: 0.8125rem; color: var(--gray-700);">Failed Schedulers</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div id="dailyBreakdownChart" style="width: 100%; overflow: hidden;"></div>
                     </div>
                     
                     <!-- Heatmap: Scheduler Activity by Hour -->
@@ -1682,7 +1719,6 @@
                     <div class="chart-container" style="height: auto; min-height: 400px;">
                         <div class="chart-title">⏱️ Duration Distribution (All Schedulers)</div>
                         <div id="durationChart"></div>
-                        <div id="attemptChart" style="margin-top: 30px;"></div>
                     </div>
                 </section>
             </div>
@@ -1820,6 +1856,7 @@
         let JOBS_DATA = [];
         let TODAY_DATA = [];
         let REPORTS_DATA = [];
+        let FILTERED_REPORTS_DATA = []; // Filtered version of REPORTS_DATA based on selected filter
         
         // Function to load data from JSON files
         async function loadData() {
@@ -1833,6 +1870,9 @@
                 JOBS_DATA = await jobsResponse.json();
                 TODAY_DATA = await todayResponse.json();
                 REPORTS_DATA = await reportsResponse.json();
+                
+                // Initialize filtered data based on current filter selection
+                FILTERED_REPORTS_DATA = getFilteredReportsData();
                 
                 return true;
             } catch (error) {
@@ -1864,6 +1904,274 @@ Option 4 - Node.js (if installed):
                 
                 alert(errorMsg);
                 return false;
+            }
+        }
+        
+        // Function to refresh past data - fetches last 14 days and stores in past-data.json
+        async function refreshPastData() {
+            const refreshBtn = document.getElementById('refreshPastDataBtn');
+            const refreshIcon = document.getElementById('refreshPastDataIcon');
+            const refreshText = document.getElementById('refreshPastDataText');
+            const statusSpan = document.getElementById('pastDataStatus');
+            
+            if (!refreshBtn) return;
+            
+            // Disable button and show loading state
+            refreshBtn.disabled = true;
+            refreshIcon.textContent = '⏳';
+            refreshText.textContent = 'Refreshing...';
+            
+            // Update status
+            if (statusSpan) {
+                statusSpan.textContent = 'Fetching last 14 days of data (excluding today)...';
+                statusSpan.style.color = 'var(--primary)';
+            }
+            
+            try {
+                const response = await fetch('/api/fetch-past-data', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ date_range: 'LAST_14_DAYS_EXCLUDING_TODAY' })
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    // Update last fetched time
+                    updatePastDataLastUpdatedTime();
+                    
+                    // Update status
+                    if (statusSpan) {
+                        statusSpan.textContent = `✓ ${result.message}`;
+                        statusSpan.style.color = '#10b981';
+                        // Clear status after 3 seconds
+                        setTimeout(() => {
+                            if (statusSpan) {
+                                statusSpan.textContent = '';
+                            }
+                        }, 3000);
+                    }
+                    
+                    // Reload past data
+                    await loadData();
+                    
+                    // Update filtered data based on current filter selection
+                    FILTERED_REPORTS_DATA = getFilteredReportsData();
+                    
+                    // Preserve current heatmap frequency filter
+                    const heatmapFrequency = document.querySelector('.filter-btn.active[id^="heatmap-"]');
+                    const currentFrequency = heatmapFrequency ? heatmapFrequency.textContent.trim() : 'All';
+                    
+                    // Refresh Reports Overview page (reports-overview-section)
+                    displayReportsDateRange();
+                    updateInsights();
+                    updatePerformance();
+                    renderDailyBreakdownChart();
+                    
+                    // Refresh Pattern Analysis page (reports-patterns-section)
+                    // This updates stats, duration chart, attempt chart, and heatmap
+                    // Note: initPatternAnalysis() calls renderHeatmap('All'), so we'll restore the filter after
+                    initPatternAnalysis();
+                    
+                    // Restore heatmap filter for Reports Overview (if it was different from 'All')
+                    if (currentFrequency !== 'All') {
+                        renderHeatmap(currentFrequency);
+                    }
+                    
+                    // Refresh All Scheduler Data page (reports-data-section)
+                    // This updates the pattern match table
+                    populatePatternDateFilter();
+                    filterPatternTable();
+                    
+                    // Also refresh reports table if it exists (for any other reports views)
+                    if (typeof renderReportsTable === 'function') {
+                        renderReportsTable();
+                    }
+                } else {
+                    // Show error
+                    if (statusSpan) {
+                        statusSpan.textContent = `✗ Error: ${result.error || 'Failed to fetch data'}`;
+                        statusSpan.style.color = '#ef4444';
+                    }
+                    console.error('Error refreshing past data:', result);
+                }
+            } catch (error) {
+                // Show error
+                if (statusSpan) {
+                    statusSpan.textContent = `✗ Error: ${error.message}`;
+                    statusSpan.style.color = '#ef4444';
+                }
+                console.error('Error refreshing past data:', error);
+            } finally {
+                // Re-enable button and restore state
+                refreshBtn.disabled = false;
+                refreshIcon.textContent = '🔄';
+                refreshText.textContent = 'Refresh';
+            }
+        }
+        
+        // Function to get filtered reports data based on selected date range filter
+        function getFilteredReportsData() {
+            const filterSelect = document.getElementById('pastDataFilter');
+            if (!filterSelect || REPORTS_DATA.length === 0) {
+                return REPORTS_DATA;
+            }
+            
+            const dateRange = filterSelect.value;
+            
+            // Get current time and calculate WIB timezone offset (UTC+7)
+            const wibOffset = 7 * 60 * 60 * 1000; // UTC+7 in milliseconds
+            const now = Date.now();
+            const nowWIB = new Date(now + wibOffset);
+            
+            // Get start of today in WIB
+            const todayStartWIB = new Date(nowWIB);
+            todayStartWIB.setUTCHours(0, 0, 0, 0);
+            const todayStartMs = todayStartWIB.getTime() - wibOffset;
+            
+            let startMs, endMs;
+            
+            if (dateRange === 'YESTERDAY') {
+                // Yesterday: start of yesterday 00:00:00 to end of yesterday 23:59:59 (WIB timezone)
+                const yesterdayStartWIB = new Date(todayStartWIB);
+                yesterdayStartWIB.setUTCDate(yesterdayStartWIB.getUTCDate() - 1);
+                const yesterdayEndWIB = new Date(yesterdayStartWIB);
+                yesterdayEndWIB.setUTCHours(23, 59, 59, 999);
+                
+                startMs = yesterdayStartWIB.getTime() - wibOffset;
+                endMs = yesterdayEndWIB.getTime() - wibOffset;
+            } else if (dateRange === 'LAST_7_DAYS') {
+                // Last 7 days: from 7 days ago start of day to today end of day
+                const sevenDaysAgoStartWIB = new Date(todayStartWIB);
+                sevenDaysAgoStartWIB.setUTCDate(sevenDaysAgoStartWIB.getUTCDate() - 7);
+                const todayEndWIB = new Date(todayStartWIB);
+                todayEndWIB.setUTCHours(23, 59, 59, 999);
+                
+                startMs = sevenDaysAgoStartWIB.getTime() - wibOffset;
+                endMs = todayEndWIB.getTime() - wibOffset;
+            } else if (dateRange === 'LAST_14_DAYS') {
+                // Last 14 days: from 14 days ago start of day to today end of day
+                const fourteenDaysAgoStartWIB = new Date(todayStartWIB);
+                fourteenDaysAgoStartWIB.setUTCDate(fourteenDaysAgoStartWIB.getUTCDate() - 14);
+                const todayEndWIB = new Date(todayStartWIB);
+                todayEndWIB.setUTCHours(23, 59, 59, 999);
+                
+                startMs = fourteenDaysAgoStartWIB.getTime() - wibOffset;
+                endMs = todayEndWIB.getTime() - wibOffset;
+            } else {
+                // Default: return all data
+                return REPORTS_DATA;
+            }
+            
+            // Filter REPORTS_DATA based on analyticDate
+            // analyticDate represents start of day in WIB, so we check if it falls within the range
+            return REPORTS_DATA.filter(item => {
+                const analyticDate = parseInt(item.analyticDate);
+                if (isNaN(analyticDate)) return false;
+                
+                // For YESTERDAY, we want records where analyticDate equals yesterday's start
+                // For date ranges, we want records where analyticDate is within the range
+                if (dateRange === 'YESTERDAY') {
+                    // Check if analyticDate is yesterday's start of day
+                    const yesterdayStartWIB = new Date(todayStartWIB);
+                    yesterdayStartWIB.setUTCDate(yesterdayStartWIB.getUTCDate() - 1);
+                    const yesterdayStartMs = yesterdayStartWIB.getTime() - wibOffset;
+                    return analyticDate === yesterdayStartMs;
+                } else {
+                    // For ranges, check if analyticDate is within the range
+                    return analyticDate >= startMs && analyticDate <= endMs;
+                }
+            });
+        }
+        
+        // Function to filter past data based on dropdown selection (client-side filtering only, no API calls)
+        function filterPastData() {
+            // Update filtered data based on current filter selection
+            FILTERED_REPORTS_DATA = getFilteredReportsData();
+            
+            // Preserve current heatmap frequency filter
+            const heatmapFrequency = document.querySelector('.filter-btn.active[id^="heatmap-"]');
+            const currentFrequency = heatmapFrequency ? heatmapFrequency.textContent.trim() : 'All';
+            
+            // Refresh Reports Overview page (reports-overview-section)
+            displayReportsDateRange();
+            updateInsights();
+            updatePerformance();
+            renderDailyBreakdownChart();
+            
+            // Refresh Pattern Analysis page (reports-patterns-section)
+            // This updates stats, duration chart, attempt chart, and heatmap
+            // Note: initPatternAnalysis() calls renderHeatmap('All'), so we'll restore the filter after
+            initPatternAnalysis();
+            
+            // Restore heatmap filter for Reports Overview (if it was different from 'All')
+            if (currentFrequency !== 'All') {
+                renderHeatmap(currentFrequency);
+            }
+            
+            // Refresh All Scheduler Data page (reports-data-section)
+            // This updates the pattern match table
+            populatePatternDateFilter();
+            filterPatternTable();
+            
+            // Also refresh reports table if it exists (for any other reports views)
+            if (typeof renderReportsTable === 'function') {
+                renderReportsTable();
+            }
+        }
+        
+        // Function to update last updated time for past data
+        function updatePastDataLastUpdatedTime() {
+            const lastUpdatedEl = document.getElementById('pastDataLastUpdatedTime');
+            if (!lastUpdatedEl) return;
+            
+            const now = new Date();
+            const timeStr = now.toLocaleTimeString('en-US', {
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit',
+                hour12: false
+            });
+            const dateStr = now.toLocaleDateString('en-US', {
+                month: 'short',
+                day: 'numeric'
+            });
+            
+            lastUpdatedEl.textContent = `Last updated: ${dateStr} ${timeStr}`;
+            lastUpdatedEl.style.display = 'inline';
+            
+            // Store in localStorage for persistence
+            localStorage.setItem('pastDataLastUpdated', now.toISOString());
+        }
+        
+        // Function to load and display last updated time for past data
+        function loadPastDataLastUpdatedTime() {
+            const lastUpdatedEl = document.getElementById('pastDataLastUpdatedTime');
+            if (!lastUpdatedEl) return;
+            
+            const lastUpdatedStr = localStorage.getItem('pastDataLastUpdated');
+            
+            if (lastUpdatedStr) {
+                const lastUpdated = new Date(lastUpdatedStr);
+                const timeStr = lastUpdated.toLocaleTimeString('en-US', {
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    second: '2-digit',
+                    hour12: false
+                });
+                const dateStr = lastUpdated.toLocaleDateString('en-US', {
+                    month: 'short',
+                    day: 'numeric'
+                });
+                
+                lastUpdatedEl.textContent = `Last updated: ${dateStr} ${timeStr}`;
+                lastUpdatedEl.style.display = 'inline';
+            } else {
+                // Show "-" when no last updated time exists
+                lastUpdatedEl.textContent = 'Last updated: -';
+                lastUpdatedEl.style.display = 'inline';
             }
         }
         
@@ -2665,6 +2973,15 @@ Option 4 - Node.js (if installed):
                     }
                     // Show last updated time
                     loadLastUpdatedTime(true);
+                } else if (page === 'reports-overview') {
+                    // Load last updated time for Reports Overview page
+                    loadPastDataLastUpdatedTime();
+                    // Hide Today's Report refresh button
+                    refreshBtn.style.display = 'none';
+                    const refreshContainer = document.getElementById('refreshButtonContainer');
+                    if (refreshContainer) {
+                        refreshContainer.style.display = 'none';
+                    }
                 } else {
                     // Hide button on all other pages (including Rundeck Jobs)
                     refreshBtn.style.display = 'none';
@@ -3568,8 +3885,8 @@ Option 4 - Node.js (if installed):
         let reportsCharts = {};
         
         function displayReportsDateRange() {
-            // Extract all dates from REPORTS_DATA
-            const dates = REPORTS_DATA
+            // Extract all dates from FILTERED_REPORTS_DATA
+            const dates = FILTERED_REPORTS_DATA
                 .map(s => parseInt(s.analyticDate))
                 .filter(d => !isNaN(d) && d > 0);
             
@@ -3601,18 +3918,22 @@ Option 4 - Node.js (if installed):
             
             // Update current page title if on a reports page
             const currentPage = document.querySelector('.page-section.active')?.id?.replace('-section', '');
-            if (currentPage && pageTitles[currentPage]) {
-                document.getElementById('pageTitle').textContent = pageTitles[currentPage];
+            const pageTitleEl = document.getElementById('pageTitle');
+            if (currentPage && pageTitles[currentPage] && pageTitleEl) {
+                pageTitleEl.textContent = pageTitles[currentPage];
             }
         }
         
         function updateInsights() {
-            const totalData = REPORTS_DATA.reduce((sum, s) => sum + parseInt(s.bqTotalData || 0), 0);
-            const uniqueTypes = new Set(REPORTS_DATA.map(s => s.analyticName)).size;
-            const durations = REPORTS_DATA.map(s => calculateDuration(s.executionStartDate, s.executionFinishDate)).filter(d => d);
+            const insightsGrid = document.getElementById('insightsGrid');
+            if (!insightsGrid) return; // Element doesn't exist, skip update
+            
+            const totalData = FILTERED_REPORTS_DATA.reduce((sum, s) => sum + parseInt(s.bqTotalData || 0), 0);
+            const uniqueTypes = new Set(FILTERED_REPORTS_DATA.map(s => s.analyticName)).size;
+            const durations = FILTERED_REPORTS_DATA.map(s => calculateDuration(s.executionStartDate, s.executionFinishDate)).filter(d => d);
             const avgDuration = durations.length ? durations.reduce((sum, d) => sum + d.totalSeconds, 0) / durations.length : 0;
             
-            document.getElementById('insightsGrid').innerHTML = `
+            insightsGrid.innerHTML = `
                 <div class="insight-card">
                     <div class="insight-label">Total Records</div>
                     <div class="insight-value">${totalData.toLocaleString()}</div>
@@ -3629,7 +3950,7 @@ Option 4 - Node.js (if installed):
         }
         
         function updatePerformance() {
-            const withDuration = REPORTS_DATA.map(s => ({
+            const withDuration = FILTERED_REPORTS_DATA.map(s => ({
                 name: s.analyticName,
                 duration: calculateDuration(s.executionStartDate, s.executionFinishDate),
                 bqData: parseInt(s.bqTotalData || 0)
@@ -3637,8 +3958,8 @@ Option 4 - Node.js (if installed):
             
             const slowest = [...withDuration].sort((a, b) => b.duration.totalSeconds - a.duration.totalSeconds).slice(0, 5);
             const fastest = [...withDuration].sort((a, b) => a.duration.totalSeconds - b.duration.totalSeconds).slice(0, 5);
-            const highest = [...REPORTS_DATA].filter(s => s.bqTotalData).sort((a, b) => parseInt(b.bqTotalData) - parseInt(a.bqTotalData)).slice(0, 5);
-            const failed = REPORTS_DATA.filter(s => getStatus(s) !== 'success');
+            const highest = [...FILTERED_REPORTS_DATA].filter(s => s.bqTotalData).sort((a, b) => parseInt(b.bqTotalData) - parseInt(a.bqTotalData)).slice(0, 5);
+            const failed = FILTERED_REPORTS_DATA.filter(s => getStatus(s) !== 'success');
             
             let html = '<div class="performance-card"><h3>🐌 Slowest Runs</h3>';
             slowest.forEach(s => html += `<div class="perf-item"><span class="perf-item-name">${s.name}</span><span class="perf-item-value">${formatDuration(s.duration)}</span></div>`);
@@ -3658,15 +3979,18 @@ Option 4 - Node.js (if installed):
                 html += '</div>';
             }
             
-            document.getElementById('performanceGrid').innerHTML = html;
+            const performanceGrid = document.getElementById('performanceGrid');
+            if (performanceGrid) {
+                performanceGrid.innerHTML = html;
+            }
         }
         
         function renderDailyBreakdownChart() {
             console.log('🔍 Rendering Daily Breakdown Chart...');
-            console.log('  REPORTS_DATA length:', REPORTS_DATA.length);
+            console.log('  FILTERED_REPORTS_DATA length:', FILTERED_REPORTS_DATA.length);
             
             const byDate = {};
-            REPORTS_DATA.forEach(s => {
+            FILTERED_REPORTS_DATA.forEach(s => {
                 const date = s.analyticDate;
                 if (!byDate[date]) byDate[date] = { total: 0, success: 0, failed: 0 };
                 byDate[date].total++;
@@ -3677,94 +4001,127 @@ Option 4 - Node.js (if installed):
             const sorted = Object.keys(byDate).sort((a, b) => parseInt(a) - parseInt(b));
             console.log('  Dates found:', sorted.length);
             console.log('  Date data:', byDate);
+            
+            if (sorted.length === 0) {
+                const chartContainer = document.getElementById('dailyBreakdownChart');
+                if (chartContainer) {
+                    chartContainer.innerHTML = '<div style="padding: 3rem; text-align: center; color: var(--gray-500);"><div style="font-size: 3rem; margin-bottom: 1rem;">📊</div><div style="font-size: 1rem;">No data available for the selected date range</div></div>';
+                }
+                return;
+            }
+            
             const maxTotal = Math.max(...sorted.map(date => byDate[date].total));
             console.log('  Max total:', maxTotal);
             
-            // Calculate bar width based on number of dates
-            const barWidth = Math.max(40, Math.min(70, 1400 / sorted.length));
             const chartHeight = 180;
             
-            let html = '<div style="padding: 1rem; background: white; border-radius: 0.5rem;">';
+            let html = '<div style="background: white; border-radius: 0.5rem; padding: 1rem; box-shadow: 0 1px 3px rgba(0,0,0,0.1); width: 100%; box-sizing: border-box;">';
             
-            // Legend
-            html += '<div style="display: flex; gap: 1.5rem; margin-bottom: 1.5rem; justify-content: center; font-size: 0.875rem;">';
-            html += '<div style="display: flex; align-items: center; gap: 0.5rem;">';
-            html += '<div style="width: 18px; height: 18px; background: #10b981; border-radius: 0.25rem; box-shadow: 0 1px 3px rgba(0,0,0,0.1);"></div>';
-            html += '<span style="font-weight: 500;">Success</span></div>';
-            html += '<div style="display: flex; align-items: center; gap: 0.5rem;">';
-            html += '<div style="width: 18px; height: 18px; background: #ef4444; border-radius: 0.25rem; box-shadow: 0 1px 3px rgba(0,0,0,0.1);"></div>';
-            html += '<span style="font-weight: 500;">Failed</span></div>';
-            html += '</div>';
+            // Chart container with better spacing for labels
+            html += `<div style="width: 100%; padding: 0.5rem 0 4rem 0; box-sizing: border-box; overflow: visible;">`;
+            html += `<div style="display: flex; gap: 6px; align-items: flex-end; height: ${chartHeight}px; border-bottom: 2px solid #e5e7eb; position: relative; padding-bottom: 0.75rem; width: 100%; box-sizing: border-box; margin-bottom: 0.5rem;">`;
             
-            // Chart container with proper spacing
-            html += '<div style="overflow-x: auto; padding-bottom: 4rem;">';
-            html += `<div style="min-width: ${sorted.length * (barWidth + 12)}px; padding: 0 1rem;">`;
-            html += `<div style="display: flex; gap: 12px; align-items: flex-end; height: ${chartHeight}px; border-bottom: 2px solid var(--gray-200); position: relative;">`;
-            
-            sorted.forEach(date => {
+            sorted.forEach((date, index) => {
                 const data = byDate[date];
-                const totalHeight = chartHeight - 10;
+                const totalHeight = chartHeight - 50; // More space for labels
                 const successHeightPx = Math.max(4, Math.round((data.success / maxTotal) * totalHeight));
                 const failedHeightPx = Math.max(4, Math.round((data.failed / maxTotal) * totalHeight));
                 const successPct = ((data.success / data.total) * 100).toFixed(0);
                 const failedPct = ((data.failed / data.total) * 100).toFixed(0);
                 
-                html += `<div style="width: ${barWidth}px; display: flex; flex-direction: column; align-items: center; position: relative;">`;
+                // Format date for display
+                const dateObj = new Date(parseInt(date));
+                const dateStr = dateObj.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
                 
-                // Values on top
-                html += `<div style="font-size: 0.75rem; font-weight: 600; color: var(--gray-700); margin-bottom: 0.25rem; text-align: center;">
+                html += `<div style="flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: center; position: relative; max-width: 100%;" class="daily-breakdown-bar">`;
+                
+                // Total count badge on top - more visible
+                html += `<div style="font-size: 0.75rem; font-weight: 700; color: #1e293b; margin-bottom: 0.5rem; text-align: center; 
+                         background: #f1f5f9; padding: 0.25rem 0.5rem; border-radius: 0.375rem; border: 1px solid #cbd5e1; cursor: help; white-space: nowrap;"
+                         title="Total Schedulers: ${data.total}\\n\\nBreakdown:\\n- Success: ${data.success}\\n- Failed: ${data.failed}\\n\\nDate: ${dateStr}">
                     ${data.total}
                 </div>`;
                 
                 // Bar container
-                html += `<div style="width: 100%; display: flex; flex-direction: column; justify-content: flex-end; height: ${chartHeight - 30}px;">`;
+                html += `<div style="width: 100%; display: flex; flex-direction: column; justify-content: flex-end; 
+                         height: ${totalHeight}px; gap: 1px; position: relative;">`;
                 
                 // Success bar
                 if (data.success > 0) {
-                    html += `<div style="width: 100%; background: linear-gradient(180deg, #10b981 0%, #059669 100%); 
-                             border-radius: 0.375rem 0.375rem 0 0; height: ${successHeightPx}px; 
-                             position: relative; cursor: pointer; transition: transform 0.2s ease; border: 1px solid #059669;"
-                             onmouseover="this.style.transform='scaleY(1.05)'" 
-                             onmouseout="this.style.transform='scaleY(1)'"
-                             title="✓ Success: ${data.success} (${successPct}%)">
-                        ${successHeightPx > 20 ? `<div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: white; font-size: 0.75rem; font-weight: 600;">${data.success}</div>` : ''}
+                    html += `<div class="success-bar" 
+                             style="width: 100%; 
+                             background: linear-gradient(180deg, #10b981 0%, #059669 100%); 
+                             border-radius: ${data.failed > 0 ? '0.375rem 0.375rem 0 0' : '0.375rem'}; 
+                             height: ${successHeightPx}px; 
+                             position: relative; 
+                             cursor: help; 
+                             transition: opacity 0.2s ease;
+                             box-shadow: 0 2px 4px rgba(16, 185, 129, 0.2);"
+                             onmouseover="this.style.opacity='0.85'" 
+                             onmouseout="this.style.opacity='1'"
+                             title="Success: ${data.success} schedulers (${successPct}%)">
+                        ${successHeightPx > 20 ? `<div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); 
+                         color: white; font-size: 0.7rem; font-weight: 700; text-shadow: 0 1px 3px rgba(0,0,0,0.4);">${data.success}</div>` : ''}
                     </div>`;
                 }
                 
                 // Failed bar
                 if (data.failed > 0) {
-                    html += `<div style="width: 100%; background: linear-gradient(180deg, #ef4444 0%, #dc2626 100%); 
+                    html += `<div class="failed-bar"
+                             style="width: 100%; 
+                             background: linear-gradient(180deg, #ef4444 0%, #dc2626 100%); 
                              ${data.success > 0 ? 'border-radius: 0 0 0.375rem 0.375rem;' : 'border-radius: 0.375rem;'} 
-                             height: ${failedHeightPx}px; position: relative; cursor: pointer; 
-                             transition: transform 0.2s ease; border: 1px solid #dc2626;"
-                             onmouseover="this.style.transform='scaleY(1.05)'" 
-                             onmouseout="this.style.transform='scaleY(1)'"
-                             title="✗ Failed: ${data.failed} (${failedPct}%)">
-                        ${failedHeightPx > 20 ? `<div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: white; font-size: 0.75rem; font-weight: 600;">${data.failed}</div>` : ''}
+                             height: ${failedHeightPx}px; 
+                             position: relative; 
+                             cursor: help; 
+                             transition: opacity 0.2s ease;
+                             box-shadow: 0 2px 4px rgba(239, 68, 68, 0.2);"
+                             onmouseover="this.style.opacity='0.85'" 
+                             onmouseout="this.style.opacity='1'"
+                             title="Failed: ${data.failed} schedulers (${failedPct}%)">
+                        ${failedHeightPx > 20 ? `<div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); 
+                         color: white; font-size: 0.7rem; font-weight: 700; text-shadow: 0 1px 3px rgba(0,0,0,0.4);">${data.failed}</div>` : ''}
                     </div>`;
                 }
                 
                 html += '</div>'; // End bar container
                 
-                // Date label below the axis
+                // Date label - larger and more visible
                 html += `<div style="position: absolute; top: ${chartHeight + 10}px; left: 50%; transform: translateX(-50%); 
-                         font-size: 0.75rem; color: var(--gray-600); text-align: center; white-space: nowrap; font-weight: 500;">
-                    ${formatDateShort(date).replace(', 2025', '')}
+                         font-size: 0.75rem; color: #1e293b; text-align: center; white-space: nowrap; font-weight: 600; 
+                         width: 100%; overflow: visible; z-index: 2; background: white; padding: 0.125rem 0.25rem; line-height: 1.2;">
+                    ${dateStr}
+                </div>`;
+                
+                // Success and Failed counts below date - always visible with better styling
+                html += `<div style="position: absolute; top: ${chartHeight + 28}px; left: 50%; transform: translateX(-50%); 
+                         font-size: 0.75rem; text-align: center; white-space: nowrap; z-index: 2; background: white; padding: 0.125rem 0.25rem; width: 100%; line-height: 1.4;">
+                    <div style="display: flex; align-items: center; justify-content: center; gap: 0.75rem; flex-wrap: wrap;">
+                        <span style="color: #059669; font-weight: 700; font-size: 0.8rem; display: inline-flex; align-items: center; gap: 0.25rem;">
+                            <span style="font-size: 0.9rem;">✓</span>${data.success}
+                        </span>
+                        ${data.failed > 0 ? `<span style="color: #dc2626; font-weight: 700; font-size: 0.8rem; display: inline-flex; align-items: center; gap: 0.25rem;">
+                            <span style="font-size: 0.9rem;">✗</span>${data.failed}
+                        </span>` : '<span style="color: #94a3b8; font-size: 0.7rem;">No failures</span>'}
+                    </div>
                 </div>`;
                 
                 html += '</div>'; // End bar wrapper
             });
             
-            html += '</div></div></div></div>';
+            html += '</div></div>';
             
             console.log('  Generated HTML length:', html.length);
             console.log('  Setting innerHTML...');
-            document.getElementById('dailyBreakdownChart').innerHTML = html;
-            console.log('✅ Daily Breakdown Chart rendered');
+            const chartContainer = document.getElementById('dailyBreakdownChart');
+            if (chartContainer) {
+                chartContainer.innerHTML = html;
+                console.log('✅ Daily Breakdown Chart rendered');
+            }
         }
         
         function populateDateFilter() {
-            const dates = [...new Set(REPORTS_DATA.map(s => s.analyticDate))].sort((a, b) => parseInt(b) - parseInt(a));
+            const dates = [...new Set(FILTERED_REPORTS_DATA.map(s => s.analyticDate))].sort((a, b) => parseInt(b) - parseInt(a));
             const select = document.getElementById('dateFilter');
             dates.forEach(date => {
                 const opt = document.createElement('option');
@@ -3775,11 +4132,20 @@ Option 4 - Node.js (if installed):
         }
         
         function filterReports() {
-            const search = document.getElementById('reportSearch').value.toLowerCase();
-            const date = document.getElementById('dateFilter').value;
-            const status = document.getElementById('reportStatusFilter').value;
+            const reportSearchEl = document.getElementById('reportSearch');
+            const dateFilterEl = document.getElementById('dateFilter');
+            const reportStatusFilterEl = document.getElementById('reportStatusFilter');
             
-            return REPORTS_DATA.filter(s => {
+            // If elements don't exist, return all filtered data
+            if (!reportSearchEl || !dateFilterEl || !reportStatusFilterEl) {
+                return FILTERED_REPORTS_DATA;
+            }
+            
+            const search = reportSearchEl.value.toLowerCase();
+            const date = dateFilterEl.value;
+            const status = reportStatusFilterEl.value;
+            
+            return FILTERED_REPORTS_DATA.filter(s => {
                 const matchSearch = !search || s.analyticName.toLowerCase().includes(search);
                 const matchDate = !date || s.analyticDate === date;
                 const matchStatus = !status || getStatus(s) === status;
@@ -3812,12 +4178,13 @@ Option 4 - Node.js (if installed):
         }
         
         function renderReportsTable() {
+            const tbody = document.getElementById('reportsTableBody');
+            if (!tbody) return; // Element doesn't exist, skip
+            
             filteredReports = filterReports();
             if (reportSort.column) {
                 filteredReports = sortReports(filteredReports, reportSort.column, reportSort.direction);
             }
-            
-            const tbody = document.getElementById('reportsTableBody');
             
             if (filteredReports.length === 0) {
                 tbody.innerHTML = '<tr><td colspan="7" class="no-results">No results found</td></tr>';
@@ -4571,7 +4938,7 @@ Option 4 - Node.js (if installed):
         
         function determineAttemptStatusByTime(scheduler) {
             // Get all runs for this scheduler on this date, sorted by execution start time
-            const runsOnDate = REPORTS_DATA.filter(s => 
+            const runsOnDate = FILTERED_REPORTS_DATA.filter(s => 
                 s.analyticName === scheduler.analyticName && 
                 s.analyticDate === scheduler.analyticDate
             ).sort((a, b) => parseInt(a.executionStartDate || 0) - parseInt(b.executionStartDate || 0));
@@ -4603,7 +4970,7 @@ Option 4 - Node.js (if installed):
         function initPatternAnalysis() {
             // Calculate durations for each scheduler
             schedulerDurations = {};
-            REPORTS_DATA.forEach(s => {
+            FILTERED_REPORTS_DATA.forEach(s => {
                 const duration = calculateDuration(s.executionStartDate, s.executionFinishDate);
                 if (duration && s.analyticName) {
                     if (!schedulerDurations[s.analyticName]) {
@@ -4614,7 +4981,7 @@ Option 4 - Node.js (if installed):
             });
             
             // Build pattern data with job matching and attempt detection
-            patternData = REPORTS_DATA.map(scheduler => {
+            patternData = FILTERED_REPORTS_DATA.map(scheduler => {
                 const matchedJob = matchJobToScheduler(scheduler.analyticName);
                 const attemptInfo = determineAttemptStatusByTime(scheduler);
                 return {
@@ -4627,14 +4994,14 @@ Option 4 - Node.js (if installed):
             });
             
             // Update stats
-            const totalSchedulers = new Set(REPORTS_DATA.map(s => s.analyticName)).size;
-            const totalExecutions = REPORTS_DATA.length;
-            const successfulExecutions = REPORTS_DATA.filter(s => getStatus(s) === 'success').length;
+            const totalSchedulers = new Set(FILTERED_REPORTS_DATA.map(s => s.analyticName)).size;
+            const totalExecutions = FILTERED_REPORTS_DATA.length;
+            const successfulExecutions = FILTERED_REPORTS_DATA.filter(s => getStatus(s) === 'success').length;
             const successRate = totalExecutions > 0 ? ((successfulExecutions / totalExecutions) * 100).toFixed(1) : 0;
             
             // Calculate peak hour
             const hourCounts = {};
-            REPORTS_DATA.forEach(s => {
+            FILTERED_REPORTS_DATA.forEach(s => {
                 if (s.executionStartDate) {
                     const hour = new Date(parseInt(s.executionStartDate)).getHours();
                     hourCounts[hour] = (hourCounts[hour] || 0) + 1;
@@ -4646,15 +5013,20 @@ Option 4 - Node.js (if installed):
             const peakHourFormatted = peakHour !== '--' ? `${peakHour.padStart(2, '0')}:00` : '--:--';
             const peakHourCount = peakHour !== '--' ? hourCounts[peakHour] : 0;
             
-            // Update DOM
-            document.getElementById('patternTotalSchedulers').textContent = totalSchedulers;
-            document.getElementById('patternSchedulersTrend').textContent = `Unique jobs`;
+            // Update DOM (with null checks)
+            const patternTotalSchedulers = document.getElementById('patternTotalSchedulers');
+            const patternSchedulersTrend = document.getElementById('patternSchedulersTrend');
+            const patternSuccessRate = document.getElementById('patternSuccessRate');
+            const patternSuccessTrend = document.getElementById('patternSuccessTrend');
+            const patternPeakHour = document.getElementById('patternPeakHour');
+            const patternPeakTrend = document.getElementById('patternPeakTrend');
             
-            document.getElementById('patternSuccessRate').textContent = `${successRate}%`;
-            document.getElementById('patternSuccessTrend').textContent = `${successfulExecutions}/${totalExecutions} passed`;
-            
-            document.getElementById('patternPeakHour').textContent = peakHourFormatted;
-            document.getElementById('patternPeakTrend').textContent = peakHour !== '--' ? `${peakHourCount} executions` : `No data`;
+            if (patternTotalSchedulers) patternTotalSchedulers.textContent = totalSchedulers;
+            if (patternSchedulersTrend) patternSchedulersTrend.textContent = `Unique jobs`;
+            if (patternSuccessRate) patternSuccessRate.textContent = `${successRate}%`;
+            if (patternSuccessTrend) patternSuccessTrend.textContent = `${successfulExecutions}/${totalExecutions} passed`;
+            if (patternPeakHour) patternPeakHour.textContent = peakHourFormatted;
+            if (patternPeakTrend) patternPeakTrend.textContent = peakHour !== '--' ? `${peakHourCount} executions` : `No data`;
             
             // Render visualizations
             renderDurationChart();
@@ -4691,7 +5063,10 @@ Option 4 - Node.js (if installed):
             });
             html += '</div>';
             
-            document.getElementById('durationChart').innerHTML = html;
+            const durationChart = document.getElementById('durationChart');
+            if (durationChart) {
+                durationChart.innerHTML = html;
+            }
         }
         
         function renderAttemptChart() {
@@ -4722,7 +5097,10 @@ Option 4 - Node.js (if installed):
             });
             html += '</div>';
             
-            document.getElementById('attemptChart').innerHTML = html;
+            const attemptChart = document.getElementById('attemptChart');
+            if (attemptChart) {
+                attemptChart.innerHTML = html;
+            }
         }
         
         function renderSuccessRateChart() {
@@ -4887,7 +5265,7 @@ Option 4 - Node.js (if installed):
         
         function populateTimelineDates() {
             const select = document.getElementById('timelineDate');
-            const dates = [...new Set(REPORTS_DATA.map(s => s.analyticDate))].sort((a, b) => parseInt(b) - parseInt(a));
+            const dates = [...new Set(FILTERED_REPORTS_DATA.map(s => s.analyticDate))].sort((a, b) => parseInt(b) - parseInt(a));
             select.innerHTML = '<option value="">Select a date...</option>' + 
                 dates.map(d => `<option value="${d}">${formatDate(d)}</option>`).join('');
         }
@@ -5065,8 +5443,8 @@ Option 4 - Node.js (if installed):
                         break;
                     case 'successSlot':
                         // Sort by success time
-                        const successA = REPORTS_DATA.find(s => s.analyticName === a.analyticName && s.analyticDate === a.analyticDate && getStatus(s) === 'success');
-                        const successB = REPORTS_DATA.find(s => s.analyticName === b.analyticName && s.analyticDate === b.analyticDate && getStatus(s) === 'success');
+                        const successA = FILTERED_REPORTS_DATA.find(s => s.analyticName === a.analyticName && s.analyticDate === a.analyticDate && getStatus(s) === 'success');
+                        const successB = FILTERED_REPORTS_DATA.find(s => s.analyticName === b.analyticName && s.analyticDate === b.analyticDate && getStatus(s) === 'success');
                         valA = successA && successA.executionStartDate ? parseInt(successA.executionStartDate) : 0;
                         valB = successB && successB.executionStartDate ? parseInt(successB.executionStartDate) : 0;
                         break;
@@ -5104,6 +5482,7 @@ Option 4 - Node.js (if installed):
         
         function renderPatternMatchTable(data = patternData) {
             const tbody = document.getElementById('patternMatchBody');
+            if (!tbody) return; // Element doesn't exist, skip
             
             if (data.length === 0) {
                 tbody.innerHTML = '<tr><td colspan="7" class="no-results">No data to display</td></tr>';
@@ -5133,7 +5512,7 @@ Option 4 - Node.js (if installed):
                 
                 // Get success time slot - find when this scheduler succeeded for this date
                 let successTimeSlot = '<span style="color: var(--gray-400);">—</span>';
-                const successRun = REPORTS_DATA.find(s => 
+                const successRun = FILTERED_REPORTS_DATA.find(s => 
                     s.analyticName === scheduler.analyticName && 
                     s.analyticDate === scheduler.analyticDate && 
                     getStatus(s) === 'success'
@@ -5211,8 +5590,13 @@ Option 4 - Node.js (if installed):
         
         // Filter pattern match table with both search and date
         function filterPatternTable() {
-            const searchTerm = document.getElementById('patternSearchInput').value.toLowerCase();
-            const selectedDate = document.getElementById('patternDateFilter').value;
+            const patternSearchInput = document.getElementById('patternSearchInput');
+            const patternDateFilter = document.getElementById('patternDateFilter');
+            
+            if (!patternSearchInput || !patternDateFilter) return; // Elements don't exist, skip
+            
+            const searchTerm = patternSearchInput.value.toLowerCase();
+            const selectedDate = patternDateFilter.value;
             
             let filtered = patternData;
             
@@ -5238,8 +5622,13 @@ Option 4 - Node.js (if installed):
         
         // Populate date filter for pattern analysis
         function populatePatternDateFilter() {
-            const dates = [...new Set(REPORTS_DATA.map(s => s.analyticDate))].sort((a, b) => parseInt(b) - parseInt(a));
             const select = document.getElementById('patternDateFilter');
+            if (!select) return; // Element doesn't exist, skip
+            
+            // Clear existing options except "All Dates"
+            select.innerHTML = '<option value="">All Dates</option>';
+            
+            const dates = [...new Set(FILTERED_REPORTS_DATA.map(s => s.analyticDate))].sort((a, b) => parseInt(b) - parseInt(a));
             dates.forEach(date => {
                 const opt = document.createElement('option');
                 opt.value = date;
@@ -5254,6 +5643,8 @@ Option 4 - Node.js (if installed):
             const refreshBtn = document.getElementById('refreshDataBtn');
             if (refreshBtn) {
                 const isTodayReport = document.getElementById('today-report-section')?.classList.contains('active');
+                const isReportsOverview = document.getElementById('reports-overview-section')?.classList.contains('active');
+                
                 if (isTodayReport) {
                     refreshBtn.style.display = 'inline-flex';
                     const refreshText = document.getElementById('refreshText');
@@ -5267,6 +5658,15 @@ Option 4 - Node.js (if installed):
                     }
                     // Load last updated time for Today's Report page
                     loadLastUpdatedTime(true);
+                } else if (isReportsOverview) {
+                    // Load last updated time for Reports Overview page
+                    loadPastDataLastUpdatedTime();
+                    refreshBtn.style.display = 'none';
+                    // Hide refresh button container on other pages
+                    const refreshContainer = document.getElementById('refreshButtonContainer');
+                    if (refreshContainer) {
+                        refreshContainer.style.display = 'none';
+                    }
                 } else {
                     refreshBtn.style.display = 'none';
                     // Hide refresh button container on other pages
@@ -5291,7 +5691,8 @@ Option 4 - Node.js (if installed):
             // Today's Report
             initTodayReport();
             
-            // Reports
+            // Reports - Initialize filtered data first
+            FILTERED_REPORTS_DATA = getFilteredReportsData();
             displayReportsDateRange();
             renderDailyBreakdownChart();
             

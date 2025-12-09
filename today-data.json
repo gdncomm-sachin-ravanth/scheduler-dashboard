@@ -68,5 +68,17 @@
         "executionFinishDate": 1765315835602,
         "executionStartDate": 1765315802274,
         "executionSuccess": true
+    },
+    {
+        "_class": "com.gdn.partners.seller.insights.repository.model.scheduler.Scheduler",
+        "_id": {
+            "$oid": "6938997de6bb997cd4795cda"
+        },
+        "analyticDate": 1765299600000,
+        "analyticName": "CUSTOMER_INSIGHTS",
+        "analyticTotalData": 0,
+        "executionFinishDate": 1765316992414,
+        "executionStartDate": 1765316989711,
+        "executionSuccess": true
     }
 ]
