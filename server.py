@@ -79,6 +79,9 @@ class DashboardHandler(BaseHTTPRequestHandler):
         elif path == '/api/validate-sales-funnel':
             self.handle_validate_sales_funnel()
             return
+        elif path == '/api/execute-curl':
+            self.handle_execute_curl()
+            return
         else:
             self.send_error(404, "Not found")
             return
@@ -247,6 +250,7 @@ class DashboardHandler(BaseHTTPRequestHandler):
             body = self.rfile.read(content_length) if content_length > 0 else b'{}'
             request_data = json.loads(body.decode('utf-8'))
             scheduler_name = request_data.get('scheduler_name')
+            force_refresh = request_data.get('force_refresh', False)  # Allow forcing refresh
             
             # Get SSO token if available
             sso_token = self.get_sso_token()
@@ -257,8 +261,14 @@ class DashboardHandler(BaseHTTPRequestHandler):
             sys.path.insert(0, str(script_dir))
             from fetch_today_data import validate_single_sales_funnel_report
             
-            # Run validation (silent mode for API calls)
-            result = validate_single_sales_funnel_report(scheduler_name, sso_token=sso_token, silent=True)
+            # Run validation (silent mode for API calls, use cache unless force_refresh)
+            result = validate_single_sales_funnel_report(
+                scheduler_name, 
+                sso_token=sso_token, 
+                silent=True,
+                use_cache=True,
+                force_refresh=force_refresh
+            )
             
             if 'error' in result:
                 # Return 200 even for errors - empty results are not server errors
@@ -273,13 +283,16 @@ class DashboardHandler(BaseHTTPRequestHandler):
                 }
                 self.send_response(200)
             else:
+                # Include cache metadata if available
                 response = {
                     'success': True,
                     'message': 'Sales funnel validation completed',
                     'validation': result.get('validation', {}),
                     'report': result.get('report'),
                     'scheduler_report_details': result.get('scheduler_report_details', {}),
-                    'scheduler_record': result.get('scheduler_record')
+                    'scheduler_record': result.get('scheduler_record'),
+                    'from_cache': result.get('from_cache', False),
+                    'fetched_at': result.get('fetched_at')
                 }
                 self.send_response(200)
             
@@ -305,6 +318,77 @@ class DashboardHandler(BaseHTTPRequestHandler):
             self.wfile.write(json.dumps(response).encode('utf-8'))
             # Also print to console for debugging
             print(f"Error in handle_validate_sales_funnel: {error_traceback}")
+    
+    def handle_execute_curl(self):
+        """Handle the execute curl command API endpoint."""
+        try:
+            # Read request body
+            content_length = int(self.headers.get('Content-Length', 0))
+            body = self.rfile.read(content_length) if content_length > 0 else b'{}'
+            request_data = json.loads(body.decode('utf-8'))
+            curl_command = request_data.get('curl_command')
+            
+            if not curl_command:
+                response = {
+                    'success': False,
+                    'error': 'No curl command provided'
+                }
+                self.send_response(400)
+                self.send_header('Content-Type', 'application/json')
+                self.send_header('Access-Control-Allow-Origin', '*')
+                self.end_headers()
+                self.wfile.write(json.dumps(response).encode('utf-8'))
+                return
+            
+            # Execute curl command using bash
+            import subprocess
+            try:
+                result = subprocess.run(
+                    ['bash', '-c', curl_command],
+                    capture_output=True,
+                    text=True,
+                    timeout=30  # 30 second timeout
+                )
+                
+                response = {
+                    'success': True,
+                    'stdout': result.stdout,
+                    'stderr': result.stderr,
+                    'exit_code': result.returncode
+                }
+                self.send_response(200)
+            except subprocess.TimeoutExpired:
+                response = {
+                    'success': False,
+                    'error': 'Command execution timed out (30 seconds)'
+                }
+                self.send_response(200)
+            except Exception as e:
+                response = {
+                    'success': False,
+                    'error': f'Error executing command: {str(e)}'
+                }
+                self.send_response(200)
+            
+            # Send JSON response
+            self.send_header('Content-Type', 'application/json')
+            self.send_header('Access-Control-Allow-Origin', '*')
+            self.end_headers()
+            self.wfile.write(json.dumps(response).encode('utf-8'))
+            
+        except Exception as e:
+            import traceback
+            error_traceback = traceback.format_exc()
+            response = {
+                'success': False,
+                'error': f'Server Error: {str(e)}'
+            }
+            self.send_response(500)
+            self.send_header('Content-Type', 'application/json')
+            self.send_header('Access-Control-Allow-Origin', '*')
+            self.end_headers()
+            self.wfile.write(json.dumps(response).encode('utf-8'))
+            print(f"Error in handle_execute_curl: {error_traceback}")
     
     def log_message(self, format, *args):
         """Override to customize log format."""

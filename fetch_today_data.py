@@ -9,6 +9,7 @@ import subprocess
 import argparse
 from datetime import datetime, timezone, timedelta
 from pathlib import Path
+import time
 
 
 def get_sso_token_from_file():
@@ -443,7 +444,79 @@ def validate_sales_funnel_reports(today_data_file=None, sso_token=None, silent=F
     }
 
 
-def validate_single_sales_funnel_report(scheduler_name, today_data_file=None, sso_token=None, silent=False):
+def get_validation_cache_file(scheduler_name):
+    """Get the cache file path for a scheduler."""
+    script_dir = Path(__file__).parent
+    cache_dir = script_dir / ".validation_cache"
+    cache_dir.mkdir(exist_ok=True)
+    # Sanitize scheduler name for filename
+    safe_name = scheduler_name.replace('/', '_').replace('\\', '_')
+    return cache_dir / f"{safe_name}.json"
+
+
+def save_validation_cache(scheduler_name, result, silent=False):
+    """Save validation result to cache file."""
+    try:
+        cache_file = get_validation_cache_file(scheduler_name)
+        cache_data = {
+            'scheduler_name': scheduler_name,
+            'fetched_at': int(time.time() * 1000),  # Timestamp in milliseconds
+            'result': result
+        }
+        with open(cache_file, 'w') as f:
+            json.dump(cache_data, f, indent=2)
+        if not silent:
+            print(f"Validation result cached for {scheduler_name}")
+    except Exception as e:
+        if not silent:
+            print(f"Warning: Failed to save cache: {e}")
+
+
+def load_validation_cache(scheduler_name, silent=False):
+    """Load validation result from cache if available and valid."""
+    try:
+        cache_file = get_validation_cache_file(scheduler_name)
+        if not cache_file.exists():
+            return None
+        
+        with open(cache_file, 'r') as f:
+            cache_data = json.load(f)
+        
+        # Check if cache is from today (same day)
+        fetched_at = cache_data.get('fetched_at', 0)
+        cache_date = datetime.fromtimestamp(fetched_at / 1000, tz=timezone(timedelta(hours=7)))
+        today_timestamp = get_current_day_start_timestamp()
+        today_date = datetime.fromtimestamp(today_timestamp / 1000, tz=timezone(timedelta(hours=7)))
+        
+        # Check if cache is from today
+        if cache_date.date() != today_date.date():
+            if not silent:
+                print(f"Cache expired: from {cache_date.date()}, today is {today_date.date()}")
+            return None
+        
+        # Check if result is valid (successful and matched)
+        result = cache_data.get('result', {})
+        validation = result.get('validation', {})
+        if validation.get('execution_success') and validation.get('match'):
+            if not silent:
+                print(f"Using cached validation result for {scheduler_name} (fetched at {cache_date.strftime('%Y-%m-%d %H:%M:%S')})")
+            return {
+                'result': result,
+                'fetched_at': fetched_at,
+                'from_cache': True
+            }
+        else:
+            if not silent:
+                print(f"Cache invalid: execution_success={validation.get('execution_success')}, match={validation.get('match')}")
+            return None
+            
+    except Exception as e:
+        if not silent:
+            print(f"Warning: Failed to load cache: {e}")
+        return None
+
+
+def validate_single_sales_funnel_report(scheduler_name, today_data_file=None, sso_token=None, silent=False, use_cache=True, force_refresh=False):
     """
     Fetch and validate a single sales funnel scheduler report.
     
@@ -452,6 +525,8 @@ def validate_single_sales_funnel_report(scheduler_name, today_data_file=None, ss
         today_data_file: Path to today-data.json file. If None, uses default location.
         sso_token: Optional SSO token. If not provided, reads from .sso_token file.
         silent: If True, suppress print statements (useful for API calls).
+        use_cache: If True, check cache before fetching from database.
+        force_refresh: If True, bypass cache and fetch fresh data.
     
     Returns:
         Dictionary with validation results and detailed scheduler report
@@ -465,6 +540,16 @@ def validate_single_sales_funnel_report(scheduler_name, today_data_file=None, ss
     valid_schedulers = ['SALES_FUNNEL_YESTERDAY', 'SALES_FUNNEL_LAST_THIRTY_DAYS', 'SALES_FUNNEL_PREVIOUS_MONTH']
     if scheduler_name not in valid_schedulers:
         return {'error': f'Invalid scheduler name. Must be one of: {", ".join(valid_schedulers)}'}
+    
+    # Check cache first (unless force refresh is requested)
+    if use_cache and not force_refresh:
+        cache_result = load_validation_cache(scheduler_name, silent=silent)
+        if cache_result:
+            # Add cache metadata to result
+            result = cache_result['result'].copy()
+            result['from_cache'] = True
+            result['fetched_at'] = cache_result['fetched_at']
+            return result
     
     # Fetch sales funnel reports for today's start of day
     today_timestamp = get_current_day_start_timestamp()
@@ -578,12 +663,18 @@ def validate_single_sales_funnel_report(scheduler_name, today_data_file=None, ss
         'difference': total_rows_inserted - expected_total
     }
     
-    return {
+    result = {
         'validation': validation_result,
         'report': target_report,
         'scheduler_report_details': scheduler_report_details,
         'scheduler_record': scheduler_record  # Include the full scheduler record from today-data.json
     }
+    
+    # Save to cache if validation is successful and data matches
+    if execution_success and match:
+        save_validation_cache(scheduler_name, result, silent=silent)
+    
+    return result
 
 
 def main():
