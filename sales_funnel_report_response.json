@@ -1,0 +1,65 @@
+[
+    {
+      "_class": "com.gdn.partners.seller.insights.repository.model.scheduler.SalesFunnelSchedulerReport",
+      "_id": {
+        "$oid": "693622857a97d75aae05b854"
+      },
+      "createdBy": "SYSTEM",
+      "createdDate": 1765155461835,
+      "date": 1765126800000,
+      "lastModifiedBy": "SYSTEM",
+      "lastModifiedDate": 1765156224580,
+      "markForDelete": false,
+      "schedulerName": "SALES_FUNNEL_PREVIOUS_MONTH",
+      "schedulerReport": {
+        "0": {
+          "endTime": 1765156224579,
+          "executionSuccess": true,
+          "rowsInserted": 1336953,
+          "schedulerNo": 0,
+          "startTime": 1765155461831
+        }
+      }
+    },
+    {
+      "_class": "com.gdn.partners.seller.insights.repository.model.scheduler.SalesFunnelSchedulerReport",
+      "_id": {
+        "$oid": "693658d12e9c807463607194"
+      },
+      "createdBy": "SYSTEM",
+      "createdDate": 1765169361555,
+      "date": 1765126800000,
+      "lastModifiedBy": "SYSTEM",
+      "lastModifiedDate": 1765169361555,
+      "markForDelete": false,
+      "schedulerName": "SALES_FUNNEL_LAST_THIRTY_DAYS",
+      "schedulerReport": {
+        "0": {
+          "schedulerNo": 0,
+          "startTime": 1765169361549
+        }
+      }
+    },
+    {
+      "_class": "com.gdn.partners.seller.insights.repository.model.scheduler.SalesFunnelSchedulerReport",
+      "_id": {
+        "$oid": "69365bac2e9c807463607195"
+      },
+      "createdBy": "SYSTEM",
+      "createdDate": 1765170092233,
+      "date": 1765126800000,
+      "lastModifiedBy": "SYSTEM",
+      "lastModifiedDate": 1765172718951,
+      "markForDelete": false,
+      "schedulerName": "SALES_FUNNEL_YESTERDAY",
+      "schedulerReport": {
+        "0": {
+          "endTime": 1765172718950,
+          "executionSuccess": true,
+          "rowsInserted": 814430,
+          "schedulerNo": 0,
+          "startTime": 1765172441921
+        }
+      }
+    }
+  ]

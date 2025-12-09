@@ -76,6 +76,9 @@ class DashboardHandler(BaseHTTPRequestHandler):
         elif path == '/api/update-sso-token':
             self.handle_update_sso_token()
             return
+        elif path == '/api/validate-sales-funnel':
+            self.handle_validate_sales_funnel()
+            return
         else:
             self.send_error(404, "Not found")
             return
@@ -235,6 +238,73 @@ class DashboardHandler(BaseHTTPRequestHandler):
             self.send_header('Access-Control-Allow-Origin', '*')
             self.end_headers()
             self.wfile.write(json.dumps(response).encode('utf-8'))
+    
+    def handle_validate_sales_funnel(self):
+        """Handle the validate sales funnel API endpoint."""
+        try:
+            # Read request body
+            content_length = int(self.headers.get('Content-Length', 0))
+            body = self.rfile.read(content_length) if content_length > 0 else b'{}'
+            request_data = json.loads(body.decode('utf-8'))
+            scheduler_name = request_data.get('scheduler_name')
+            
+            # Get SSO token if available
+            sso_token = self.get_sso_token()
+            
+            # Import the validation function
+            import sys
+            script_dir = Path(__file__).parent
+            sys.path.insert(0, str(script_dir))
+            from fetch_today_data import validate_single_sales_funnel_report
+            
+            # Run validation (silent mode for API calls)
+            result = validate_single_sales_funnel_report(scheduler_name, sso_token=sso_token, silent=True)
+            
+            if 'error' in result:
+                # Return 200 even for errors - empty results are not server errors
+                response = {
+                    'success': False,
+                    'message': 'Failed to validate sales funnel report',
+                    'error': result.get('error'),
+                    'empty_result': result.get('empty_result', False),
+                    'found_reports': result.get('found_reports', 0),
+                    'found_schedulers': result.get('found_schedulers', []),
+                    'today_date': result.get('today_date')
+                }
+                self.send_response(200)
+            else:
+                response = {
+                    'success': True,
+                    'message': 'Sales funnel validation completed',
+                    'validation': result.get('validation', {}),
+                    'report': result.get('report'),
+                    'scheduler_report_details': result.get('scheduler_report_details', {}),
+                    'scheduler_record': result.get('scheduler_record')
+                }
+                self.send_response(200)
+            
+            # Send JSON response
+            self.send_header('Content-Type', 'application/json')
+            self.send_header('Access-Control-Allow-Origin', '*')
+            self.end_headers()
+            self.wfile.write(json.dumps(response).encode('utf-8'))
+            
+        except Exception as e:
+            import traceback
+            error_traceback = traceback.format_exc()
+            response = {
+                'success': False,
+                'message': f'Error: {str(e)}',
+                'error': str(e),
+                'traceback': error_traceback
+            }
+            self.send_response(500)
+            self.send_header('Content-Type', 'application/json')
+            self.send_header('Access-Control-Allow-Origin', '*')
+            self.end_headers()
+            self.wfile.write(json.dumps(response).encode('utf-8'))
+            # Also print to console for debugging
+            print(f"Error in handle_validate_sales_funnel: {error_traceback}")
     
     def log_message(self, format, *args):
         """Override to customize log format."""

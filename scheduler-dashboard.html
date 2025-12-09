@@ -885,6 +885,8 @@
         
         .modal-body {
             padding: 1.5rem;
+            max-height: calc(100vh - 200px);
+            overflow-y: auto;
         }
         
         .modal-body pre {
@@ -1543,15 +1545,13 @@
                                         <th>Frequency</th>
                                         <th>Environment</th>
                                         <th>Time Slots</th>
-                                        <th class="sortable" data-key="executionStartDate">Start Time</th>
-                                        <th class="sortable" data-key="executionFinishDate">End Time</th>
-                                        <th class="sortable" data-key="duration">Duration</th>
+                                        <th class="sortable" data-key="executionStartDate">Execution Time</th>
                                         <th class="sortable" data-key="bqTotalData">BQ Data Fetch</th>
                                         <th class="sortable" data-key="analyticTotalData">Saved Data</th>
                                     </tr>
                                 </thead>
                                 <tbody id="todayTableBody">
-                                    <tr><td colspan="10" class="no-results">Loading...</td></tr>
+                                    <tr><td colspan="8" class="no-results">Loading...</td></tr>
                                 </tbody>
                             </table>
                         </div>
@@ -1733,6 +1733,34 @@
                 <pre id="modalCurlCommand"></pre>
                 <div style="display: flex; gap: 0.75rem;">
                     <button class="btn btn-success btn-sm" onclick="copyCurlCommand()">📋 Copy Command</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Sales Funnel Validation Modal -->
+    <div id="salesFunnelValidationModal" class="modal">
+        <div class="modal-content" style="max-width: 900px; max-height: 90vh; display: flex; flex-direction: column;">
+            <div class="modal-header" style="flex-shrink: 0;">
+                <h3 id="salesFunnelModalTitle">🔍 Sales Funnel Validation</h3>
+                <button class="close" onclick="closeSalesFunnelValidationModal()">&times;</button>
+            </div>
+            <div class="modal-body" style="flex: 1; overflow-y: auto; min-height: 0;">
+                <div id="salesFunnelValidationContent">
+                    <div style="padding: 1rem; background: var(--gray-50); border-radius: 0.5rem; color: var(--gray-600); margin-bottom: 1rem;">
+                        <div style="font-weight: 600; margin-bottom: 0.5rem;">Validating sales funnel reports...</div>
+                        <div>This will check if the sum of rowsInserted from all pods matches the SAVED DATA in today's report.</div>
+                    </div>
+                    <div style="display: flex; align-items: center; justify-content: space-between; padding: 0.75rem 1rem; background: var(--gray-50); border-radius: 0.5rem; margin-bottom: 1rem;">
+                        <div style="font-size: 0.875rem; color: var(--gray-700);">
+                            Checking if sum of rowsInserted matches SAVED DATA
+                        </div>
+                        <button id="validateSalesFunnelModalBtn" onclick="validateSalesFunnelFromModal()" 
+                                style="padding: 0.5rem 1rem; background: var(--primary); color: white; border: none; border-radius: 0.375rem; cursor: pointer; font-weight: 500; font-size: 0.875rem;">
+                            🔄 Validate
+                        </button>
+                    </div>
+                    <div id="salesFunnelValidationResults" style="margin-top: 1.5rem;"></div>
                 </div>
             </div>
         </div>
@@ -1934,6 +1962,457 @@ Option 4 - Node.js (if installed):
                     }
                 }, 300);
             }, duration);
+        }
+        
+        // Store current scheduler name and record for validation
+        let currentSchedulerName = null;
+        let currentSchedulerRecord = null;
+        
+        // Function to show sales funnel validation modal
+        function showSalesFunnelValidationModal(schedulerName) {
+            currentSchedulerName = schedulerName;
+            
+            // Try to find the scheduler record from current page data
+            currentSchedulerRecord = null;
+            if (window.todayScheduledData && Array.isArray(window.todayScheduledData)) {
+                currentSchedulerRecord = window.todayScheduledData.find(job => job.analyticName === schedulerName);
+            }
+            
+            const modal = document.getElementById('salesFunnelValidationModal');
+            if (modal) {
+                modal.style.display = 'block';
+                
+                // Build scheduler details section if record is available
+                let schedulerDetailsHtml = '';
+                if (currentSchedulerRecord) {
+                    const isPending = !currentSchedulerRecord.executionStartDate && currentSchedulerRecord.executionSuccess === undefined;
+                    const isInProgress = currentSchedulerRecord.executionStartDate && !currentSchedulerRecord.executionFinishDate;
+                    const isSuccess = currentSchedulerRecord.executionSuccess === true;
+                    const isFailed = currentSchedulerRecord.executionSuccess === false;
+                    
+                    let statusText, statusClass;
+                    if (isPending) {
+                        statusText = 'Pending';
+                        statusClass = 'status-pending';
+                    } else if (isInProgress) {
+                        statusText = 'In Progress';
+                        statusClass = 'status-in-progress';
+                    } else if (isSuccess) {
+                        statusText = 'Success';
+                        statusClass = 'status-success';
+                    } else {
+                        statusText = 'Fail';
+                        statusClass = 'status-fail';
+                    }
+                    
+                    const statusBgColor = statusClass === 'status-success' ? '#d1fae5' : 
+                                         statusClass === 'status-fail' ? '#fee2e2' :
+                                         statusClass === 'status-in-progress' ? '#dbeafe' : '#fef3c7';
+                    const statusFgColor = statusClass === 'status-success' ? '#065f46' : 
+                                         statusClass === 'status-fail' ? '#991b1b' :
+                                         statusClass === 'status-in-progress' ? '#1e40af' : '#92400e';
+                    
+                    // Calculate duration
+                    let duration = '-';
+                    if (currentSchedulerRecord.executionStartDate && currentSchedulerRecord.executionFinishDate) {
+                        const start = parseInt(currentSchedulerRecord.executionStartDate);
+                        const end = parseInt(currentSchedulerRecord.executionFinishDate);
+                        const diffMs = end - start;
+                        const hours = Math.floor(diffMs / (1000 * 60 * 60));
+                        const minutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
+                        const seconds = Math.floor((diffMs % (1000 * 60)) / 1000);
+                        duration = `${hours}h ${minutes}m ${seconds}s`;
+                    }
+                    
+                    schedulerDetailsHtml = `
+                        <div style="padding: 0.75rem; background: white; border: 1px solid var(--gray-200); border-radius: 0.5rem; box-shadow: 0 1px 3px rgba(0,0,0,0.1); margin-bottom: 1rem;">
+                            <div style="display: grid; grid-template-columns: repeat(6, 1fr); gap: 0.75rem; align-items: center;">
+                                <div style="text-align: center;">
+                                    <div style="font-size: 0.7rem; color: var(--gray-600); margin-bottom: 0.125rem;">Status</div>
+                                    <div style="padding: 0.25rem 0.5rem; border-radius: 0.25rem; display: inline-block; font-size: 0.75rem; font-weight: 600; background: ${statusBgColor}; color: ${statusFgColor};">
+                                        ${statusText}
+                                    </div>
+                                </div>
+                                <div style="text-align: center;">
+                                    <div style="font-size: 0.7rem; color: var(--gray-600); margin-bottom: 0.125rem;">Start Time</div>
+                                    <div style="font-size: 0.875rem; font-weight: 600; color: var(--gray-900); font-family: monospace;">${currentSchedulerRecord.executionStartDate ? formatTimeOnly(currentSchedulerRecord.executionStartDate) : '-'}</div>
+                                </div>
+                                <div style="text-align: center;">
+                                    <div style="font-size: 0.7rem; color: var(--gray-600); margin-bottom: 0.125rem;">End Time</div>
+                                    <div style="font-size: 0.875rem; font-weight: 600; color: var(--gray-900); font-family: monospace;">${currentSchedulerRecord.executionFinishDate ? formatTimeOnly(currentSchedulerRecord.executionFinishDate) : '-'}</div>
+                                </div>
+                                <div style="text-align: center;">
+                                    <div style="font-size: 0.7rem; color: var(--gray-600); margin-bottom: 0.125rem;">Duration</div>
+                                    <div style="font-size: 0.875rem; font-weight: 600; color: var(--gray-900);">${duration}</div>
+                                </div>
+                                <div style="text-align: center;">
+                                    <div style="font-size: 0.7rem; color: var(--gray-600); margin-bottom: 0.125rem;">BQ Data Fetch</div>
+                                    <div style="font-size: 0.875rem; font-weight: 600; color: var(--gray-900);">${currentSchedulerRecord.bqTotalData !== undefined ? (typeof currentSchedulerRecord.bqTotalData === 'number' ? currentSchedulerRecord.bqTotalData.toLocaleString() : currentSchedulerRecord.bqTotalData) : '-'}</div>
+                                </div>
+                                <div style="text-align: center;">
+                                    <div style="font-size: 0.7rem; color: var(--gray-600); margin-bottom: 0.125rem;">Saved Data</div>
+                                    <div style="font-size: 0.875rem; font-weight: 600; color: var(--gray-900);">${currentSchedulerRecord.analyticTotalData !== undefined ? (typeof currentSchedulerRecord.analyticTotalData === 'number' ? currentSchedulerRecord.analyticTotalData.toLocaleString() : currentSchedulerRecord.analyticTotalData) : '-'}</div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }
+                
+                // Update modal title with analytic name and date
+                const modalTitleEl = document.getElementById('salesFunnelModalTitle');
+                if (modalTitleEl) {
+                    let titleText = `🔍 Validate: ${schedulerName}`;
+                    if (currentSchedulerRecord && currentSchedulerRecord.analyticDate) {
+                        const analyticDate = new Date(parseInt(currentSchedulerRecord.analyticDate));
+                        const dateStr = analyticDate.toLocaleDateString('en-US', {
+                            year: 'numeric',
+                            month: 'short',
+                            day: 'numeric'
+                        });
+                        titleText += ` - ${dateStr}`;
+                    }
+                    modalTitleEl.textContent = titleText;
+                }
+                
+                // Reset content with scheduler details at top
+                document.getElementById('salesFunnelValidationContent').innerHTML = `
+                    ${schedulerDetailsHtml}
+                    <div style="display: flex; align-items: center; justify-content: space-between; gap: 0.75rem; padding: 0.75rem; background: var(--gray-50); border-radius: 0.5rem; margin-bottom: 1rem;">
+                        <p style="margin: 0; font-size: 0.85rem; color: var(--gray-700); line-height: 1.5; flex: 1;">
+                            Verify that the sum of <strong>rowsInserted</strong> from all pods matches the <strong>SAVED DATA</strong> value
+                        </p>
+                        <button id="validateSalesFunnelModalBtn" onclick="validateSalesFunnelFromModal()" 
+                                style="padding: 0.6rem 1.5rem; background: var(--primary); color: white; border: none; border-radius: 0.375rem; cursor: pointer; font-weight: 600; font-size: 0.9rem; white-space: nowrap; box-shadow: 0 2px 4px rgba(0,0,0,0.1); transition: all 0.2s; flex-shrink: 0;">
+                            🔄 Run Validation
+                        </button>
+                    </div>
+                    <div id="salesFunnelValidationResults" style="margin-top: 1rem;"></div>
+                `;
+            }
+        }
+        
+        function closeSalesFunnelValidationModal() {
+            const modal = document.getElementById('salesFunnelValidationModal');
+            if (modal) {
+                modal.style.display = 'none';
+                // Reset modal title
+                const modalTitleEl = document.getElementById('salesFunnelModalTitle');
+                if (modalTitleEl) {
+                    modalTitleEl.textContent = '🔍 Validate: Sales Funnel';
+                }
+            }
+        }
+        
+        // Function to validate sales funnel reports from modal
+        async function validateSalesFunnelFromModal() {
+            if (!currentSchedulerName) {
+                showToast('Error', 'No scheduler selected', 'error', 3000);
+                return;
+            }
+            
+            const btn = document.getElementById('validateSalesFunnelModalBtn');
+            const resultsDiv = document.getElementById('salesFunnelValidationResults');
+            
+            // Disable button and show loading state
+            if (btn) {
+                btn.disabled = true;
+                btn.textContent = '⏳ Validating...';
+            }
+            if (resultsDiv) {
+                resultsDiv.innerHTML = '<div class="info-box" style="padding: 1rem; background: var(--gray-50); border-radius: 0.5rem; color: var(--gray-600);">Validating sales funnel report...</div>';
+            }
+            
+            try {
+                const response = await fetch('/api/validate-sales-funnel', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ scheduler_name: currentSchedulerName })
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    // Use scheduler_record from API response, or fall back to current page data
+                    const schedulerRecord = result.scheduler_record || currentSchedulerRecord;
+                    displaySingleSalesFunnelResults(result.validation, result.scheduler_report_details, result.report, schedulerRecord);
+                    showToast('Validation Complete', `${currentSchedulerName} validated successfully`, 'success', 3000);
+                } else {
+                    if (resultsDiv) {
+                        let errorDetails = '';
+                        
+                        // Handle empty results with a user-friendly message
+                        if (result.empty_result) {
+                            const todayDate = result.today_date || new Date().toISOString().split('T')[0];
+                            errorDetails = `
+                                <div style="padding: 1.5rem; background: #fef3c7; border: 1px solid #fbbf24; border-radius: 0.5rem; text-align: center;">
+                                    <div style="font-size: 1.5rem; margin-bottom: 0.75rem;">📭</div>
+                                    <h4 style="margin: 0 0 0.5rem 0; font-size: 1rem; color: #92400e; font-weight: 600;">No Data Found</h4>
+                                    <p style="margin: 0; font-size: 0.875rem; color: #78350f; line-height: 1.6;">
+                                        No sales funnel reports were found for <strong>${currentSchedulerName}</strong> for today's date (<strong>${todayDate}</strong>).
+                                    </p>
+                                    <p style="margin: 0.75rem 0 0 0; font-size: 0.8rem; color: #92400e;">
+                                        The scheduler may not have run yet today, or the data may not be available in the database.
+                                    </p>
+                                </div>
+                            `;
+                            // Don't show error toast for empty results
+                        } else {
+                            // Regular error message
+                            errorDetails = result.message || 'Failed to validate sales funnel report';
+                            if (result.error) {
+                                errorDetails += `<br><br><strong>Details:</strong><br><small style="font-family: monospace; white-space: pre-wrap;">${result.error}</small>`;
+                            }
+                            if (result.found_schedulers && result.found_schedulers.length > 0) {
+                                errorDetails += `<br><br><strong>Found schedulers:</strong> ${result.found_schedulers.join(', ')}`;
+                            }
+                            if (result.found_reports !== undefined) {
+                                errorDetails += `<br><strong>Total reports found:</strong> ${result.found_reports}`;
+                            }
+                            errorDetails = `
+                                <div style="padding: 1rem; background: #fee2e2; border: 1px solid #f87171; border-radius: 0.5rem; color: #991b1b;">
+                                    <strong>Error:</strong> ${errorDetails}
+                                </div>
+                            `;
+                            // Show error toast only for actual errors (not empty results)
+                            showToast('Validation Failed', result.message || 'Failed to validate report', 'error', 4000);
+                        }
+                        
+                        resultsDiv.innerHTML = errorDetails;
+                    }
+                }
+            } catch (error) {
+                console.error('Error validating sales funnel:', error);
+                if (resultsDiv) {
+                    resultsDiv.innerHTML = `
+                        <div class="info-box" style="padding: 1rem; background: #fee2e2; border-radius: 0.5rem; color: #991b1b;">
+                            <strong>Error:</strong> ${error.message}
+                        </div>
+                    `;
+                }
+                showToast('Validation Error', 'Failed to validate sales funnel report', 'error', 4000);
+            } finally {
+                if (btn) {
+                    btn.disabled = false;
+                    btn.textContent = '🔄 Run Validation';
+                }
+            }
+        }
+        
+        function formatTimestamp(timestamp) {
+            if (!timestamp) return '-';
+            const date = new Date(timestamp);
+            return date.toLocaleString('en-US', {
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit',
+                hour12: false
+            });
+        }
+        
+        function formatTimeOnly(timestamp) {
+            if (!timestamp) return '-';
+            const date = new Date(timestamp);
+            return date.toLocaleTimeString('en-US', {
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit',
+                hour12: false
+            });
+        }
+        
+        function displaySingleSalesFunnelResults(validation, schedulerReportDetails, report, schedulerRecord) {
+            const resultsDiv = document.getElementById('salesFunnelValidationResults');
+            
+            if (!resultsDiv) return;
+            
+            if (!validation || typeof validation !== 'object') {
+                resultsDiv.innerHTML = '<div class="info-box" style="padding: 1rem; background: var(--gray-50); border-radius: 0.5rem; color: var(--gray-600);">No validation results available.</div>';
+                return;
+            }
+            
+            const rowsInserted = validation.rows_inserted || 0;
+            const expectedTotal = validation.expected_total || 0;
+            const match = validation.match;
+            const podCount = validation.pod_count || 0;
+            const executionSuccess = validation.execution_success;
+            const diff = validation.difference || 0;
+            
+            // Extract scheduler details from schedulerRecord
+            let schedulerDetails = null;
+            if (schedulerRecord) {
+                const isPending = !schedulerRecord.executionStartDate && schedulerRecord.executionSuccess === undefined;
+                const isInProgress = schedulerRecord.executionStartDate && !schedulerRecord.executionFinishDate;
+                const isSuccess = schedulerRecord.executionSuccess === true;
+                const isFailed = schedulerRecord.executionSuccess === false;
+                
+                let statusText, statusClass;
+                if (isPending) {
+                    statusText = 'Pending';
+                    statusClass = 'status-pending';
+                } else if (isInProgress) {
+                    statusText = 'In Progress';
+                    statusClass = 'status-in-progress';
+                } else if (isSuccess) {
+                    statusText = 'Success';
+                    statusClass = 'status-success';
+                } else {
+                    statusText = 'Fail';
+                    statusClass = 'status-fail';
+                }
+                
+                // Calculate duration
+                let duration = null;
+                if (schedulerRecord.executionStartDate && schedulerRecord.executionFinishDate) {
+                    const start = parseInt(schedulerRecord.executionStartDate);
+                    const end = parseInt(schedulerRecord.executionFinishDate);
+                    const diffMs = end - start;
+                    const hours = Math.floor(diffMs / (1000 * 60 * 60));
+                    const minutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
+                    const seconds = Math.floor((diffMs % (1000 * 60)) / 1000);
+                    duration = `${hours}h ${minutes}m ${seconds}s`;
+                }
+                
+                schedulerDetails = {
+                    status: statusText,
+                    statusClass: statusClass,
+                    startTime: schedulerRecord.executionStartDate ? formatTimeOnly(schedulerRecord.executionStartDate) : '-',
+                    endTime: schedulerRecord.executionFinishDate ? formatTimeOnly(schedulerRecord.executionFinishDate) : '-',
+                    duration: duration || '-',
+                    bqDataFetch: schedulerRecord.bqTotalData !== undefined ? schedulerRecord.bqTotalData : '-',
+                    savedData: schedulerRecord.analyticTotalData !== undefined ? schedulerRecord.analyticTotalData : '-'
+                };
+            }
+            
+            const statusColor = match ? '#d1fae5' : '#fee2e2';
+            const statusTextColor = match ? '#065f46' : '#991b1b';
+            const executionColor = executionSuccess ? '#d1fae5' : '#fee2e2';
+            const executionTextColor = executionSuccess ? '#065f46' : '#991b1b';
+            
+            // Calculate number of columns needed (always include Difference)
+            const numColumns = 6; // Pods, Rows Inserted, Expected, Match, Success, Difference
+            
+            // Build validation results HTML (shown after clicking validate)
+            // Note: Scheduler details section is already shown above the validate button when modal opens
+            let html = '';
+            
+            // Add validation metrics section
+            html += `
+                <div style="padding: 0.75rem; background: white; border: 1px solid var(--gray-200); border-radius: 0.5rem; box-shadow: 0 1px 3px rgba(0,0,0,0.1); margin-bottom: 1rem;">
+                    <div style="display: grid; grid-template-columns: repeat(${numColumns}, 1fr); gap: 0.75rem; align-items: center;">
+                        <div style="text-align: center;">
+                            <div style="font-size: 0.7rem; color: var(--gray-600); margin-bottom: 0.125rem;">Pods</div>
+                            <div style="font-size: 1rem; font-weight: 600; color: var(--gray-900);">${podCount}</div>
+                        </div>
+                        <div style="text-align: center;">
+                            <div style="font-size: 0.7rem; color: var(--gray-600); margin-bottom: 0.125rem;">Rows Inserted</div>
+                            <div style="font-size: 1rem; font-weight: 600; color: var(--gray-900);">${rowsInserted.toLocaleString()}</div>
+                        </div>
+                        <div style="text-align: center;">
+                            <div style="font-size: 0.7rem; color: var(--gray-600); margin-bottom: 0.125rem;">SAVED DATA</div>
+                            <div style="font-size: 1rem; font-weight: 600; color: var(--gray-900);">${expectedTotal > 0 ? expectedTotal.toLocaleString() : '<span style="color: var(--gray-400);">-</span>'}</div>
+                        </div>
+                        <div style="text-align: center;">
+                            <div style="font-size: 0.7rem; color: var(--gray-600); margin-bottom: 0.125rem;">Difference</div>
+                            <div style="font-size: 1rem; font-weight: 600; color: ${diff > 0 ? '#059669' : diff < 0 ? '#dc2626' : 'var(--gray-600)'};">
+                                ${diff > 0 ? '+' : ''}${diff.toLocaleString()}
+                            </div>
+                        </div>
+                        <div style="text-align: center;">
+                            <div style="font-size: 0.7rem; color: var(--gray-600); margin-bottom: 0.125rem;">Match</div>
+                            <div style="padding: 0.25rem 0.5rem; border-radius: 0.25rem; display: inline-block; font-size: 0.75rem; font-weight: 600; background: ${statusColor}; color: ${statusTextColor};">
+                                ${match ? '✓ YES' : '✗ NO'}
+                            </div>
+                        </div>
+                        <div style="text-align: center;">
+                            <div style="font-size: 0.7rem; color: var(--gray-600); margin-bottom: 0.125rem;">Success</div>
+                            <div style="padding: 0.25rem 0.5rem; border-radius: 0.25rem; display: inline-block; font-size: 0.75rem; font-weight: 600; background: ${executionColor}; color: ${executionTextColor};">
+                                ${executionSuccess ? '✓ YES' : '✗ NO'}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            // Display scheduler report details (all pods)
+            if (schedulerReportDetails && Object.keys(schedulerReportDetails).length > 0) {
+                html += `
+                    <div style="padding: 0.75rem; background: white; border: 1px solid var(--gray-200); border-radius: 0.5rem; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+                        <h3 style="margin: 0 0 0.75rem 0; font-size: 0.875rem; font-weight: 600; color: var(--gray-900);">Scheduler Report Details (All Pods)</h3>
+                        <div style="overflow-x: auto;">
+                            <table style="width: 100%; border-collapse: collapse;">
+                                <thead>
+                                    <tr style="background: var(--gray-50);">
+                                        <th style="padding: 0.5rem; text-align: left; font-size: 0.75rem; font-weight: 600; color: var(--gray-700); border-bottom: 1px solid var(--gray-200);">Scheduler No</th>
+                                        <th style="padding: 0.5rem; text-align: left; font-size: 0.75rem; font-weight: 600; color: var(--gray-700); border-bottom: 1px solid var(--gray-200);">Start Time</th>
+                                        <th style="padding: 0.5rem; text-align: left; font-size: 0.75rem; font-weight: 600; color: var(--gray-700); border-bottom: 1px solid var(--gray-200);">End Time</th>
+                                        <th style="padding: 0.5rem; text-align: left; font-size: 0.75rem; font-weight: 600; color: var(--gray-700); border-bottom: 1px solid var(--gray-200);">Duration</th>
+                                        <th style="padding: 0.5rem; text-align: left; font-size: 0.75rem; font-weight: 600; color: var(--gray-700); border-bottom: 1px solid var(--gray-200);">Rows Inserted</th>
+                                        <th style="padding: 0.5rem; text-align: left; font-size: 0.75rem; font-weight: 600; color: var(--gray-700); border-bottom: 1px solid var(--gray-200);">Execution Success</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+            `;
+                
+                // Sort pods by schedulerNo
+                const sortedPods = Object.entries(schedulerReportDetails).sort((a, b) => {
+                    const aNo = a[1].schedulerNo || 0;
+                    const bNo = b[1].schedulerNo || 0;
+                    return aNo - bNo;
+                });
+                
+                sortedPods.forEach(([podKey, podData]) => {
+                    const podSuccess = podData.executionSuccess;
+                    const podSuccessColor = podSuccess ? '#d1fae5' : '#fee2e2';
+                    const podSuccessTextColor = podSuccess ? '#065f46' : '#991b1b';
+                    
+                    // Calculate duration for this pod
+                    let podDuration = '-';
+                    if (podData.startTime && podData.endTime) {
+                        const start = parseInt(podData.startTime);
+                        const end = parseInt(podData.endTime);
+                        if (!isNaN(start) && !isNaN(end)) {
+                            const diffMs = end - start;
+                            const hours = Math.floor(diffMs / (1000 * 60 * 60));
+                            const minutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
+                            const seconds = Math.floor((diffMs % (1000 * 60)) / 1000);
+                            podDuration = `${hours}h ${minutes}m ${seconds}s`;
+                        }
+                    }
+                    
+                    html += `
+                        <tr style="border-bottom: 1px solid var(--gray-100);">
+                            <td style="padding: 0.5rem; font-size: 0.875rem; color: var(--gray-900);">${podData.schedulerNo !== undefined ? podData.schedulerNo : '-'}</td>
+                            <td style="padding: 0.5rem; font-size: 0.875rem; color: var(--gray-900); font-family: monospace;">${formatTimeOnly(podData.startTime)}</td>
+                            <td style="padding: 0.5rem; font-size: 0.875rem; color: var(--gray-900); font-family: monospace;">${formatTimeOnly(podData.endTime)}</td>
+                            <td style="padding: 0.5rem; font-size: 0.875rem; color: var(--gray-900);">${podDuration}</td>
+                            <td style="padding: 0.5rem; font-size: 0.875rem; color: var(--gray-900); font-weight: 600;">${podData.rowsInserted !== undefined ? podData.rowsInserted.toLocaleString() : '-'}</td>
+                            <td style="padding: 0.5rem; font-size: 0.875rem;">
+                                <span style="padding: 0.25rem 0.5rem; border-radius: 0.25rem; font-size: 0.75rem; font-weight: 600; background: ${podSuccessColor}; color: ${podSuccessTextColor};">
+                                    ${podSuccess ? '✓ YES' : '✗ NO'}
+                                </span>
+                            </td>
+                        </tr>
+                    `;
+                });
+                
+                html += `
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                `;
+            }
+            
+            resultsDiv.innerHTML = html;
         }
         
         // Function to refresh data by triggering the Python script
@@ -2981,6 +3460,10 @@ Option 4 - Node.js (if installed):
             if (event.target === ssoModal) {
                 closeSsoTokenModal();
             }
+            const salesFunnelModal = document.getElementById('salesFunnelValidationModal');
+            if (event.target === salesFunnelModal) {
+                closeSalesFunnelValidationModal();
+            }
         }
         
         // Reports Functions
@@ -3808,7 +4291,7 @@ Option 4 - Node.js (if installed):
             const tbody = document.getElementById('todayTableBody');
             
             if (data.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="10" class="no-results">No results found</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="8" class="no-results">No results found</td></tr>';
                 return;
             }
             
@@ -3852,13 +4335,13 @@ Option 4 - Node.js (if installed):
                 // Get frequency from matched job
                 const frequency = matchedJob ? matchedJob.frequency || '-' : '-';
                 
-                // Get environment badge
+                // Get environment badge - clean and compact styling
                 const jobEnvironment = job.environment || getTodayJobEnvironment(matchedJob);
-                let environmentBadge = '<span class="badge badge-secondary">Unknown</span>';
+                let environmentBadge = '<span class="badge badge-secondary" style="padding: 0.2rem 0.6rem; border-radius: 0.375rem; font-size: 0.7rem; font-weight: 600; line-height: 1.2;">Unknown</span>';
                 if (jobEnvironment === 'Canary') {
-                    environmentBadge = '<span class="badge badge-warning" style="background: #fef3c7; color: #92400e; font-weight: 700;">🟡 Canary</span>';
+                    environmentBadge = '<span class="badge badge-warning" style="padding: 0.2rem 0.6rem; border-radius: 0.375rem; background: #fef3c7; color: #92400e; font-weight: 600; font-size: 0.7rem; display: inline-flex; align-items: center; gap: 0.3rem; line-height: 1.2; white-space: nowrap;">🟡 Canary</span>';
                 } else if (jobEnvironment === 'Non-Canary') {
-                    environmentBadge = '<span class="badge badge-info" style="background: #dbeafe; color: #1e40af; font-weight: 700;">🔵 Non-Canary</span>';
+                    environmentBadge = '<span class="badge badge-info" style="padding: 0.2rem 0.6rem; border-radius: 0.375rem; background: #dbeafe; color: #1e40af; font-weight: 600; font-size: 0.7rem; display: inline-flex; align-items: center; gap: 0.3rem; line-height: 1.2; white-space: nowrap;">🔵 Non-Canary</span>';
                 }
                 
                 if (matchedJob) {
@@ -3918,16 +4401,38 @@ Option 4 - Node.js (if installed):
                 const hasMismatch = bqValue > 0 && savedValue > 0 && bqValue !== savedValue;
                 const rowClass = hasMismatch ? 'data-mismatch' : '';
                 
+                // Check if this is a sales funnel scheduler and add validate button next to name
+                const salesFunnelSchedulers = ['SALES_FUNNEL_YESTERDAY', 'SALES_FUNNEL_LAST_THIRTY_DAYS', 'SALES_FUNNEL_PREVIOUS_MONTH'];
+                const isSalesFunnel = salesFunnelSchedulers.includes(job.analyticName);
+                // Combine analytic name with duration below
+                const analyticNameWithDuration = `<div style="display: flex; flex-direction: column; gap: 0.25rem;">
+                    <div style="display: flex; align-items: center; flex-wrap: wrap;">
+                        <span style="font-weight: 600; color: var(--gray-900);">${job.analyticName || ''}</span>
+                        ${isSalesFunnel ? `<button onclick="showSalesFunnelValidationModal('${job.analyticName}')" 
+                              style="margin-left: 0.5rem; padding: 0.1rem 0.4rem; background: var(--primary); color: white; border: none; border-radius: 0.25rem; cursor: pointer; font-size: 0.65rem; font-weight: 500;"
+                              title="Validate Sales Funnel Report">
+                          🔍
+                       </button>` : ''}
+                    </div>
+                    ${durationDisplay !== '-' ? `<div style="color: var(--gray-600); font-size: 0.75rem; font-weight: 500;">Duration: <span style="color: var(--gray-900);">${durationDisplay}</span></div>` : ''}
+                </div>`;
+                
+                // Combine start time and end time in a single column (without duration)
+                const executionTimeDisplay = startTime !== '-' || endTime !== '-'
+                    ? `<div style="display: flex; flex-direction: column; gap: 0.25rem; font-size: 0.875rem;">
+                        ${startTime !== '-' ? `<div style="color: var(--gray-700);"><strong>Start:</strong> <span style="font-family: monospace; color: var(--gray-900);">${startTime}</span></div>` : ''}
+                        ${endTime !== '-' ? `<div style="color: var(--gray-700);"><strong>End:</strong> <span style="font-family: monospace; color: var(--gray-900);">${endTime}</span></div>` : ''}
+                    </div>`
+                    : '-';
+                
                 return `
                     <tr class="${rowClass}" data-duration="${duration ? duration.totalSeconds : 0}">
-                        <td>${job.analyticName || ''}</td>
+                        <td>${analyticNameWithDuration}</td>
                         <td><span class="${statusClass}">${statusText}</span></td>
-                        <td>${frequency}</td>
+                        <td style="color: var(--gray-700); font-size: 0.875rem;">${frequency}</td>
                         <td>${environmentBadge}</td>
                         <td>${timeSlotsDisplay}</td>
-                        <td>${startTime}</td>
-                        <td>${endTime}</td>
-                        <td>${durationDisplay}</td>
+                        <td>${executionTimeDisplay}</td>
                         <td>${bqData}</td>
                         <td>${savedData}</td>
                     </tr>
@@ -4738,6 +5243,8 @@ Option 4 - Node.js (if installed):
             window.onclick = (event) => {
                 const modal = document.getElementById('curlModal');
                 if (event.target === modal) closeModal();
+                const salesFunnelModal = document.getElementById('salesFunnelValidationModal');
+                if (event.target === salesFunnelModal) closeSalesFunnelValidationModal();
             };
         });
     </script>
