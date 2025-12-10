@@ -75,9 +75,7 @@ class DashboardHandler(BaseHTTPRequestHandler):
         if path == '/api/refresh-today':
             self.handle_refresh_today()
             return
-        elif path == '/api/update-sso-token':
-            self.handle_update_sso_token()
-            return
+        # SSO token is now stored in browser localStorage, no server endpoint needed
         elif path == '/api/validate-sales-funnel':
             self.handle_validate_sales_funnel()
             return
@@ -91,92 +89,20 @@ class DashboardHandler(BaseHTTPRequestHandler):
             self.send_error(404, "Not found")
             return
     
-    def get_sso_token(self):
-        """Get the stored SSO token from file."""
-        token_file = Path(__file__).parent / '.sso_token'
-        if token_file.exists():
-            try:
-                return token_file.read_text().strip()
-            except:
-                pass
-        return None
+    # SSO token is now stored in browser localStorage, not in server files
+    # Token is passed from client to server in API request bodies
     
-    def save_sso_token(self, token):
-        """Save the SSO token to file."""
-        token_file = Path(__file__).parent / '.sso_token'
-        try:
-            token_file.write_text(token)
-            return True
-        except Exception as e:
-            print(f"Error saving SSO token: {e}")
-            return False
-    
-    def handle_update_sso_token(self):
-        """Handle the update SSO token API endpoint."""
-        try:
-            # Read request body
-            content_length = int(self.headers.get('Content-Length', 0))
-            body = self.rfile.read(content_length)
-            data = json.loads(body.decode('utf-8'))
-            
-            token = data.get('token', '').strip()
-            if not token:
-                response = {
-                    'success': False,
-                    'message': 'Token is required'
-                }
-                self.send_response(400)
-                self.send_header('Content-Type', 'application/json')
-                self.send_header('Access-Control-Allow-Origin', '*')
-                self.end_headers()
-                self.wfile.write(json.dumps(response).encode('utf-8'))
-                return
-            
-            # Save token
-            if self.save_sso_token(token):
-                response = {
-                    'success': True,
-                    'message': 'SSO token updated successfully'
-                }
-                self.send_response(200)
-            else:
-                response = {
-                    'success': False,
-                    'message': 'Failed to save SSO token'
-                }
-                self.send_response(500)
-            
-            self.send_header('Content-Type', 'application/json')
-            self.send_header('Access-Control-Allow-Origin', '*')
-            self.end_headers()
-            self.wfile.write(json.dumps(response).encode('utf-8'))
-            
-        except json.JSONDecodeError:
-            response = {
-                'success': False,
-                'message': 'Invalid JSON in request body'
-            }
-            self.send_response(400)
-            self.send_header('Content-Type', 'application/json')
-            self.send_header('Access-Control-Allow-Origin', '*')
-            self.end_headers()
-            self.wfile.write(json.dumps(response).encode('utf-8'))
-        except Exception as e:
-            response = {
-                'success': False,
-                'message': f'Error: {str(e)}'
-            }
-            self.send_response(500)
-            self.send_header('Content-Type', 'application/json')
-            self.send_header('Access-Control-Allow-Origin', '*')
-            self.end_headers()
-            self.wfile.write(json.dumps(response).encode('utf-8'))
+    # SSO token update endpoint removed - token is now stored in browser localStorage
+    # Token is passed from client to server in API request bodies
     
     def handle_refresh_today(self):
         """Handle the refresh today API endpoint."""
         try:
-            # Get SSO token if available
-            sso_token = self.get_sso_token()
+            # Read request body to get SSO token
+            content_length = int(self.headers.get('Content-Length', 0))
+            body = self.rfile.read(content_length) if content_length > 0 else b'{}'
+            request_data = json.loads(body.decode('utf-8'))
+            sso_token = request_data.get('sso_token')
             
             # Execute the fetch today script
             script_path = Path(__file__).parent / 'fetch_today_data.py'
@@ -257,8 +183,8 @@ class DashboardHandler(BaseHTTPRequestHandler):
             scheduler_name = request_data.get('scheduler_name')
             force_refresh = request_data.get('force_refresh', False)  # Allow forcing refresh
             
-            # Get SSO token if available
-            sso_token = self.get_sso_token()
+            # Get SSO token from request body (browser localStorage)
+            sso_token = request_data.get('sso_token')
             
             # Import the validation function
             import sys
@@ -404,8 +330,8 @@ class DashboardHandler(BaseHTTPRequestHandler):
             request_data = json.loads(body.decode('utf-8'))
             date_range = request_data.get('date_range', 'LAST_7_DAYS')
             
-            # Get SSO token
-            sso_token = self.get_sso_token()
+            # Get SSO token from request body (browser localStorage)
+            sso_token = request_data.get('sso_token')
             default_token = 'DEHijcfTDiMhsQXwTj1d'
             token = sso_token if sso_token else default_token
             

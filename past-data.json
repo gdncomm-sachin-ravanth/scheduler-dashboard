@@ -16,319 +16,6 @@
     {
         "_class": "com.gdn.partners.seller.insights.repository.model.scheduler.Scheduler",
         "_id": {
-            "$oid": "69260869bad41b285a358626"
-        },
-        "analyticDate": 1764090000000,
-        "analyticName": "PRODUCT_LATEST_BRANDS",
-        "analyticTotalData": 27,
-        "bqFetchEndDate": 1764100205810,
-        "bqTotalData": 27,
-        "executionFinishDate": 1764100207603,
-        "executionStartDate": 1764100201822,
-        "executionSuccess": true
-    },
-    {
-        "_class": "com.gdn.partners.seller.insights.repository.model.scheduler.Scheduler",
-        "_id": {
-            "$oid": "69260ac380c1254b64995672"
-        },
-        "analyticDate": 1764090000000,
-        "analyticName": "PRODUCT_LOW_STOCK",
-        "analyticTotalData": 7493,
-        "bqFetchEndDate": 1764101145505,
-        "bqTotalData": 7493,
-        "executionFinishDate": 1764101152737,
-        "executionStartDate": 1764100803785,
-        "executionSuccess": true
-    },
-    {
-        "_class": "com.gdn.partners.seller.insights.repository.model.scheduler.Scheduler",
-        "_id": {
-            "$oid": "692611cb80c1254b64997413"
-        },
-        "analyticDate": 1764090000000,
-        "analyticName": "SALES_ITEM_FILTER_DAILY",
-        "executionStartDate": 1764124202963
-    },
-    {
-        "_class": "com.gdn.partners.seller.insights.repository.model.scheduler.Scheduler",
-        "_id": {
-            "$oid": "6926154d09d75f7eca71bf62"
-        },
-        "analyticDate": 1764090000000,
-        "analyticName": "PRODUCT_UNCOMPETITIVE_PRICE",
-        "analyticTotalData": 1616,
-        "bqFetchEndDate": 1764103728527,
-        "bqTotalData": 62364,
-        "executionFinishDate": 1764103772140,
-        "executionStartDate": 1764103501897,
-        "executionSuccess": true
-    },
-    {
-        "_class": "com.gdn.partners.seller.insights.repository.model.scheduler.Scheduler",
-        "_id": {
-            "$oid": "69261fdb09d75f7eca71c5b3"
-        },
-        "analyticDate": 1764090000000,
-        "analyticName": "SELLER_RANKING",
-        "analyticTotalData": 35025,
-        "bqFetchEndDate": 1764106210782,
-        "bqTotalData": 35025,
-        "executionFinishDate": 1764106234493,
-        "executionStartDate": 1764106203050,
-        "executionSuccess": true
-    },
-    {
-        "_class": "com.gdn.partners.seller.insights.repository.model.scheduler.Scheduler",
-        "_id": {
-            "$oid": "6926304109d75f7eca724e85"
-        },
-        "analyticDate": 1764090000000,
-        "analyticName": "SALES_ITEM_HOURLY",
-        "analyticTotalData": 35713,
-        "bqFetchEndDate": 1764110831537,
-        "bqTotalData": 35713,
-        "executionFinishDate": 1764110853603,
-        "executionStartDate": 1764110401658,
-        "executionSuccess": true
-    },
-    {
-        "_class": "com.gdn.partners.seller.insights.repository.model.scheduler.Scheduler",
-        "_id": {
-            "$oid": "6926316d09d75f7eca724e86"
-        },
-        "analyticDate": 1764090000000,
-        "analyticName": "SALES_ITEM_DAILY",
-        "analyticTotalData": 297502,
-        "bqFetchEndDate": 1764111250952,
-        "bqTotalData": 297502,
-        "executionFinishDate": 1764111466653,
-        "executionStartDate": 1764110701886,
-        "executionSuccess": true
-    },
-    {
-        "_class": "com.gdn.partners.seller.insights.repository.model.scheduler.Scheduler",
-        "_id": {
-            "$oid": "692640a9bad41b285a358972"
-        },
-        "analyticDate": 1764090000000,
-        "analyticName": "OVERVIEW_DAILY",
-        "analyticTotalData": 565616,
-        "bqFetchEndDate": 1764162798546,
-        "bqTotalData": 565616,
-        "executionFinishDate": 1764163000583,
-        "executionStartDate": 1764162624744,
-        "executionSuccess": true
-    },
-    {
-        "_class": "com.gdn.partners.seller.insights.repository.model.scheduler.Scheduler",
-        "_id": {
-            "$oid": "69264559bad41b285a3e2b58"
-        },
-        "analyticDate": 1764090000000,
-        "analyticName": "HIGH_ENGAGEMENT",
-        "analyticTotalData": 23539,
-        "bqFetchEndDate": 1764130208854,
-        "bqTotalData": 23539,
-        "executionFinishDate": 1764130222601,
-        "executionStartDate": 1764130201873,
-        "executionSuccess": true
-    },
-    {
-        "_class": "com.gdn.partners.seller.insights.repository.model.scheduler.Scheduler",
-        "_id": {
-            "$oid": "692647b11db46972612ca32f"
-        },
-        "analyticDate": 1764090000000,
-        "analyticName": "PRODUCT_INSIGHTS",
-        "analyticTotalData": 8501,
-        "bqFetchEndDate": 1764116405225,
-        "bqTotalData": 8501,
-        "executionFinishDate": 1764116408141,
-        "executionStartDate": 1764116401447,
-        "executionSuccess": true
-    },
-    {
-        "_class": "com.gdn.partners.seller.insights.repository.model.scheduler.Scheduler",
-        "_id": {
-            "$oid": "692647b1bad41b285a3e87a6"
-        },
-        "analyticDate": 1764090000000,
-        "analyticName": "CANCELLATION_FULFILMENT_OPERATIONAL",
-        "analyticTotalData": 822876,
-        "bqFetchEndDate": 1764172112851,
-        "bqTotalData": 822876,
-        "executionFinishDate": 1764172870913,
-        "executionStartDate": 1764171978751,
-        "executionSuccess": true
-    },
-    {
-        "_class": "com.gdn.partners.seller.insights.repository.model.scheduler.Scheduler",
-        "_id": {
-            "$oid": "69264a0909d75f7eca776426"
-        },
-        "analyticDate": 1764090000000,
-        "analyticName": "SALES_FUNNEL_PREVIOUS_MONTH",
-        "executionStartDate": 1764131402194
-    },
-    {
-        "_class": "com.gdn.partners.seller.insights.repository.model.scheduler.Scheduler",
-        "_id": {
-            "$oid": "69264a0abad41b285a3eb208"
-        },
-        "analyticDate": 1764090000000,
-        "analyticName": "CUSTOMER_RANGE",
-        "analyticTotalData": 103497,
-        "bqFetchEndDate": 1764117016451,
-        "bqTotalData": 103497,
-        "executionFinishDate": 1764117308024,
-        "executionStartDate": 1764117002264,
-        "executionSuccess": true
-    },
-    {
-        "_class": "com.gdn.partners.seller.insights.repository.model.scheduler.Scheduler",
-        "_id": {
-            "$oid": "69264c61bad41b285a3eb261"
-        },
-        "analyticDate": 1764090000000,
-        "analyticName": "SALES_INSIGHTS",
-        "analyticTotalData": 28089,
-        "bqFetchEndDate": 1764117606453,
-        "bqTotalData": 28089,
-        "executionFinishDate": 1764117616788,
-        "executionStartDate": 1764117601582,
-        "executionSuccess": true
-    },
-    {
-        "_class": "com.gdn.partners.seller.insights.repository.model.scheduler.Scheduler",
-        "_id": {
-            "$oid": "69264c611db46972612ca330"
-        },
-        "analyticDate": 1764090000000,
-        "analyticName": "CUSTOMER_INSIGHTS",
-        "analyticTotalData": 38334,
-        "bqFetchEndDate": 1764117607502,
-        "bqTotalData": 38334,
-        "executionFinishDate": 1764117619990,
-        "executionStartDate": 1764117601677,
-        "executionSuccess": true
-    },
-    {
-        "_class": "com.gdn.partners.seller.insights.repository.model.scheduler.Scheduler",
-        "_id": {
-            "$oid": "69264d8dbad41b285a3eb28c"
-        },
-        "analyticDate": 1764090000000,
-        "analyticName": "TRAFFIC_V2",
-        "analyticTotalData": 114241,
-        "bqFetchEndDate": 1764118024878,
-        "bqTotalData": 114241,
-        "executionFinishDate": 1764119790599,
-        "executionStartDate": 1764117901252,
-        "executionSuccess": true
-    },
-    {
-        "_class": "com.gdn.partners.seller.insights.repository.model.scheduler.Scheduler",
-        "_id": {
-            "$oid": "69264d8d1db46972612ca331"
-        },
-        "analyticDate": 1764090000000,
-        "analyticName": "SALES_FUNNEL_LAST_THIRTY_DAYS",
-        "executionStartDate": 1764132301580
-    },
-    {
-        "_class": "com.gdn.partners.seller.insights.repository.model.scheduler.Scheduler",
-        "_id": {
-            "$oid": "692651145820456e2d5af760"
-        },
-        "analyticDate": 1764090000000,
-        "analyticName": "SALES_FUNNEL_YESTERDAY",
-        "executionStartDate": 1764133203000
-    },
-    {
-        "_class": "com.gdn.partners.seller.insights.repository.model.scheduler.Scheduler",
-        "_id": {
-            "$oid": "692655c180c1254b64997fe6"
-        },
-        "analyticDate": 1764090000000,
-        "analyticName": "CHAT_RESPONSE_OPERATIONAL",
-        "analyticTotalData": 24148,
-        "bqFetchEndDate": 1764120023370,
-        "bqTotalData": 24148,
-        "executionFinishDate": 1764120044149,
-        "executionStartDate": 1764120001410,
-        "executionSuccess": true
-    },
-    {
-        "_class": "com.gdn.partners.seller.insights.repository.model.scheduler.Scheduler",
-        "_id": {
-            "$oid": "692659451db46972612ca332"
-        },
-        "analyticDate": 1764090000000,
-        "analyticName": "CUSTOMER_DAILY",
-        "analyticTotalData": 677523,
-        "bqFetchEndDate": 1764121106121,
-        "bqTotalData": 677523,
-        "executionFinishDate": 1764121643161,
-        "executionStartDate": 1764120901385,
-        "executionSuccess": true
-    },
-    {
-        "_class": "com.gdn.partners.seller.insights.repository.model.scheduler.Scheduler",
-        "_id": {
-            "$oid": "692661791db4697261381490"
-        },
-        "analyticDate": 1764090000000,
-        "analyticName": "PRODUCT_WISHLIST_LAST_THIRTY_DAYS",
-        "analyticTotalData": 185495,
-        "bqFetchEndDate": 1764123085530,
-        "bqTotalData": 185495,
-        "executionFinishDate": 1764123268870,
-        "executionStartDate": 1764123001966,
-        "executionSuccess": true
-    },
-    {
-        "_class": "com.gdn.partners.seller.insights.repository.model.scheduler.Scheduler",
-        "_id": {
-            "$oid": "692663d1bad41b285a977ce4"
-        },
-        "analyticDate": 1764090000000,
-        "analyticName": "REMOVE_ANALYTIC_DATA",
-        "analyticTotalData": 1,
-        "bqTotalData": 1,
-        "executionFinishDate": 1764123601443,
-        "executionStartDate": 1764123601438,
-        "executionSuccess": true
-    },
-    {
-        "_class": "com.gdn.partners.seller.insights.repository.model.scheduler.Scheduler",
-        "_id": {
-            "$oid": "692663d180c1254b649b5c43"
-        },
-        "analyticDate": 1764090000000,
-        "analyticName": "PRODUCT_SEARCH_KEYWORD_LAST_THIRTY_DAYS",
-        "analyticTotalData": 4564,
-        "bqFetchEndDate": 1764123658896,
-        "bqTotalData": 4564,
-        "executionFinishDate": 1764123662841,
-        "executionStartDate": 1764123601772,
-        "executionSuccess": true
-    },
-    {
-        "_class": "com.gdn.partners.seller.insights.repository.model.scheduler.Scheduler",
-        "_id": {
-            "$oid": "6926824abad41b285a97842d"
-        },
-        "analyticDate": 1764090000000,
-        "analyticName": "DAILY_SCHEDULER_REPORT",
-        "analyticTotalData": 1,
-        "executionFinishDate": 1764131403322,
-        "executionStartDate": 1764131402028,
-        "executionSuccess": true
-    },
-    {
-        "_class": "com.gdn.partners.seller.insights.repository.model.scheduler.Scheduler",
-        "_id": {
             "$oid": "692759e980c1254b649c252c"
         },
         "analyticDate": 1764176400000,
@@ -4690,6 +4377,339 @@
         "analyticTotalData": 1,
         "executionFinishDate": 1765254603642,
         "executionStartDate": 1765254602118,
+        "executionSuccess": true
+    },
+    {
+        "_class": "com.gdn.partners.seller.insights.repository.model.scheduler.Scheduler",
+        "_id": {
+            "$oid": "69387d6928e2362d5f8aa280"
+        },
+        "analyticDate": 1765299600000,
+        "analyticName": "PRODUCT_LATEST_BRANDS",
+        "analyticTotalData": 50,
+        "bqFetchEndDate": 1765309804836,
+        "bqTotalData": 50,
+        "executionFinishDate": 1765309807078,
+        "executionStartDate": 1765309801732,
+        "executionSuccess": true
+    },
+    {
+        "_class": "com.gdn.partners.seller.insights.repository.model.scheduler.Scheduler",
+        "_id": {
+            "$oid": "69387fc4214bb37966b6f283"
+        },
+        "analyticDate": 1765299600000,
+        "analyticName": "PRODUCT_LOW_STOCK",
+        "analyticTotalData": 13367,
+        "bqFetchEndDate": 1765310753761,
+        "bqTotalData": 13367,
+        "executionFinishDate": 1765310765029,
+        "executionStartDate": 1765310404468,
+        "executionSuccess": true
+    },
+    {
+        "_class": "com.gdn.partners.seller.insights.repository.model.scheduler.Scheduler",
+        "_id": {
+            "$oid": "693886cb214bb37966b726eb"
+        },
+        "analyticDate": 1765299600000,
+        "analyticName": "SALES_ITEM_FILTER_DAILY",
+        "analyticTotalData": 135,
+        "bqFetchEndDate": 1765312212152,
+        "bqTotalData": 233,
+        "executionFinishDate": 1765312213747,
+        "executionStartDate": 1765312203318,
+        "executionSuccess": true
+    },
+    {
+        "_class": "com.gdn.partners.seller.insights.repository.model.scheduler.Scheduler",
+        "_id": {
+            "$oid": "69388a4ee6bb997cd47958e3"
+        },
+        "analyticDate": 1765299600000,
+        "analyticName": "PRODUCT_UNCOMPETITIVE_PRICE",
+        "analyticTotalData": 895,
+        "bqFetchEndDate": 1765313221915,
+        "bqTotalData": 45950,
+        "executionFinishDate": 1765313256344,
+        "executionStartDate": 1765313102137,
+        "executionSuccess": true
+    },
+    {
+        "_class": "com.gdn.partners.seller.insights.repository.model.scheduler.Scheduler",
+        "_id": {
+            "$oid": "693894da6b8cbc01bad37403"
+        },
+        "analyticDate": 1765299600000,
+        "analyticName": "SELLER_RANKING",
+        "analyticTotalData": 35900,
+        "bqFetchEndDate": 1765315809573,
+        "bqTotalData": 35900,
+        "executionFinishDate": 1765315835602,
+        "executionStartDate": 1765315802274,
+        "executionSuccess": true
+    },
+    {
+        "_class": "com.gdn.partners.seller.insights.repository.model.scheduler.Scheduler",
+        "_id": {
+            "$oid": "6938997de6bb997cd4795cda"
+        },
+        "analyticDate": 1765299600000,
+        "analyticName": "CUSTOMER_INSIGHTS",
+        "analyticTotalData": 37410,
+        "bqFetchEndDate": 1765327206249,
+        "bqTotalData": 37410,
+        "executionFinishDate": 1765327221285,
+        "executionStartDate": 1765327201074,
+        "executionSuccess": true
+    },
+    {
+        "_class": "com.gdn.partners.seller.insights.repository.model.scheduler.Scheduler",
+        "_id": {
+            "$oid": "6938a541e6bb997cd4795d95"
+        },
+        "analyticDate": 1765299600000,
+        "analyticName": "SALES_ITEM_HOURLY",
+        "analyticTotalData": 46809,
+        "bqFetchEndDate": 1765320169209,
+        "bqTotalData": 46809,
+        "executionFinishDate": 1765320199119,
+        "executionStartDate": 1765320001736,
+        "executionSuccess": true
+    },
+    {
+        "_class": "com.gdn.partners.seller.insights.repository.model.scheduler.Scheduler",
+        "_id": {
+            "$oid": "6938a66d6b8cbc01bad4d0ad"
+        },
+        "analyticDate": 1765299600000,
+        "analyticName": "SALES_ITEM_DAILY",
+        "analyticTotalData": 310673,
+        "bqFetchEndDate": 1765320581483,
+        "bqTotalData": 310673,
+        "executionFinishDate": 1765320809195,
+        "executionStartDate": 1765320301169,
+        "executionSuccess": true
+    },
+    {
+        "_class": "com.gdn.partners.seller.insights.repository.model.scheduler.Scheduler",
+        "_id": {
+            "$oid": "6938b5a9214bb37966b728d3"
+        },
+        "analyticDate": 1765299600000,
+        "analyticName": "OVERVIEW_DAILY",
+        "analyticTotalData": 584309,
+        "bqFetchEndDate": 1765324451263,
+        "bqTotalData": 584309,
+        "executionFinishDate": 1765324671225,
+        "executionStartDate": 1765324201935,
+        "executionSuccess": true
+    },
+    {
+        "_class": "com.gdn.partners.seller.insights.repository.model.scheduler.Scheduler",
+        "_id": {
+            "$oid": "6938ba5928e2362d5f8aa7e8"
+        },
+        "analyticDate": 1765299600000,
+        "analyticName": "HIGH_ENGAGEMENT",
+        "analyticTotalData": 24809,
+        "bqFetchEndDate": 1765339807640,
+        "bqTotalData": 24809,
+        "executionFinishDate": 1765339821995,
+        "executionStartDate": 1765339801023,
+        "executionSuccess": true
+    },
+    {
+        "_class": "com.gdn.partners.seller.insights.repository.model.scheduler.Scheduler",
+        "_id": {
+            "$oid": "6938bcb128e2362d5f8b0943"
+        },
+        "analyticDate": 1765299600000,
+        "analyticName": "CANCELLATION_FULFILMENT_OPERATIONAL",
+        "analyticTotalData": 11284,
+        "bqFetchEndDate": 1765326231413,
+        "bqTotalData": 11284,
+        "executionFinishDate": 1765326238500,
+        "executionStartDate": 1765326001514,
+        "executionSuccess": true
+    },
+    {
+        "_class": "com.gdn.partners.seller.insights.repository.model.scheduler.Scheduler",
+        "_id": {
+            "$oid": "6938bcb2e6bb997cd47a1645"
+        },
+        "analyticDate": 1765299600000,
+        "analyticName": "PRODUCT_INSIGHTS",
+        "analyticTotalData": 8757,
+        "bqFetchEndDate": 1765326006163,
+        "bqTotalData": 8757,
+        "executionFinishDate": 1765326008960,
+        "executionStartDate": 1765326002038,
+        "executionSuccess": true
+    },
+    {
+        "_class": "com.gdn.partners.seller.insights.repository.model.scheduler.Scheduler",
+        "_id": {
+            "$oid": "6938bf0a6b8cbc01bad99035"
+        },
+        "analyticDate": 1765299600000,
+        "analyticName": "SALES_FUNNEL_PREVIOUS_MONTH",
+        "analyticTotalData": 1336953,
+        "bqFetchEndDate": 1765328005757,
+        "bqTotalData": 1336953,
+        "executionFinishDate": 1765328057341,
+        "executionStartDate": 1765326602777,
+        "executionSuccess": true
+    },
+    {
+        "_class": "com.gdn.partners.seller.insights.repository.model.scheduler.Scheduler",
+        "_id": {
+            "$oid": "6938bf0a214bb37966c013f0"
+        },
+        "analyticDate": 1765299600000,
+        "analyticName": "CUSTOMER_RANGE",
+        "analyticTotalData": 104905,
+        "bqFetchEndDate": 1765326617773,
+        "bqTotalData": 104905,
+        "executionFinishDate": 1765326923463,
+        "executionStartDate": 1765326602916,
+        "executionSuccess": true
+    },
+    {
+        "_class": "com.gdn.partners.seller.insights.repository.model.scheduler.Scheduler",
+        "_id": {
+            "$oid": "6938c16128e2362d5f8b35e5"
+        },
+        "analyticDate": 1765299600000,
+        "analyticName": "SALES_INSIGHTS",
+        "analyticTotalData": 28045,
+        "bqFetchEndDate": 1765327206295,
+        "bqTotalData": 28045,
+        "executionFinishDate": 1765327216776,
+        "executionStartDate": 1765327201634,
+        "executionSuccess": true
+    },
+    {
+        "_class": "com.gdn.partners.seller.insights.repository.model.scheduler.Scheduler",
+        "_id": {
+            "$oid": "6938c28de0874e45f400b109"
+        },
+        "analyticDate": 1765299600000,
+        "analyticName": "SALES_FUNNEL_LAST_THIRTY_DAYS",
+        "analyticTotalData": 1345011,
+        "bqFetchEndDate": 1765342106383,
+        "bqTotalData": 1345011,
+        "executionFinishDate": 1765342156600,
+        "executionStartDate": 1765341901182,
+        "executionSuccess": true
+    },
+    {
+        "_class": "com.gdn.partners.seller.insights.repository.model.scheduler.Scheduler",
+        "_id": {
+            "$oid": "6938c28e28e2362d5f8b3601"
+        },
+        "analyticDate": 1765299600000,
+        "analyticName": "TRAFFIC_V2",
+        "analyticTotalData": 116143,
+        "bqFetchEndDate": 1765328003783,
+        "bqTotalData": 116143,
+        "executionFinishDate": 1765329739721,
+        "executionStartDate": 1765327502057,
+        "executionSuccess": true
+    },
+    {
+        "_class": "com.gdn.partners.seller.insights.repository.model.scheduler.Scheduler",
+        "_id": {
+            "$oid": "6938c614df7ccc77137f1ff4"
+        },
+        "analyticDate": 1765299600000,
+        "analyticName": "SALES_FUNNEL_YESTERDAY",
+        "analyticTotalData": 852109,
+        "bqFetchEndDate": 1765342887904,
+        "bqTotalData": 852109,
+        "executionFinishDate": 1765342939765,
+        "executionStartDate": 1765342805194,
+        "executionSuccess": true
+    },
+    {
+        "_class": "com.gdn.partners.seller.insights.repository.model.scheduler.Scheduler",
+        "_id": {
+            "$oid": "6938cac1214bb37966c0154b"
+        },
+        "analyticDate": 1765299600000,
+        "analyticName": "CHAT_RESPONSE_OPERATIONAL",
+        "analyticTotalData": 24875,
+        "bqFetchEndDate": 1765329639405,
+        "bqTotalData": 24875,
+        "executionFinishDate": 1765329669384,
+        "executionStartDate": 1765329601869,
+        "executionSuccess": true
+    },
+    {
+        "_class": "com.gdn.partners.seller.insights.repository.model.scheduler.Scheduler",
+        "_id": {
+            "$oid": "6938ce45e6bb997cd47a17fc"
+        },
+        "analyticDate": 1765299600000,
+        "analyticName": "CUSTOMER_DAILY",
+        "analyticTotalData": 691589,
+        "bqFetchEndDate": 1765330761965,
+        "bqTotalData": 691589,
+        "executionFinishDate": 1765331330020,
+        "executionStartDate": 1765330501199,
+        "executionSuccess": true
+    },
+    {
+        "_class": "com.gdn.partners.seller.insights.repository.model.scheduler.Scheduler",
+        "_id": {
+            "$oid": "6938d6796b8cbc01bad992b9"
+        },
+        "analyticDate": 1765299600000,
+        "analyticName": "PRODUCT_WISHLIST_LAST_THIRTY_DAYS",
+        "analyticTotalData": 191164,
+        "bqFetchEndDate": 1765332710058,
+        "bqTotalData": 191164,
+        "executionFinishDate": 1765332896790,
+        "executionStartDate": 1765332601889,
+        "executionSuccess": true
+    },
+    {
+        "_class": "com.gdn.partners.seller.insights.repository.model.scheduler.Scheduler",
+        "_id": {
+            "$oid": "6938d8d1214bb37966c1fd26"
+        },
+        "analyticDate": 1765299600000,
+        "analyticName": "REMOVE_ANALYTIC_DATA",
+        "analyticTotalData": 1,
+        "bqTotalData": 1,
+        "executionFinishDate": 1765333201645,
+        "executionStartDate": 1765333201639,
+        "executionSuccess": true
+    },
+    {
+        "_class": "com.gdn.partners.seller.insights.repository.model.scheduler.Scheduler",
+        "_id": {
+            "$oid": "6938d8d128e2362d5fe97243"
+        },
+        "analyticDate": 1765299600000,
+        "analyticName": "PRODUCT_SEARCH_KEYWORD_LAST_THIRTY_DAYS",
+        "analyticTotalData": 4632,
+        "bqFetchEndDate": 1765333260165,
+        "bqTotalData": 4632,
+        "executionFinishDate": 1765333263633,
+        "executionStartDate": 1765333201965,
+        "executionSuccess": true
+    },
+    {
+        "_class": "com.gdn.partners.seller.insights.repository.model.scheduler.Scheduler",
+        "_id": {
+            "$oid": "6938f74b214bb37966c20131"
+        },
+        "analyticDate": 1765299600000,
+        "analyticName": "DAILY_SCHEDULER_REPORT",
+        "analyticTotalData": 1,
+        "executionFinishDate": 1765341004341,
+        "executionStartDate": 1765341003222,
         "executionSuccess": true
     }
 ]
