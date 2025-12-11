@@ -173,6 +173,21 @@
             border-radius: 0.5rem;
             box-shadow: 0 1px 3px rgba(0,0,0,0.1);
             border-left: 3px solid var(--primary);
+            transition: all 0.2s ease;
+        }
+        
+        .stat-card.clickable {
+            cursor: pointer;
+        }
+        
+        .stat-card.clickable:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 6px rgba(0,0,0,0.15);
+        }
+        
+        .stat-card.clickable.active {
+            background: var(--gray-50);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
         }
         
         .stat-card.success { border-left-color: var(--success); }
@@ -870,6 +885,8 @@
         
         .modal-body {
             padding: 1.5rem;
+            max-height: calc(100vh - 200px);
+            overflow-y: auto;
         }
         
         .modal-body pre {
@@ -1269,23 +1286,98 @@
                     <!-- Job Schedule Heatmap -->
                     <div class="chart-container">
                         <div class="chart-title">🔥 Job Schedule Heatmap (By Hour of Day)</div>
-                        <div style="display: flex; gap: 1rem; align-items: center; margin-bottom: 1rem; font-size: 0.875rem; flex-wrap: wrap;">
-                            <span style="color: var(--gray-600); font-weight: 600;">Legend:</span>
+                        
+                        <!-- Filters and Legend -->
+                        <div style="display: flex; flex-wrap: wrap; gap: 0.75rem; align-items: center; margin-bottom: 1rem; padding: 0.75rem; background: var(--gray-50); border-radius: 0.5rem; font-size: 0.75rem;">
+                            <!-- Filters -->
+                            <div style="display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center;">
+                                <span style="color: var(--gray-600); font-weight: 600; margin-right: 0.25rem;">Try:</span>
+                                <button class="filter-btn active" id="jobs-heatmap-all-tries" onclick="filterJobsHeatmapByTry('All')" 
+                                        style="padding: 0.3rem 0.6rem; border: 1px solid var(--gray-300); border-radius: 0.25rem; 
+                                        background: var(--primary); color: white; cursor: pointer; font-size: 0.75rem; font-weight: 500; white-space: nowrap;">
+                                    All
+                                </button>
+                                <button class="filter-btn" id="jobs-heatmap-try-1" onclick="filterJobsHeatmapByTry('1')" 
+                                        style="padding: 0.3rem 0.6rem; border: 1px solid var(--gray-300); border-radius: 0.25rem; 
+                                        background: white; color: var(--gray-700); cursor: pointer; font-size: 0.75rem; font-weight: 500; white-space: nowrap;">
+                                    1st
+                                </button>
+                                <button class="filter-btn" id="jobs-heatmap-try-2" onclick="filterJobsHeatmapByTry('2')" 
+                                        style="padding: 0.3rem 0.6rem; border: 1px solid var(--gray-300); border-radius: 0.25rem; 
+                                        background: white; color: var(--gray-700); cursor: pointer; font-size: 0.75rem; font-weight: 500; white-space: nowrap;">
+                                    2nd
+                                </button>
+                                <button class="filter-btn" id="jobs-heatmap-try-3" onclick="filterJobsHeatmapByTry('3')" 
+                                        style="padding: 0.3rem 0.6rem; border: 1px solid var(--gray-300); border-radius: 0.25rem; 
+                                        background: white; color: var(--gray-700); cursor: pointer; font-size: 0.75rem; font-weight: 500; white-space: nowrap;">
+                                    3rd
+                                </button>
+                                <button class="filter-btn" id="jobs-heatmap-try-4" onclick="filterJobsHeatmapByTry('4')" 
+                                        style="padding: 0.3rem 0.6rem; border: 1px solid var(--gray-300); border-radius: 0.25rem; 
+                                        background: white; color: var(--gray-700); cursor: pointer; font-size: 0.75rem; font-weight: 500; white-space: nowrap;">
+                                    4th
+                                </button>
+                            </div>
+                            
+                            <div style="width: 1px; height: 20px; background: var(--gray-300);"></div>
+                            
                             <div style="display: flex; gap: 0.5rem; align-items: center;">
-                                <div style="width: 20px; height: 20px; background: #10b981; border-radius: 0.25rem;"></div>
-                                <span>Enabled</span>
+                                <span style="color: var(--gray-600); font-weight: 600; margin-right: 0.25rem;">Status:</span>
+                                <button class="filter-btn" id="jobs-heatmap-status-all" onclick="filterJobsHeatmapByStatus('All')" 
+                                        style="padding: 0.3rem 0.6rem; border: 1px solid var(--gray-300); border-radius: 0.25rem; 
+                                        background: white; color: var(--gray-700); cursor: pointer; font-size: 0.75rem; font-weight: 500; white-space: nowrap;">
+                                    All
+                                </button>
+                                <button class="filter-btn active" id="jobs-heatmap-status-enabled" onclick="filterJobsHeatmapByStatus('Enabled')" 
+                                        style="padding: 0.3rem 0.6rem; border: 1px solid var(--gray-300); border-radius: 0.25rem; 
+                                        background: var(--primary); color: white; cursor: pointer; font-size: 0.75rem; font-weight: 500; white-space: nowrap;">
+                                    ✓ Enabled
+                                </button>
+                                <button class="filter-btn" id="jobs-heatmap-status-disabled" onclick="filterJobsHeatmapByStatus('Disabled')" 
+                                        style="padding: 0.3rem 0.6rem; border: 1px solid var(--gray-300); border-radius: 0.25rem; 
+                                        background: white; color: var(--gray-700); cursor: pointer; font-size: 0.75rem; font-weight: 500; white-space: nowrap;">
+                                    ✕ Disabled
+                                </button>
                             </div>
+                            
+                            <div style="width: 1px; height: 20px; background: var(--gray-300);"></div>
+                            
                             <div style="display: flex; gap: 0.5rem; align-items: center;">
-                                <div style="width: 20px; height: 20px; background: #9ca3af; border-radius: 0.25rem;"></div>
-                                <span>Disabled</span>
+                                <span style="color: var(--gray-600); font-weight: 600; margin-right: 0.25rem;">Env:</span>
+                                <button class="filter-btn active" id="jobs-heatmap-env-all" onclick="filterJobsHeatmapByEnvironment('All')" 
+                                        style="padding: 0.3rem 0.6rem; border: 1px solid var(--gray-300); border-radius: 0.25rem; 
+                                        background: var(--primary); color: white; cursor: pointer; font-size: 0.75rem; font-weight: 500; white-space: nowrap;">
+                                    All
+                                </button>
+                                <button class="filter-btn" id="jobs-heatmap-env-canary" onclick="filterJobsHeatmapByEnvironment('Canary')" 
+                                        style="padding: 0.3rem 0.6rem; border: 1px solid var(--gray-300); border-radius: 0.25rem; 
+                                        background: white; color: var(--gray-700); cursor: pointer; font-size: 0.75rem; font-weight: 500; white-space: nowrap;">
+                                    🟡 Canary
+                                </button>
+                                <button class="filter-btn" id="jobs-heatmap-env-noncanary" onclick="filterJobsHeatmapByEnvironment('Non-Canary')" 
+                                        style="padding: 0.3rem 0.6rem; border: 1px solid var(--gray-300); border-radius: 0.25rem; 
+                                        background: white; color: var(--gray-700); cursor: pointer; font-size: 0.75rem; font-weight: 500; white-space: nowrap;">
+                                    🔵 Non-Canary
+                                </button>
                             </div>
-                            <div style="display: flex; gap: 0.5rem; align-items: center; margin-left: 1rem;">
-                                <span style="color: var(--gray-600);">Intensity = Number of Jobs</span>
-                            </div>
-                            <div style="display: flex; gap: 0.5rem; align-items: center; margin-left: 1rem; padding: 0.375rem 0.75rem; background: var(--gray-100); border-radius: 0.25rem;">
-                                <span style="color: var(--primary); font-size: 0.8rem;">💡 Jobs with multiple scheduled times appear in multiple hours</span>
+                            
+                            <div style="width: 1px; height: 20px; background: var(--gray-300); margin-left: auto;"></div>
+                            
+                            <!-- Legend -->
+                            <div style="display: flex; gap: 0.75rem; align-items: center; flex-wrap: wrap;">
+                                <span style="color: var(--gray-600); font-weight: 600;">Legend:</span>
+                                <div style="display: flex; gap: 0.3rem; align-items: center;">
+                                    <div style="width: 14px; height: 14px; background: #10b981; border-radius: 0.2rem; flex-shrink: 0;"></div>
+                                    <span style="white-space: nowrap;">Enabled</span>
+                                </div>
+                                <div style="display: flex; gap: 0.3rem; align-items: center;">
+                                    <div style="width: 14px; height: 14px; background: #9ca3af; border-radius: 0.2rem; flex-shrink: 0;"></div>
+                                    <span style="white-space: nowrap;">Disabled</span>
+                                </div>
+                                <span style="color: var(--gray-500); white-space: nowrap;">Intensity = Count</span>
                             </div>
                         </div>
+                        
                         <div class="heatmap-container" id="jobsHeatmapContainer">
                             <div class="no-results">Loading heatmap...</div>
                         </div>
@@ -1360,29 +1452,45 @@
                 <!-- Today's Report Section -->
                 <section id="today-report-section" class="page-section active">
                     <div class="stats">
-                        <div class="stat-card info">
+                        <div class="stat-card info clickable" id="todayCardTotal" onclick="filterTodayByCard('All')" title="Click to show all jobs">
                             <div class="stat-label">Total Jobs</div>
                             <div class="stat-value" id="todayTotal">0</div>
+                            <div style="display: flex; gap: 0.75rem; margin-top: 0.5rem; font-size: 0.7rem;">
+                                <div style="color: #92400e;">🟡 <span id="todayTotalCanary">0</span></div>
+                                <div style="color: #1e40af;">🔵 <span id="todayTotalNonCanary">0</span></div>
+                            </div>
                         </div>
-                        <div class="stat-card warning">
+                        <div class="stat-card warning clickable" id="todayCardPending" onclick="filterTodayByCard('Pending')" title="Click to filter pending jobs">
                             <div class="stat-label">Pending Jobs</div>
                             <div class="stat-value" id="todayPending">0</div>
+                            <div style="display: flex; gap: 0.75rem; margin-top: 0.5rem; font-size: 0.7rem;">
+                                <div style="color: #92400e;">🟡 <span id="todayPendingCanary">0</span></div>
+                                <div style="color: #1e40af;">🔵 <span id="todayPendingNonCanary">0</span></div>
+                            </div>
                         </div>
-                        <div class="stat-card" style="border-left-color: var(--info);">
+                        <div class="stat-card clickable" id="todayCardInProgress" onclick="filterTodayByCard('In Progress')" style="border-left-color: var(--info);" title="Click to filter in-progress jobs">
                             <div class="stat-label">In Progress Jobs</div>
                             <div class="stat-value" id="todayInProgress">0</div>
+                            <div style="display: flex; gap: 0.75rem; margin-top: 0.5rem; font-size: 0.7rem;">
+                                <div style="color: #92400e;">🟡 <span id="todayInProgressCanary">0</span></div>
+                                <div style="color: #1e40af;">🔵 <span id="todayInProgressNonCanary">0</span></div>
+                            </div>
                         </div>
-                        <div class="stat-card success">
+                        <div class="stat-card success clickable" id="todayCardSuccess" onclick="filterTodayByCard('Success')" title="Click to filter succeeded jobs">
                             <div class="stat-label">Succeeded Jobs</div>
                             <div class="stat-value" id="todaySucceeded">0</div>
+                            <div style="display: flex; gap: 0.75rem; margin-top: 0.5rem; font-size: 0.7rem;">
+                                <div style="color: #92400e;">🟡 <span id="todaySucceededCanary">0</span></div>
+                                <div style="color: #1e40af;">🔵 <span id="todaySucceededNonCanary">0</span></div>
+                            </div>
                         </div>
-                        <div class="stat-card danger">
+                        <div class="stat-card danger clickable" id="todayCardFailed" onclick="filterTodayByCard('Failed')" title="Click to filter failed jobs">
                             <div class="stat-label">Failed Jobs</div>
                             <div class="stat-value" id="todayFailed">0</div>
-                        </div>
-                        <div class="stat-card success">
-                            <div class="stat-label">Success Rate</div>
-                            <div class="stat-value" id="todaySuccessRate">0%</div>
+                            <div style="display: flex; gap: 0.75rem; margin-top: 0.5rem; font-size: 0.7rem;">
+                                <div style="color: #92400e;">🟡 <span id="todayFailedCanary">0</span></div>
+                                <div style="color: #1e40af;">🔵 <span id="todayFailedNonCanary">0</span></div>
+                            </div>
                         </div>
                     </div>
                     
@@ -1419,6 +1527,14 @@
                                     <option value="Monthly">Monthly</option>
                                 </select>
                             </div>
+                            <div class="filter-group">
+                                <label>🌐 Environment</label>
+                                <select id="todayEnvironmentFilter">
+                                    <option value="All">All</option>
+                                    <option value="Canary">🟡 Canary</option>
+                                    <option value="Non-Canary">🔵 Non-Canary</option>
+                                </select>
+                            </div>
                         </div>
                         <div class="table-wrapper">
                             <table id="todaySchedulerTable">
@@ -1427,16 +1543,15 @@
                                         <th class="sortable" data-key="analyticName">Analytic Name</th>
                                         <th class="sortable" data-key="executionSuccess">Status</th>
                                         <th>Frequency</th>
+                                        <th>Environment</th>
                                         <th>Time Slots</th>
-                                        <th class="sortable" data-key="executionStartDate">Start Time</th>
-                                        <th class="sortable" data-key="executionFinishDate">End Time</th>
-                                        <th class="sortable" data-key="duration">Duration</th>
+                                        <th class="sortable" data-key="executionStartDate">Execution Time</th>
                                         <th class="sortable" data-key="bqTotalData">BQ Data Fetch</th>
                                         <th class="sortable" data-key="analyticTotalData">Saved Data</th>
                                     </tr>
                                 </thead>
                                 <tbody id="todayTableBody">
-                                    <tr><td colspan="9" class="no-results">Loading...</td></tr>
+                                    <tr><td colspan="8" class="no-results">Loading...</td></tr>
                                 </tbody>
                             </table>
                         </div>
@@ -1445,10 +1560,47 @@
                 
                 <!-- Reports Overview Section -->
                 <section id="reports-overview-section" class="page-section">
+                    <!-- Date Range Filter -->
+                    <div style="margin-bottom: 1.5rem; padding: 1rem; background: white; border-radius: 0.5rem; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+                        <div style="display: flex; align-items: center; gap: 1rem; flex-wrap: wrap;">
+                            <label for="pastDataFilter" style="font-weight: 600; color: var(--gray-700); font-size: 0.875rem;">
+                                📅 Date Range Filter:
+                            </label>
+                            <select id="pastDataFilter" onchange="filterPastData()" 
+                                    style="padding: 0.5rem 0.75rem; border: 1px solid var(--gray-300); border-radius: 0.375rem; 
+                                    font-size: 0.875rem; background: white; min-width: 180px; cursor: pointer;">
+                                <option value="YESTERDAY" selected>YESTERDAY</option>
+                                <option value="LAST_7_DAYS">LAST 7 DAYS</option>
+                                <option value="LAST_14_DAYS">LAST 14 DAYS</option>
+                            </select>
+                            <button id="refreshPastDataBtn" onclick="refreshPastData()" 
+                                    style="padding: 0.5rem 1rem; border: 1px solid var(--gray-300); border-radius: 0.375rem; 
+                                    background: var(--primary); color: white; cursor: pointer; font-size: 0.875rem; font-weight: 500;
+                                    display: flex; align-items: center; gap: 0.5rem;">
+                                <span id="refreshPastDataIcon">🔄</span>
+                                <span id="refreshPastDataText">Refresh</span>
+                            </button>
+                            <span id="pastDataLastUpdatedTime" style="font-size: 0.875rem; color: var(--gray-600); font-style: italic; padding-left: 0.5rem; border-left: 1px solid var(--gray-300);"></span>
+                            <span id="pastDataStatus" style="font-size: 0.875rem; color: var(--gray-600);"></span>
+                        </div>
+                    </div>
+                    
                     <!-- Daily Breakdown Chart -->
                     <div class="chart-container" style="min-height: auto;">
-                        <div class="chart-title">📊 Daily Breakdown - Success vs Failed</div>
-                        <div id="dailyBreakdownChart" style="overflow-x: auto;"></div>
+                        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem; flex-wrap: wrap; gap: 1rem;">
+                            <div class="chart-title">📊 Daily Breakdown - Success vs Failed</div>
+                            <div style="display: flex; align-items: center; gap: 1.5rem; flex-wrap: wrap;">
+                                <div style="display: flex; align-items: center; gap: 0.5rem;">
+                                    <div style="width: 14px; height: 14px; background: linear-gradient(135deg, #10b981 0%, #059669 100%); border-radius: 0.25rem; box-shadow: 0 1px 2px rgba(16, 185, 129, 0.3);"></div>
+                                    <span style="font-weight: 500; font-size: 0.8125rem; color: var(--gray-700);">Success Schedulers</span>
+                                </div>
+                                <div style="display: flex; align-items: center; gap: 0.5rem;">
+                                    <div style="width: 14px; height: 14px; background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); border-radius: 0.25rem; box-shadow: 0 1px 2px rgba(239, 68, 68, 0.3);"></div>
+                                    <span style="font-weight: 500; font-size: 0.8125rem; color: var(--gray-700);">Failed Schedulers</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div id="dailyBreakdownChart" style="width: 100%; overflow: hidden;"></div>
                     </div>
                     
                     <!-- Heatmap: Scheduler Activity by Hour -->
@@ -1567,7 +1719,6 @@
                     <div class="chart-container" style="height: auto; min-height: 400px;">
                         <div class="chart-title">⏱️ Duration Distribution (All Schedulers)</div>
                         <div id="durationChart"></div>
-                        <div id="attemptChart" style="margin-top: 30px;"></div>
                     </div>
                 </section>
             </div>
@@ -1616,8 +1767,48 @@
                 </div>
                 
                 <pre id="modalCurlCommand"></pre>
-                <div style="display: flex; gap: 0.75rem;">
+                <div style="display: flex; gap: 0.75rem; margin-bottom: 1rem;">
                     <button class="btn btn-success btn-sm" onclick="copyCurlCommand()">📋 Copy Command</button>
+                    <button class="btn btn-primary btn-sm" id="executeCurlBtn" onclick="executeCurlCommand()" style="background: var(--primary); color: white; border: none; padding: 0.5rem 1rem; border-radius: 0.375rem; cursor: pointer; font-weight: 500;">
+                        ⚡ Execute
+                    </button>
+                </div>
+                <div id="curlExecutionResults" style="display: none; margin-top: 1rem;">
+                    <div style="background: var(--gray-50); padding: 1rem; border-radius: 0.5rem; border: 1px solid var(--gray-200);">
+                        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.75rem;">
+                            <h4 style="margin: 0; font-size: 0.875rem; font-weight: 600; color: var(--gray-900);">Execution Results</h4>
+                            <button onclick="document.getElementById('curlExecutionResults').style.display='none'" style="background: none; border: none; color: var(--gray-600); cursor: pointer; font-size: 1.25rem; padding: 0;">&times;</button>
+                        </div>
+                        <div id="curlExecutionOutput" style="background: white; padding: 0.75rem; border-radius: 0.375rem; border: 1px solid var(--gray-200); max-height: 400px; overflow-y: auto; font-family: monospace; font-size: 0.8125rem; white-space: pre-wrap; word-wrap: break-word;"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Sales Funnel Validation Modal -->
+    <div id="salesFunnelValidationModal" class="modal">
+        <div class="modal-content" style="max-width: 900px; max-height: 90vh; display: flex; flex-direction: column;">
+            <div class="modal-header" style="flex-shrink: 0;">
+                <h3 id="salesFunnelModalTitle">🔍 Sales Funnel Validation</h3>
+                <button class="close" onclick="closeSalesFunnelValidationModal()">&times;</button>
+            </div>
+            <div class="modal-body" style="flex: 1; overflow-y: auto; min-height: 0;">
+                <div id="salesFunnelValidationContent">
+                    <div style="padding: 1rem; background: var(--gray-50); border-radius: 0.5rem; color: var(--gray-600); margin-bottom: 1rem;">
+                        <div style="font-weight: 600; margin-bottom: 0.5rem;">Validating sales funnel reports...</div>
+                        <div>This will check if the sum of Row Inserted from all pods matches the Saved Data in today's report.</div>
+                    </div>
+                    <div style="display: flex; align-items: center; justify-content: space-between; padding: 0.75rem 1rem; background: var(--gray-50); border-radius: 0.5rem; margin-bottom: 1rem;">
+                        <div style="font-size: 0.875rem; color: var(--gray-700);">
+                            Checking if sum of rowsInserted matches SAVED DATA
+                        </div>
+                        <button id="validateSalesFunnelModalBtn" onclick="validateSalesFunnelFromModal()" 
+                                style="padding: 0.5rem 1rem; background: var(--primary); color: white; border: none; border-radius: 0.375rem; cursor: pointer; font-weight: 500; font-size: 0.875rem;">
+                            🔄 Validate
+                        </button>
+                    </div>
+                    <div id="salesFunnelValidationResults" style="margin-top: 1.5rem;"></div>
                 </div>
             </div>
         </div>
@@ -1665,6 +1856,7 @@
         let JOBS_DATA = [];
         let TODAY_DATA = [];
         let REPORTS_DATA = [];
+        let FILTERED_REPORTS_DATA = []; // Filtered version of REPORTS_DATA based on selected filter
         
         // Function to load data from JSON files
         async function loadData() {
@@ -1678,6 +1870,9 @@
                 JOBS_DATA = await jobsResponse.json();
                 TODAY_DATA = await todayResponse.json();
                 REPORTS_DATA = await reportsResponse.json();
+                
+                // Initialize filtered data based on current filter selection
+                FILTERED_REPORTS_DATA = getFilteredReportsData();
                 
                 return true;
             } catch (error) {
@@ -1709,6 +1904,277 @@ Option 4 - Node.js (if installed):
                 
                 alert(errorMsg);
                 return false;
+            }
+        }
+        
+        // Function to refresh past data - fetches last 14 days and stores in past-data.json
+        async function refreshPastData() {
+            const refreshBtn = document.getElementById('refreshPastDataBtn');
+            const refreshIcon = document.getElementById('refreshPastDataIcon');
+            const refreshText = document.getElementById('refreshPastDataText');
+            const statusSpan = document.getElementById('pastDataStatus');
+            
+            if (!refreshBtn) return;
+            
+            // Disable button and show loading state
+            refreshBtn.disabled = true;
+            refreshIcon.textContent = '⏳';
+            refreshText.textContent = 'Refreshing...';
+            
+            // Update status
+            if (statusSpan) {
+                statusSpan.textContent = 'Fetching last 14 days of data (excluding today)...';
+                statusSpan.style.color = 'var(--primary)';
+            }
+            
+            try {
+                const response = await fetch('/api/fetch-past-data', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ 
+                        date_range: 'LAST_14_DAYS_EXCLUDING_TODAY',
+                        sso_token: getSsoToken()
+                    })
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    // Update last fetched time
+                    updatePastDataLastUpdatedTime();
+                    
+                    // Update status
+                    if (statusSpan) {
+                        statusSpan.textContent = `✓ ${result.message}`;
+                        statusSpan.style.color = '#10b981';
+                        // Clear status after 3 seconds
+                        setTimeout(() => {
+                            if (statusSpan) {
+                                statusSpan.textContent = '';
+                            }
+                        }, 3000);
+                    }
+                    
+                    // Reload past data
+                    await loadData();
+                    
+                    // Update filtered data based on current filter selection
+                    FILTERED_REPORTS_DATA = getFilteredReportsData();
+                    
+                    // Preserve current heatmap frequency filter
+                    const heatmapFrequency = document.querySelector('.filter-btn.active[id^="heatmap-"]');
+                    const currentFrequency = heatmapFrequency ? heatmapFrequency.textContent.trim() : 'All';
+                    
+                    // Refresh Reports Overview page (reports-overview-section)
+                    displayReportsDateRange();
+                    updateInsights();
+                    updatePerformance();
+                    renderDailyBreakdownChart();
+                    
+                    // Refresh Pattern Analysis page (reports-patterns-section)
+                    // This updates stats, duration chart, attempt chart, and heatmap
+                    // Note: initPatternAnalysis() calls renderHeatmap('All'), so we'll restore the filter after
+                    initPatternAnalysis();
+                    
+                    // Restore heatmap filter for Reports Overview (if it was different from 'All')
+                    if (currentFrequency !== 'All') {
+                        renderHeatmap(currentFrequency);
+                    }
+                    
+                    // Refresh All Scheduler Data page (reports-data-section)
+                    // This updates the pattern match table
+                    populatePatternDateFilter();
+                    filterPatternTable();
+                    
+                    // Also refresh reports table if it exists (for any other reports views)
+                    if (typeof renderReportsTable === 'function') {
+                        renderReportsTable();
+                    }
+                } else {
+                    // Show error
+                    if (statusSpan) {
+                        statusSpan.textContent = `✗ Error: ${result.error || 'Failed to fetch data'}`;
+                        statusSpan.style.color = '#ef4444';
+                    }
+                    console.error('Error refreshing past data:', result);
+                }
+            } catch (error) {
+                // Show error
+                if (statusSpan) {
+                    statusSpan.textContent = `✗ Error: ${error.message}`;
+                    statusSpan.style.color = '#ef4444';
+                }
+                console.error('Error refreshing past data:', error);
+            } finally {
+                // Re-enable button and restore state
+                refreshBtn.disabled = false;
+                refreshIcon.textContent = '🔄';
+                refreshText.textContent = 'Refresh';
+            }
+        }
+        
+        // Function to get filtered reports data based on selected date range filter
+        function getFilteredReportsData() {
+            const filterSelect = document.getElementById('pastDataFilter');
+            if (!filterSelect || REPORTS_DATA.length === 0) {
+                return REPORTS_DATA;
+            }
+            
+            const dateRange = filterSelect.value;
+            
+            // Get current time and calculate WIB timezone offset (UTC+7)
+            const wibOffset = 7 * 60 * 60 * 1000; // UTC+7 in milliseconds
+            const now = Date.now();
+            const nowWIB = new Date(now + wibOffset);
+            
+            // Get start of today in WIB
+            const todayStartWIB = new Date(nowWIB);
+            todayStartWIB.setUTCHours(0, 0, 0, 0);
+            const todayStartMs = todayStartWIB.getTime() - wibOffset;
+            
+            let startMs, endMs;
+            
+            if (dateRange === 'YESTERDAY') {
+                // Yesterday: start of yesterday 00:00:00 to end of yesterday 23:59:59 (WIB timezone)
+                const yesterdayStartWIB = new Date(todayStartWIB);
+                yesterdayStartWIB.setUTCDate(yesterdayStartWIB.getUTCDate() - 1);
+                const yesterdayEndWIB = new Date(yesterdayStartWIB);
+                yesterdayEndWIB.setUTCHours(23, 59, 59, 999);
+                
+                startMs = yesterdayStartWIB.getTime() - wibOffset;
+                endMs = yesterdayEndWIB.getTime() - wibOffset;
+            } else if (dateRange === 'LAST_7_DAYS') {
+                // Last 7 days: from 7 days ago start of day to today end of day
+                const sevenDaysAgoStartWIB = new Date(todayStartWIB);
+                sevenDaysAgoStartWIB.setUTCDate(sevenDaysAgoStartWIB.getUTCDate() - 7);
+                const todayEndWIB = new Date(todayStartWIB);
+                todayEndWIB.setUTCHours(23, 59, 59, 999);
+                
+                startMs = sevenDaysAgoStartWIB.getTime() - wibOffset;
+                endMs = todayEndWIB.getTime() - wibOffset;
+            } else if (dateRange === 'LAST_14_DAYS') {
+                // Last 14 days: from 14 days ago start of day to today end of day
+                const fourteenDaysAgoStartWIB = new Date(todayStartWIB);
+                fourteenDaysAgoStartWIB.setUTCDate(fourteenDaysAgoStartWIB.getUTCDate() - 14);
+                const todayEndWIB = new Date(todayStartWIB);
+                todayEndWIB.setUTCHours(23, 59, 59, 999);
+                
+                startMs = fourteenDaysAgoStartWIB.getTime() - wibOffset;
+                endMs = todayEndWIB.getTime() - wibOffset;
+            } else {
+                // Default: return all data
+                return REPORTS_DATA;
+            }
+            
+            // Filter REPORTS_DATA based on analyticDate
+            // analyticDate represents start of day in WIB, so we check if it falls within the range
+            return REPORTS_DATA.filter(item => {
+                const analyticDate = parseInt(item.analyticDate);
+                if (isNaN(analyticDate)) return false;
+                
+                // For YESTERDAY, we want records where analyticDate equals yesterday's start
+                // For date ranges, we want records where analyticDate is within the range
+                if (dateRange === 'YESTERDAY') {
+                    // Check if analyticDate is yesterday's start of day
+                    const yesterdayStartWIB = new Date(todayStartWIB);
+                    yesterdayStartWIB.setUTCDate(yesterdayStartWIB.getUTCDate() - 1);
+                    const yesterdayStartMs = yesterdayStartWIB.getTime() - wibOffset;
+                    return analyticDate === yesterdayStartMs;
+                } else {
+                    // For ranges, check if analyticDate is within the range
+                    return analyticDate >= startMs && analyticDate <= endMs;
+                }
+            });
+        }
+        
+        // Function to filter past data based on dropdown selection (client-side filtering only, no API calls)
+        function filterPastData() {
+            // Update filtered data based on current filter selection
+            FILTERED_REPORTS_DATA = getFilteredReportsData();
+            
+            // Preserve current heatmap frequency filter
+            const heatmapFrequency = document.querySelector('.filter-btn.active[id^="heatmap-"]');
+            const currentFrequency = heatmapFrequency ? heatmapFrequency.textContent.trim() : 'All';
+            
+            // Refresh Reports Overview page (reports-overview-section)
+            displayReportsDateRange();
+            updateInsights();
+            updatePerformance();
+            renderDailyBreakdownChart();
+            
+            // Refresh Pattern Analysis page (reports-patterns-section)
+            // This updates stats, duration chart, attempt chart, and heatmap
+            // Note: initPatternAnalysis() calls renderHeatmap('All'), so we'll restore the filter after
+            initPatternAnalysis();
+            
+            // Restore heatmap filter for Reports Overview (if it was different from 'All')
+            if (currentFrequency !== 'All') {
+                renderHeatmap(currentFrequency);
+            }
+            
+            // Refresh All Scheduler Data page (reports-data-section)
+            // This updates the pattern match table
+            populatePatternDateFilter();
+            filterPatternTable();
+            
+            // Also refresh reports table if it exists (for any other reports views)
+            if (typeof renderReportsTable === 'function') {
+                renderReportsTable();
+            }
+        }
+        
+        // Function to update last updated time for past data
+        function updatePastDataLastUpdatedTime() {
+            const lastUpdatedEl = document.getElementById('pastDataLastUpdatedTime');
+            if (!lastUpdatedEl) return;
+            
+            const now = new Date();
+            const timeStr = now.toLocaleTimeString('en-US', {
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit',
+                hour12: false
+            });
+            const dateStr = now.toLocaleDateString('en-US', {
+                month: 'short',
+                day: 'numeric'
+            });
+            
+            lastUpdatedEl.textContent = `Last updated: ${dateStr} ${timeStr}`;
+            lastUpdatedEl.style.display = 'inline';
+            
+            // Store in localStorage for persistence
+            localStorage.setItem('pastDataLastUpdated', now.toISOString());
+        }
+        
+        // Function to load and display last updated time for past data
+        function loadPastDataLastUpdatedTime() {
+            const lastUpdatedEl = document.getElementById('pastDataLastUpdatedTime');
+            if (!lastUpdatedEl) return;
+            
+            const lastUpdatedStr = localStorage.getItem('pastDataLastUpdated');
+            
+            if (lastUpdatedStr) {
+                const lastUpdated = new Date(lastUpdatedStr);
+                const timeStr = lastUpdated.toLocaleTimeString('en-US', {
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    second: '2-digit',
+                    hour12: false
+                });
+                const dateStr = lastUpdated.toLocaleDateString('en-US', {
+                    month: 'short',
+                    day: 'numeric'
+                });
+                
+                lastUpdatedEl.textContent = `Last updated: ${dateStr} ${timeStr}`;
+                lastUpdatedEl.style.display = 'inline';
+            } else {
+                // Show "-" when no last updated time exists
+                lastUpdatedEl.textContent = 'Last updated: -';
+                lastUpdatedEl.style.display = 'inline';
             }
         }
         
@@ -1821,6 +2287,471 @@ Option 4 - Node.js (if installed):
             }, duration);
         }
         
+        // Store current scheduler name and record for validation
+        let currentSchedulerName = null;
+        let currentSchedulerRecord = null;
+        
+        // Function to show sales funnel validation modal
+        function showSalesFunnelValidationModal(schedulerName) {
+            currentSchedulerName = schedulerName;
+            
+            // Try to find the scheduler record from current page data
+            currentSchedulerRecord = null;
+            if (window.todayScheduledData && Array.isArray(window.todayScheduledData)) {
+                currentSchedulerRecord = window.todayScheduledData.find(job => job.analyticName === schedulerName);
+            }
+            
+            const modal = document.getElementById('salesFunnelValidationModal');
+            if (modal) {
+                modal.style.display = 'block';
+                
+                // Build scheduler details section if record is available
+                let schedulerDetailsHtml = '';
+                if (currentSchedulerRecord) {
+                    const isPending = !currentSchedulerRecord.executionStartDate && currentSchedulerRecord.executionSuccess === undefined;
+                    const isInProgress = currentSchedulerRecord.executionStartDate && !currentSchedulerRecord.executionFinishDate;
+                    const isSuccess = currentSchedulerRecord.executionSuccess === true;
+                    const isFailed = currentSchedulerRecord.executionSuccess === false;
+                    
+                    let statusText, statusClass;
+                    if (isPending) {
+                        statusText = 'Pending';
+                        statusClass = 'status-pending';
+                    } else if (isInProgress) {
+                        statusText = 'In Progress';
+                        statusClass = 'status-in-progress';
+                    } else if (isSuccess) {
+                        statusText = 'Success';
+                        statusClass = 'status-success';
+                    } else {
+                        statusText = 'Fail';
+                        statusClass = 'status-fail';
+                    }
+                    
+                    const statusBgColor = statusClass === 'status-success' ? '#d1fae5' : 
+                                         statusClass === 'status-fail' ? '#fee2e2' :
+                                         statusClass === 'status-in-progress' ? '#dbeafe' : '#fef3c7';
+                    const statusFgColor = statusClass === 'status-success' ? '#065f46' : 
+                                         statusClass === 'status-fail' ? '#991b1b' :
+                                         statusClass === 'status-in-progress' ? '#1e40af' : '#92400e';
+                    
+                    // Calculate duration
+                    let duration = '-';
+                    if (currentSchedulerRecord.executionStartDate && currentSchedulerRecord.executionFinishDate) {
+                        const start = parseInt(currentSchedulerRecord.executionStartDate);
+                        const end = parseInt(currentSchedulerRecord.executionFinishDate);
+                        const diffMs = end - start;
+                        const hours = Math.floor(diffMs / (1000 * 60 * 60));
+                        const minutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
+                        const seconds = Math.floor((diffMs % (1000 * 60)) / 1000);
+                        duration = `${hours}h ${minutes}m ${seconds}s`;
+                    }
+                    
+                    schedulerDetailsHtml = `
+                        <div style="padding: 0.75rem; background: white; border: 1px solid var(--gray-200); border-radius: 0.5rem; box-shadow: 0 1px 3px rgba(0,0,0,0.1); margin-bottom: 1rem;">
+                            <div style="display: grid; grid-template-columns: repeat(6, 1fr); gap: 0.75rem; align-items: center;">
+                                <div style="text-align: center;">
+                                    <div style="font-size: 0.7rem; color: var(--gray-600); margin-bottom: 0.125rem;">Status</div>
+                                    <div style="padding: 0.25rem 0.5rem; border-radius: 0.25rem; display: inline-block; font-size: 0.75rem; font-weight: 600; background: ${statusBgColor}; color: ${statusFgColor};">
+                                        ${statusText}
+                                    </div>
+                                </div>
+                                <div style="text-align: center;">
+                                    <div style="font-size: 0.7rem; color: var(--gray-600); margin-bottom: 0.125rem;">Start Time</div>
+                                    <div style="font-size: 0.875rem; font-weight: 600; color: var(--gray-900); font-family: monospace;">${currentSchedulerRecord.executionStartDate ? formatTimeOnly(currentSchedulerRecord.executionStartDate) : '-'}</div>
+                                </div>
+                                <div style="text-align: center;">
+                                    <div style="font-size: 0.7rem; color: var(--gray-600); margin-bottom: 0.125rem;">End Time</div>
+                                    <div style="font-size: 0.875rem; font-weight: 600; color: var(--gray-900); font-family: monospace;">${currentSchedulerRecord.executionFinishDate ? formatTimeOnly(currentSchedulerRecord.executionFinishDate) : '-'}</div>
+                                </div>
+                                <div style="text-align: center;">
+                                    <div style="font-size: 0.7rem; color: var(--gray-600); margin-bottom: 0.125rem;">Duration</div>
+                                    <div style="font-size: 0.875rem; font-weight: 600; color: var(--gray-900);">${duration}</div>
+                                </div>
+                                <div style="text-align: center;">
+                                    <div style="font-size: 0.7rem; color: var(--gray-600); margin-bottom: 0.125rem;">BQ Data Fetch</div>
+                                    <div style="font-size: 0.875rem; font-weight: 600; color: var(--gray-900);">${currentSchedulerRecord.bqTotalData !== undefined ? (typeof currentSchedulerRecord.bqTotalData === 'number' ? currentSchedulerRecord.bqTotalData.toLocaleString() : currentSchedulerRecord.bqTotalData) : '-'}</div>
+                                </div>
+                                <div style="text-align: center;">
+                                    <div style="font-size: 0.7rem; color: var(--gray-600); margin-bottom: 0.125rem;">Saved Data</div>
+                                    <div style="font-size: 0.875rem; font-weight: 600; color: var(--gray-900);">${currentSchedulerRecord.analyticTotalData !== undefined ? (typeof currentSchedulerRecord.analyticTotalData === 'number' ? currentSchedulerRecord.analyticTotalData.toLocaleString() : currentSchedulerRecord.analyticTotalData) : '-'}</div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }
+                
+                // Update modal title with analytic name and date
+                const modalTitleEl = document.getElementById('salesFunnelModalTitle');
+                if (modalTitleEl) {
+                    let titleText = `🔍 Validate: ${schedulerName}`;
+                    if (currentSchedulerRecord && currentSchedulerRecord.analyticDate) {
+                        const analyticDate = new Date(parseInt(currentSchedulerRecord.analyticDate));
+                        const dateStr = analyticDate.toLocaleDateString('en-US', {
+                            year: 'numeric',
+                            month: 'short',
+                            day: 'numeric'
+                        });
+                        titleText += ` - ${dateStr}`;
+                    }
+                    modalTitleEl.textContent = titleText;
+                }
+                
+                // Reset content with scheduler details at top
+                document.getElementById('salesFunnelValidationContent').innerHTML = `
+                    ${schedulerDetailsHtml}
+                    <div style="display: flex; align-items: center; justify-content: space-between; gap: 0.75rem; padding: 0.75rem; background: var(--gray-50); border-radius: 0.5rem; margin-bottom: 1rem;">
+                        <p style="margin: 0; font-size: 0.85rem; color: var(--gray-700); line-height: 1.5; flex: 1;">
+                            Verify that the sum of <strong>Row Inserted</strong> from all pods matches the <strong>Saved Data</strong> value
+                        </p>
+                        <button id="validateSalesFunnelModalBtn" onclick="validateSalesFunnelFromModal()" 
+                                style="padding: 0.6rem 1.5rem; background: var(--primary); color: white; border: none; border-radius: 0.375rem; cursor: pointer; font-weight: 600; font-size: 0.9rem; white-space: nowrap; box-shadow: 0 2px 4px rgba(0,0,0,0.1); transition: all 0.2s; flex-shrink: 0;">
+                            🔄 Run Validation
+                        </button>
+                    </div>
+                    <div id="salesFunnelValidationResults" style="margin-top: 1rem;"></div>
+                `;
+            }
+        }
+        
+        function closeSalesFunnelValidationModal() {
+            const modal = document.getElementById('salesFunnelValidationModal');
+            if (modal) {
+                modal.style.display = 'none';
+                // Reset modal title
+                const modalTitleEl = document.getElementById('salesFunnelModalTitle');
+                if (modalTitleEl) {
+                    modalTitleEl.textContent = '🔍 Validate: Sales Funnel';
+                }
+            }
+        }
+        
+        // Function to validate sales funnel reports from modal
+        async function validateSalesFunnelFromModal() {
+            if (!currentSchedulerName) {
+                showToast('Error', 'No scheduler selected', 'error', 3000);
+                return;
+            }
+            
+            const btn = document.getElementById('validateSalesFunnelModalBtn');
+            const resultsDiv = document.getElementById('salesFunnelValidationResults');
+            
+            // Disable button and show loading state
+            if (btn) {
+                btn.disabled = true;
+                btn.textContent = '⏳ Validating...';
+            }
+            if (resultsDiv) {
+                resultsDiv.innerHTML = '<div class="info-box" style="padding: 1rem; background: var(--gray-50); border-radius: 0.5rem; color: var(--gray-600);">Validating sales funnel report...</div>';
+            }
+            
+            try {
+                // Check cache first, then fetch if needed
+                // Cache will be used automatically if valid (successful + match + same day)
+                const response = await fetch('/api/validate-sales-funnel', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ 
+                        scheduler_name: currentSchedulerName,
+                        force_refresh: false,  // Use cache if available and valid
+                        sso_token: getSsoToken()
+                    })
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    // Use scheduler_record from API response, or fall back to current page data
+                    const schedulerRecord = result.scheduler_record || currentSchedulerRecord;
+                    displaySingleSalesFunnelResults(result.validation, result.scheduler_report_details, result.report, schedulerRecord);
+                    
+                    // Show toast with cache info if applicable
+                    let toastMessage = `${currentSchedulerName} validated successfully`;
+                    if (result.from_cache && result.fetched_at) {
+                        const fetchedDate = new Date(result.fetched_at);
+                        const timeStr = fetchedDate.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+                        toastMessage += ` (from cache, fetched at ${timeStr})`;
+                    }
+                    showToast('Validation Complete', toastMessage, 'success', 3000);
+                } else {
+                    if (resultsDiv) {
+                        let errorDetails = '';
+                        
+                        // Handle empty results with a user-friendly message
+                        if (result.empty_result) {
+                            const todayDate = result.today_date || new Date().toISOString().split('T')[0];
+                            errorDetails = `
+                                <div style="padding: 1.5rem; background: #fef3c7; border: 1px solid #fbbf24; border-radius: 0.5rem; text-align: center;">
+                                    <div style="font-size: 1.5rem; margin-bottom: 0.75rem;">📭</div>
+                                    <h4 style="margin: 0 0 0.5rem 0; font-size: 1rem; color: #92400e; font-weight: 600;">No Data Found</h4>
+                                    <p style="margin: 0; font-size: 0.875rem; color: #78350f; line-height: 1.6;">
+                                        No sales funnel reports were found for <strong>${currentSchedulerName}</strong> for today's date (<strong>${todayDate}</strong>).
+                                    </p>
+                                    <p style="margin: 0.75rem 0 0 0; font-size: 0.8rem; color: #92400e;">
+                                        The scheduler may not have run yet today, or the data may not be available in the database.
+                                    </p>
+                                </div>
+                            `;
+                            // Don't show error toast for empty results
+                        } else {
+                            // Regular error message
+                            errorDetails = result.message || 'Failed to validate sales funnel report';
+                            if (result.error) {
+                                errorDetails += `<br><br><strong>Details:</strong><br><small style="font-family: monospace; white-space: pre-wrap;">${result.error}</small>`;
+                            }
+                            if (result.found_schedulers && result.found_schedulers.length > 0) {
+                                errorDetails += `<br><br><strong>Found schedulers:</strong> ${result.found_schedulers.join(', ')}`;
+                            }
+                            if (result.found_reports !== undefined) {
+                                errorDetails += `<br><strong>Total reports found:</strong> ${result.found_reports}`;
+                            }
+                            errorDetails = `
+                                <div style="padding: 1rem; background: #fee2e2; border: 1px solid #f87171; border-radius: 0.5rem; color: #991b1b;">
+                                    <strong>Error:</strong> ${errorDetails}
+                                </div>
+                            `;
+                            // Show error toast only for actual errors (not empty results)
+                            showToast('Validation Failed', result.message || 'Failed to validate report', 'error', 4000);
+                        }
+                        
+                        resultsDiv.innerHTML = errorDetails;
+                    }
+                }
+            } catch (error) {
+                console.error('Error validating sales funnel:', error);
+                if (resultsDiv) {
+                    resultsDiv.innerHTML = `
+                        <div class="info-box" style="padding: 1rem; background: #fee2e2; border-radius: 0.5rem; color: #991b1b;">
+                            <strong>Error:</strong> ${error.message}
+                        </div>
+                    `;
+                }
+                showToast('Validation Error', 'Failed to validate sales funnel report', 'error', 4000);
+            } finally {
+                if (btn) {
+                    btn.disabled = false;
+                    btn.textContent = '🔄 Run Validation';
+                }
+            }
+        }
+        
+        function formatTimestamp(timestamp) {
+            if (!timestamp) return '-';
+            const date = new Date(timestamp);
+            return date.toLocaleString('en-US', {
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit',
+                hour12: false
+            });
+        }
+        
+        function formatTimeOnly(timestamp) {
+            if (!timestamp) return '-';
+            const date = new Date(timestamp);
+            return date.toLocaleTimeString('en-US', {
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit',
+                hour12: false
+            });
+        }
+        
+        function displaySingleSalesFunnelResults(validation, schedulerReportDetails, report, schedulerRecord) {
+            const resultsDiv = document.getElementById('salesFunnelValidationResults');
+            
+            if (!resultsDiv) return;
+            
+            if (!validation || typeof validation !== 'object') {
+                resultsDiv.innerHTML = '<div class="info-box" style="padding: 1rem; background: var(--gray-50); border-radius: 0.5rem; color: var(--gray-600);">No validation results available.</div>';
+                return;
+            }
+            
+            const rowsInserted = validation.rows_inserted || 0;
+            const expectedTotal = validation.expected_total || 0;
+            const match = validation.match;
+            const podCount = validation.pod_count || 0;
+            const executionSuccess = validation.execution_success;
+            const diff = validation.difference || 0;
+            
+            // Extract scheduler details from schedulerRecord
+            let schedulerDetails = null;
+            if (schedulerRecord) {
+                const isPending = !schedulerRecord.executionStartDate && schedulerRecord.executionSuccess === undefined;
+                const isInProgress = schedulerRecord.executionStartDate && !schedulerRecord.executionFinishDate;
+                const isSuccess = schedulerRecord.executionSuccess === true;
+                const isFailed = schedulerRecord.executionSuccess === false;
+                
+                let statusText, statusClass;
+                if (isPending) {
+                    statusText = 'Pending';
+                    statusClass = 'status-pending';
+                } else if (isInProgress) {
+                    statusText = 'In Progress';
+                    statusClass = 'status-in-progress';
+                } else if (isSuccess) {
+                    statusText = 'Success';
+                    statusClass = 'status-success';
+                } else {
+                    statusText = 'Fail';
+                    statusClass = 'status-fail';
+                }
+                
+                // Calculate duration
+                let duration = null;
+                if (schedulerRecord.executionStartDate && schedulerRecord.executionFinishDate) {
+                    const start = parseInt(schedulerRecord.executionStartDate);
+                    const end = parseInt(schedulerRecord.executionFinishDate);
+                    const diffMs = end - start;
+                    const hours = Math.floor(diffMs / (1000 * 60 * 60));
+                    const minutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
+                    const seconds = Math.floor((diffMs % (1000 * 60)) / 1000);
+                    duration = `${hours}h ${minutes}m ${seconds}s`;
+                }
+                
+                schedulerDetails = {
+                    status: statusText,
+                    statusClass: statusClass,
+                    startTime: schedulerRecord.executionStartDate ? formatTimeOnly(schedulerRecord.executionStartDate) : '-',
+                    endTime: schedulerRecord.executionFinishDate ? formatTimeOnly(schedulerRecord.executionFinishDate) : '-',
+                    duration: duration || '-',
+                    bqDataFetch: schedulerRecord.bqTotalData !== undefined ? schedulerRecord.bqTotalData : '-',
+                    savedData: schedulerRecord.analyticTotalData !== undefined ? schedulerRecord.analyticTotalData : '-'
+                };
+            }
+            
+            const statusColor = match ? '#d1fae5' : '#fee2e2';
+            const statusTextColor = match ? '#065f46' : '#991b1b';
+            const executionColor = executionSuccess ? '#d1fae5' : '#fee2e2';
+            const executionTextColor = executionSuccess ? '#065f46' : '#991b1b';
+            
+            // Calculate number of columns needed (always include Difference)
+            const numColumns = 6; // Pods, Rows Inserted, Expected, Match, Success, Difference
+            
+            // Build validation results HTML (shown after clicking validate)
+            // Note: Scheduler details section is already shown above the validate button when modal opens
+            let html = '';
+            
+            // Add validation metrics section
+            html += `
+                <div style="padding: 0.75rem; background: white; border: 1px solid var(--gray-200); border-radius: 0.5rem; box-shadow: 0 1px 3px rgba(0,0,0,0.1); margin-bottom: 1rem;">
+                    <div style="display: grid; grid-template-columns: repeat(${numColumns}, 1fr); gap: 0.75rem; align-items: center;">
+                        <div style="text-align: center;">
+                            <div style="font-size: 0.7rem; color: var(--gray-600); margin-bottom: 0.125rem;">Pods</div>
+                            <div style="font-size: 1rem; font-weight: 600; color: var(--gray-900);">${podCount}</div>
+                        </div>
+                        <div style="text-align: center;">
+                            <div style="font-size: 0.7rem; color: var(--gray-600); margin-bottom: 0.125rem;">Rows Inserted</div>
+                            <div style="font-size: 1rem; font-weight: 600; color: var(--gray-900);">${rowsInserted.toLocaleString()}</div>
+                        </div>
+                        <div style="text-align: center;">
+                            <div style="font-size: 0.7rem; color: var(--gray-600); margin-bottom: 0.125rem;">SAVED DATA</div>
+                            <div style="font-size: 1rem; font-weight: 600; color: var(--gray-900);">${expectedTotal > 0 ? expectedTotal.toLocaleString() : '<span style="color: var(--gray-400);">-</span>'}</div>
+                        </div>
+                        <div style="text-align: center;">
+                            <div style="font-size: 0.7rem; color: var(--gray-600); margin-bottom: 0.125rem;">Difference</div>
+                            <div style="font-size: 1rem; font-weight: 600; color: ${diff > 0 ? '#059669' : diff < 0 ? '#dc2626' : 'var(--gray-600)'};">
+                                ${diff > 0 ? '+' : ''}${diff.toLocaleString()}
+                            </div>
+                        </div>
+                        <div style="text-align: center;">
+                            <div style="font-size: 0.7rem; color: var(--gray-600); margin-bottom: 0.125rem;">Match</div>
+                            <div style="padding: 0.25rem 0.5rem; border-radius: 0.25rem; display: inline-block; font-size: 0.75rem; font-weight: 600; background: ${statusColor}; color: ${statusTextColor};">
+                                ${match ? '✓ YES' : '✗ NO'}
+                            </div>
+                        </div>
+                        <div style="text-align: center;">
+                            <div style="font-size: 0.7rem; color: var(--gray-600); margin-bottom: 0.125rem;">Success</div>
+                            <div style="padding: 0.25rem 0.5rem; border-radius: 0.25rem; display: inline-block; font-size: 0.75rem; font-weight: 600; background: ${executionColor}; color: ${executionTextColor};">
+                                ${executionSuccess ? '✓ YES' : '✗ NO'}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            // Display scheduler report details (all pods)
+            if (schedulerReportDetails && Object.keys(schedulerReportDetails).length > 0) {
+                html += `
+                    <div style="padding: 0.75rem; background: white; border: 1px solid var(--gray-200); border-radius: 0.5rem; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+                        <h3 style="margin: 0 0 0.75rem 0; font-size: 0.875rem; font-weight: 600; color: var(--gray-900);">Scheduler Report Details (All Pods)</h3>
+                        <div style="overflow-x: auto;">
+                            <table style="width: 100%; border-collapse: collapse;">
+                                <thead>
+                                    <tr style="background: var(--gray-50);">
+                                        <th style="padding: 0.5rem; text-align: left; font-size: 0.75rem; font-weight: 600; color: var(--gray-700); border-bottom: 1px solid var(--gray-200);">Scheduler No</th>
+                                        <th style="padding: 0.5rem; text-align: left; font-size: 0.75rem; font-weight: 600; color: var(--gray-700); border-bottom: 1px solid var(--gray-200);">Start Time</th>
+                                        <th style="padding: 0.5rem; text-align: left; font-size: 0.75rem; font-weight: 600; color: var(--gray-700); border-bottom: 1px solid var(--gray-200);">End Time</th>
+                                        <th style="padding: 0.5rem; text-align: left; font-size: 0.75rem; font-weight: 600; color: var(--gray-700); border-bottom: 1px solid var(--gray-200);">Duration</th>
+                                        <th style="padding: 0.5rem; text-align: left; font-size: 0.75rem; font-weight: 600; color: var(--gray-700); border-bottom: 1px solid var(--gray-200);">Rows Inserted</th>
+                                        <th style="padding: 0.5rem; text-align: left; font-size: 0.75rem; font-weight: 600; color: var(--gray-700); border-bottom: 1px solid var(--gray-200);">Execution Success</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+            `;
+                
+                // Sort pods by schedulerNo
+                const sortedPods = Object.entries(schedulerReportDetails).sort((a, b) => {
+                    const aNo = a[1].schedulerNo || 0;
+                    const bNo = b[1].schedulerNo || 0;
+                    return aNo - bNo;
+                });
+                
+                sortedPods.forEach(([podKey, podData]) => {
+                    const podSuccess = podData.executionSuccess;
+                    const podSuccessColor = podSuccess ? '#d1fae5' : '#fee2e2';
+                    const podSuccessTextColor = podSuccess ? '#065f46' : '#991b1b';
+                    
+                    // Calculate duration for this pod
+                    let podDuration = '-';
+                    if (podData.startTime && podData.endTime) {
+                        const start = parseInt(podData.startTime);
+                        const end = parseInt(podData.endTime);
+                        if (!isNaN(start) && !isNaN(end)) {
+                            const diffMs = end - start;
+                            const hours = Math.floor(diffMs / (1000 * 60 * 60));
+                            const minutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
+                            const seconds = Math.floor((diffMs % (1000 * 60)) / 1000);
+                            podDuration = `${hours}h ${minutes}m ${seconds}s`;
+                        }
+                    }
+                    
+                    html += `
+                        <tr style="border-bottom: 1px solid var(--gray-100);">
+                            <td style="padding: 0.5rem; font-size: 0.875rem; color: var(--gray-900);">${podData.schedulerNo !== undefined ? podData.schedulerNo : '-'}</td>
+                            <td style="padding: 0.5rem; font-size: 0.875rem; color: var(--gray-900); font-family: monospace;">${formatTimeOnly(podData.startTime)}</td>
+                            <td style="padding: 0.5rem; font-size: 0.875rem; color: var(--gray-900); font-family: monospace;">${formatTimeOnly(podData.endTime)}</td>
+                            <td style="padding: 0.5rem; font-size: 0.875rem; color: var(--gray-900);">${podDuration}</td>
+                            <td style="padding: 0.5rem; font-size: 0.875rem; color: var(--gray-900); font-weight: 600;">${podData.rowsInserted !== undefined ? podData.rowsInserted.toLocaleString() : '-'}</td>
+                            <td style="padding: 0.5rem; font-size: 0.875rem;">
+                                <span style="padding: 0.25rem 0.5rem; border-radius: 0.25rem; font-size: 0.75rem; font-weight: 600; background: ${podSuccessColor}; color: ${podSuccessTextColor};">
+                                    ${podSuccess ? '✓ YES' : '✗ NO'}
+                                </span>
+                            </td>
+                        </tr>
+                    `;
+                });
+                
+                html += `
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                `;
+            }
+            
+            resultsDiv.innerHTML = html;
+        }
+        
         // Function to refresh data by triggering the Python script
         async function refreshData() {
             const btn = document.getElementById('refreshDataBtn');
@@ -1842,7 +2773,8 @@ Option 4 - Node.js (if installed):
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
-                    }
+                    },
+                    body: JSON.stringify({ sso_token: getSsoToken() })
                 });
                 
                 if (!response.ok) {
@@ -1895,10 +2827,19 @@ Option 4 - Node.js (if installed):
                         lastUpdatedEl.style.display = 'inline';
                     }
                     
-                    // Check if error is related to invalid token
+                    // Check for different types of errors
                     const errorMessage = result.message || '';
                     const errorOutput = result.output || '';
                     const errorText = result.error || '';
+                    const fullErrorText = (errorMessage + ' ' + errorOutput + ' ' + errorText).toLowerCase();
+                    
+                    // Check if error is related to VPN/network connectivity
+                    const isVpnError = fullErrorText.includes('could not resolve host') ||
+                                     fullErrorText.includes('could not resolve host: database-explorer.gdn-app.com') ||
+                                     fullErrorText.includes('return code: 6') ||
+                                     fullErrorText.includes('curl: (6)');
+                    
+                    // Check if error is related to invalid token
                     const isTokenError = errorMessage.includes('Invalid cookie or header token') ||
                                         errorMessage.includes('Invalid Cookie or header token') ||
                                         errorOutput.includes('Invalid cookie or header token') ||
@@ -1906,11 +2847,19 @@ Option 4 - Node.js (if installed):
                                         errorText.includes('Invalid cookie or header token') ||
                                         errorText.includes('Invalid Cookie or header token');
                     
-                    if (isTokenError) {
+                    if (isVpnError) {
+                        // Show VPN connection error toast
+                        showToast(
+                            'VPN Connection Required',
+                            'Could not connect to database. Please check your VPN connection and try again.',
+                            'error',
+                            8000
+                        );
+                    } else if (isTokenError) {
                         // Show SSO token modal
                         showSsoTokenModal();
                     } else {
-                        // Show error toast
+                        // Show generic error toast
                         showToast(
                             'Refresh Failed',
                             result.message || 'Failed to refresh today\'s data',
@@ -1944,15 +2893,27 @@ Option 4 - Node.js (if installed):
                 }
                 
                 // Check if error message contains token error (unlikely in catch, but check anyway)
-                const errorMessage = error.message || error.toString() || '';
-                const isTokenError = errorMessage.includes('Invalid cookie or header token') ||
-                                    errorMessage.includes('Invalid Cookie or header token');
+                const errorMessage = (error.message || error.toString() || '').toLowerCase();
+                const isTokenError = errorMessage.includes('invalid cookie or header token');
+                
+                // Check for network/VPN errors in catch block (e.g., fetch failures)
+                const isNetworkError = errorMessage.includes('failed to fetch') ||
+                                      errorMessage.includes('networkerror') ||
+                                      errorMessage.includes('network error');
                 
                 if (isTokenError) {
                     // Show SSO token modal
                     showSsoTokenModal();
+                } else if (isNetworkError) {
+                    // Show VPN connection error toast
+                    showToast(
+                        'Network Connection Error',
+                        'Unable to connect to server. Please check your VPN connection and try again.',
+                        'error',
+                        8000
+                    );
                 } else {
-                    // Show error toast
+                    // Show generic error toast
                     showToast(
                         'Connection Error',
                         'Make sure you\'re using the Python server (python3 server.py)',
@@ -2017,6 +2978,15 @@ Option 4 - Node.js (if installed):
                     }
                     // Show last updated time
                     loadLastUpdatedTime(true);
+                } else if (page === 'reports-overview') {
+                    // Load last updated time for Reports Overview page
+                    loadPastDataLastUpdatedTime();
+                    // Hide Today's Report refresh button
+                    refreshBtn.style.display = 'none';
+                    const refreshContainer = document.getElementById('refreshButtonContainer');
+                    if (refreshContainer) {
+                        refreshContainer.style.display = 'none';
+                    }
                 } else {
                     // Hide button on all other pages (including Rundeck Jobs)
                     refreshBtn.style.display = 'none';
@@ -2226,7 +3196,84 @@ Option 4 - Node.js (if installed):
             }).join('');
         }
         
-        function renderJobsHeatmap() {
+        let currentJobsHeatmapTryFilter = 'All';
+        let currentJobsHeatmapStatusFilter = 'Enabled';
+        let currentJobsHeatmapEnvironmentFilter = 'All';
+        
+        function getJobEnvironment(job) {
+            if (!job.curlCommand) return 'Unknown';
+            if (job.curlCommand.includes('seller-insights-next.gdn-sg.cld')) return 'Canary';
+            if (job.curlCommand.includes('seller-insights.gdn-sg.cld')) return 'Non-Canary';
+            return 'Unknown';
+        }
+        
+        function filterJobsHeatmapByTry(tryFilter) {
+            currentJobsHeatmapTryFilter = tryFilter;
+            
+            // Update try filter button styles
+            document.querySelectorAll('[id^="jobs-heatmap-all-tries"], [id^="jobs-heatmap-try-"]').forEach(btn => {
+                btn.style.background = 'white';
+                btn.style.color = 'var(--gray-700)';
+            });
+            
+            const activeBtn = document.getElementById(`jobs-heatmap-${tryFilter === 'All' ? 'all-tries' : `try-${tryFilter}`}`);
+            if (activeBtn) {
+                activeBtn.style.background = 'var(--primary)';
+                activeBtn.style.color = 'white';
+            }
+            
+            // Re-render heatmap with filters
+            renderJobsHeatmap(currentJobsHeatmapTryFilter, currentJobsHeatmapStatusFilter, currentJobsHeatmapEnvironmentFilter);
+        }
+        
+        function filterJobsHeatmapByStatus(statusFilter) {
+            currentJobsHeatmapStatusFilter = statusFilter;
+            
+            // Update status filter button styles
+            document.querySelectorAll('[id^="jobs-heatmap-status-"]').forEach(btn => {
+                btn.style.background = 'white';
+                btn.style.color = 'var(--gray-700)';
+            });
+            
+            const activeBtn = document.getElementById(`jobs-heatmap-status-${statusFilter.toLowerCase()}`);
+            if (activeBtn) {
+                activeBtn.style.background = 'var(--primary)';
+                activeBtn.style.color = 'white';
+            }
+            
+            // Re-render heatmap with filters
+            renderJobsHeatmap(currentJobsHeatmapTryFilter, currentJobsHeatmapStatusFilter, currentJobsHeatmapEnvironmentFilter);
+        }
+        
+        function filterJobsHeatmapByEnvironment(environmentFilter) {
+            currentJobsHeatmapEnvironmentFilter = environmentFilter;
+            
+            // Update environment filter button styles
+            document.querySelectorAll('[id^="jobs-heatmap-env-"]').forEach(btn => {
+                btn.style.background = 'white';
+                btn.style.color = 'var(--gray-700)';
+            });
+            
+            let activeBtnId;
+            if (environmentFilter === 'All') {
+                activeBtnId = 'jobs-heatmap-env-all';
+            } else if (environmentFilter === 'Canary') {
+                activeBtnId = 'jobs-heatmap-env-canary';
+            } else if (environmentFilter === 'Non-Canary') {
+                activeBtnId = 'jobs-heatmap-env-noncanary';
+            }
+            
+            const activeBtn = document.getElementById(activeBtnId);
+            if (activeBtn) {
+                activeBtn.style.background = 'var(--primary)';
+                activeBtn.style.color = 'white';
+            }
+            
+            // Re-render heatmap with filters
+            renderJobsHeatmap(currentJobsHeatmapTryFilter, currentJobsHeatmapStatusFilter, currentJobsHeatmapEnvironmentFilter);
+        }
+        
+        function renderJobsHeatmap(tryFilter = 'All', statusFilter = 'All', environmentFilter = 'All') {
             const frequencies = ['Daily', 'Weekly', 'Monthly', 'All Jobs'];
             
             // Group jobs by hour
@@ -2245,7 +3292,34 @@ Option 4 - Node.js (if installed):
                 const hourString = job.hour || '0';
                 const hours = hourString.split(',').map(h => parseInt(h.trim()));
                 
-                hours.forEach(hour => {
+                // Filter by try number if specified
+                let hoursToProcess = hours;
+                if (tryFilter !== 'All') {
+                    const tryIndex = parseInt(tryFilter) - 1; // Convert to 0-based index
+                    if (tryIndex >= 0 && tryIndex < hours.length) {
+                        // Only include the hour at this try position
+                        hoursToProcess = [hours[tryIndex]];
+                    } else {
+                        // Job doesn't have this many tries, skip it
+                        hoursToProcess = [];
+                    }
+                }
+                
+                hoursToProcess.forEach(hour => {
+                    // Filter by status if specified
+                    if (statusFilter !== 'All') {
+                        const isEnabled = job.scheduleEnabled === true;
+                        if (statusFilter === 'Enabled' && !isEnabled) return;
+                        if (statusFilter === 'Disabled' && isEnabled) return;
+                    }
+                    
+                    // Filter by environment if specified
+                    if (environmentFilter !== 'All') {
+                        const jobEnv = getJobEnvironment(job);
+                        if (environmentFilter === 'Canary' && jobEnv !== 'Canary') return;
+                        if (environmentFilter === 'Non-Canary' && jobEnv !== 'Non-Canary') return;
+                    }
+                    
                     const category = job.scheduleEnabled ? 'enabled' : 'disabled';
                     jobsByHour[hour][job.frequency][category].push(job);
                     jobsByHour[hour]['All Jobs'][category].push(job);
@@ -2285,9 +3359,17 @@ Option 4 - Node.js (if installed):
                     if (total === 0) {
                         html += '<div class="heatmap-cell empty" title="No jobs scheduled"></div>';
                     } else {
-                        // Color based on enabled vs disabled ratio
-                        const enabledRatio = enabledCount / total;
-                        const bgColor = enabledRatio > 0.5 ? '#10b981' : enabledRatio > 0 ? '#f59e0b' : '#9ca3af';
+                        // Color based on status filter and enabled vs disabled ratio
+                        let bgColor;
+                        if (statusFilter === 'Enabled') {
+                            bgColor = '#10b981'; // Green for enabled only
+                        } else if (statusFilter === 'Disabled') {
+                            bgColor = '#9ca3af'; // Gray for disabled only
+                        } else {
+                            // Mixed: Color based on enabled vs disabled ratio
+                            const enabledRatio = enabledCount / total;
+                            bgColor = enabledRatio > 0.5 ? '#10b981' : enabledRatio > 0 ? '#f59e0b' : '#9ca3af';
+                        }
                         
                         // Opacity based on count
                         const opacity = 0.3 + (Math.min(total, maxJobs) / maxJobs) * 0.7;
@@ -2323,9 +3405,43 @@ Option 4 - Node.js (if installed):
             const jobsByHour = JOBS_DATA.filter(job => {
                 const hourString = job.hour || '0';
                 const hours = hourString.split(',').map(h => parseInt(h.trim()));
+                
+                // Apply try filter if active
+                if (currentJobsHeatmapTryFilter !== 'All') {
+                    const tryIndex = parseInt(currentJobsHeatmapTryFilter) - 1; // Convert to 0-based index
+                    if (tryIndex >= 0 && tryIndex < hours.length) {
+                        // Only match if this hour is at the try position
+                        return hours[tryIndex] === hour;
+                    }
+                    return false;
+                }
+                
                 return hours.includes(hour);
             });
-            const filteredJobs = frequency === 'All Jobs' ? jobsByHour : jobsByHour.filter(j => j.frequency === frequency);
+            
+            // Apply status filter if active
+            let statusFilteredJobs = jobsByHour;
+            if (currentJobsHeatmapStatusFilter !== 'All') {
+                statusFilteredJobs = jobsByHour.filter(job => {
+                    const isEnabled = job.scheduleEnabled === true;
+                    if (currentJobsHeatmapStatusFilter === 'Enabled') return isEnabled;
+                    if (currentJobsHeatmapStatusFilter === 'Disabled') return !isEnabled;
+                    return true;
+                });
+            }
+            
+            // Apply environment filter if active
+            let environmentFilteredJobs = statusFilteredJobs;
+            if (currentJobsHeatmapEnvironmentFilter !== 'All') {
+                environmentFilteredJobs = statusFilteredJobs.filter(job => {
+                    const jobEnv = getJobEnvironment(job);
+                    if (currentJobsHeatmapEnvironmentFilter === 'Canary') return jobEnv === 'Canary';
+                    if (currentJobsHeatmapEnvironmentFilter === 'Non-Canary') return jobEnv === 'Non-Canary';
+                    return true;
+                });
+            }
+            
+            const filteredJobs = frequency === 'All Jobs' ? environmentFilteredJobs : environmentFilteredJobs.filter(j => j.frequency === frequency);
             
             if (filteredJobs.length === 0) {
                 return;
@@ -2343,13 +3459,27 @@ Option 4 - Node.js (if installed):
             const titleElem = document.getElementById('jobsAtHourTitle');
             const listElem = document.getElementById('jobsAtHourList');
             
-            titleElem.textContent = `📋 ${frequency} Jobs Scheduled at ${hour.toString().padStart(2, '0')}:00 (${filteredJobs.length} job${filteredJobs.length > 1 ? 's' : ''})`;
+            const tryFilterText = currentJobsHeatmapTryFilter !== 'All' ? ` (${currentJobsHeatmapTryFilter}${currentJobsHeatmapTryFilter === '1' ? 'st' : currentJobsHeatmapTryFilter === '2' ? 'nd' : currentJobsHeatmapTryFilter === '3' ? 'rd' : 'th'} Try)` : '';
+            const statusFilterText = currentJobsHeatmapStatusFilter !== 'All' ? ` - ${currentJobsHeatmapStatusFilter}` : '';
+            const envFilterText = currentJobsHeatmapEnvironmentFilter !== 'All' ? ` - ${currentJobsHeatmapEnvironmentFilter}` : '';
+            titleElem.textContent = `📋 ${frequency} Jobs Scheduled at ${hour.toString().padStart(2, '0')}:00${tryFilterText}${statusFilterText}${envFilterText} (${filteredJobs.length} job${filteredJobs.length > 1 ? 's' : ''})`;
             
             let html = '<div style="display: grid; gap: 0.5rem;">';
             filteredJobs.forEach(job => {
                 const statusColor = job.scheduleEnabled ? 'var(--success)' : 'var(--gray-400)';
                 const statusText = job.scheduleEnabled ? 'Enabled' : 'Disabled';
                 const statusIcon = job.scheduleEnabled ? '✓' : '✕';
+                
+                // Get environment
+                const jobEnv = getJobEnvironment(job);
+                let environmentBadge = '';
+                if (jobEnv === 'Canary') {
+                    environmentBadge = '<span class="badge badge-warning" style="background: #fef3c7; color: #92400e; font-weight: 600; font-size: 0.75rem;">🟡 Canary</span>';
+                } else if (jobEnv === 'Non-Canary') {
+                    environmentBadge = '<span class="badge badge-info" style="background: #dbeafe; color: #1e40af; font-weight: 600; font-size: 0.75rem;">🔵 Non-Canary</span>';
+                } else {
+                    environmentBadge = '<span class="badge badge-secondary" style="font-size: 0.75rem;">Unknown</span>';
+                }
                 
                 // Parse all scheduled hours for this job
                 const hourString = job.hour || '0';
@@ -2365,7 +3495,8 @@ Option 4 - Node.js (if installed):
                                 ⏰ ${timeLabel} • ${job.frequency}${job.dayInfo ? ' • ' + job.dayInfo : ''}
                             </div>
                         </div>
-                        <div style="display: flex; gap: 0.5rem; align-items: center;">
+                        <div style="display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap;">
+                            ${environmentBadge}
                             <span class="badge ${job.scheduleEnabled ? 'badge-success' : 'badge-danger'}">${statusIcon} ${statusText}</span>
                         </div>
                     </div>
@@ -2604,6 +3735,92 @@ Option 4 - Node.js (if installed):
         
         function closeModal() {
             document.getElementById('curlModal').style.display = 'none';
+            // Hide execution results when closing modal
+            document.getElementById('curlExecutionResults').style.display = 'none';
+        }
+        
+        async function executeCurlCommand() {
+            const command = document.getElementById('modalCurlCommand').textContent;
+            const executeBtn = document.getElementById('executeCurlBtn');
+            const resultsDiv = document.getElementById('curlExecutionResults');
+            const outputDiv = document.getElementById('curlExecutionOutput');
+            
+            if (!command || !command.trim()) {
+                alert('No command to execute');
+                return;
+            }
+            
+            // Disable button and show loading
+            if (executeBtn) {
+                executeBtn.disabled = true;
+                executeBtn.textContent = '⏳ Executing...';
+            }
+            
+            if (outputDiv) {
+                outputDiv.textContent = 'Executing curl command...';
+            }
+            
+            if (resultsDiv) {
+                resultsDiv.style.display = 'block';
+            }
+            
+            try {
+                const response = await fetch('/api/execute-curl', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ curl_command: command })
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    // Display successful result
+                    let output = '';
+                    if (result.stdout) {
+                        output += result.stdout;
+                    }
+                    if (result.stderr) {
+                        output += '\n\n--- STDERR ---\n' + result.stderr;
+                    }
+                    if (result.exit_code !== undefined) {
+                        output += `\n\n--- Exit Code: ${result.exit_code} ---`;
+                    }
+                    
+                    outputDiv.textContent = output || 'Command executed successfully (no output)';
+                    outputDiv.style.color = result.exit_code === 0 ? 'var(--gray-900)' : '#dc2626';
+                } else {
+                    outputDiv.textContent = `Error: ${result.error || 'Failed to execute command'}`;
+                    outputDiv.style.color = '#dc2626';
+                }
+            } catch (error) {
+                outputDiv.textContent = `Error: ${error.message}`;
+                outputDiv.style.color = '#dc2626';
+            } finally {
+                // Re-enable button
+                if (executeBtn) {
+                    executeBtn.disabled = false;
+                    executeBtn.textContent = '⚡ Execute';
+                }
+            }
+        }
+        
+        // SSO Token Management Functions (using localStorage)
+        function getSsoToken() {
+            return localStorage.getItem('sso_token') || null;
+        }
+        
+        function saveSsoToken(token) {
+            localStorage.setItem('sso_token', token);
+        }
+        
+        function clearSsoToken() {
+            localStorage.removeItem('sso_token');
         }
         
         // SSO Token Modal Functions
@@ -2611,11 +3828,17 @@ Option 4 - Node.js (if installed):
             const modal = document.getElementById('ssoTokenModal');
             if (modal) {
                 modal.style.display = 'block';
-                // Focus on input
-                setTimeout(() => {
-                    const input = document.getElementById('ssoTokenInput');
-                    if (input) input.focus();
-                }, 100);
+                const input = document.getElementById('ssoTokenInput');
+                if (input) {
+                    // Pre-fill with existing token if available
+                    const existingToken = getSsoToken();
+                    if (existingToken) {
+                        input.value = existingToken;
+                    } else {
+                        input.value = '';
+                    }
+                    setTimeout(() => input.focus(), 100);
+                }
             }
         }
         
@@ -2623,9 +3846,10 @@ Option 4 - Node.js (if installed):
             const modal = document.getElementById('ssoTokenModal');
             if (modal) {
                 modal.style.display = 'none';
-                // Clear input
                 const input = document.getElementById('ssoTokenInput');
-                if (input) input.value = '';
+                if (input) {
+                    input.value = '';
+                }
             }
         }
         
@@ -2638,36 +3862,15 @@ Option 4 - Node.js (if installed):
                 return;
             }
             
-            try {
-                const response = await fetch('/api/update-sso-token', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({ token: token })
-                });
-                
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
-                
-                const result = await response.json();
-                
-                if (result.success) {
-                    showToast('Success', 'SSO token updated successfully', 'success', 3000);
-                    closeSsoTokenModal();
-                    
-                    // Automatically retry refresh
-                    setTimeout(() => {
-                        refreshData();
-                    }, 500);
-                } else {
-                    showToast('Error', result.message || 'Failed to update SSO token', 'error', 4000);
-                }
-            } catch (error) {
-                console.error('Error updating SSO token:', error);
-                showToast('Error', 'Failed to update SSO token. Please try again.', 'error', 4000);
-            }
+            // Save token to localStorage
+            saveSsoToken(token);
+            showToast('Success', 'SSO token saved successfully', 'success', 3000);
+            closeSsoTokenModal();
+            
+            // Automatically retry refresh
+            setTimeout(() => {
+                refreshData();
+            }, 500);
         }
         
         // Close modal when clicking outside
@@ -2676,14 +3879,18 @@ Option 4 - Node.js (if installed):
             if (event.target === ssoModal) {
                 closeSsoTokenModal();
             }
+            const salesFunnelModal = document.getElementById('salesFunnelValidationModal');
+            if (event.target === salesFunnelModal) {
+                closeSalesFunnelValidationModal();
+            }
         }
         
         // Reports Functions
         let reportsCharts = {};
         
         function displayReportsDateRange() {
-            // Extract all dates from REPORTS_DATA
-            const dates = REPORTS_DATA
+            // Extract all dates from FILTERED_REPORTS_DATA
+            const dates = FILTERED_REPORTS_DATA
                 .map(s => parseInt(s.analyticDate))
                 .filter(d => !isNaN(d) && d > 0);
             
@@ -2715,18 +3922,22 @@ Option 4 - Node.js (if installed):
             
             // Update current page title if on a reports page
             const currentPage = document.querySelector('.page-section.active')?.id?.replace('-section', '');
-            if (currentPage && pageTitles[currentPage]) {
-                document.getElementById('pageTitle').textContent = pageTitles[currentPage];
+            const pageTitleEl = document.getElementById('pageTitle');
+            if (currentPage && pageTitles[currentPage] && pageTitleEl) {
+                pageTitleEl.textContent = pageTitles[currentPage];
             }
         }
         
         function updateInsights() {
-            const totalData = REPORTS_DATA.reduce((sum, s) => sum + parseInt(s.bqTotalData || 0), 0);
-            const uniqueTypes = new Set(REPORTS_DATA.map(s => s.analyticName)).size;
-            const durations = REPORTS_DATA.map(s => calculateDuration(s.executionStartDate, s.executionFinishDate)).filter(d => d);
+            const insightsGrid = document.getElementById('insightsGrid');
+            if (!insightsGrid) return; // Element doesn't exist, skip update
+            
+            const totalData = FILTERED_REPORTS_DATA.reduce((sum, s) => sum + parseInt(s.bqTotalData || 0), 0);
+            const uniqueTypes = new Set(FILTERED_REPORTS_DATA.map(s => s.analyticName)).size;
+            const durations = FILTERED_REPORTS_DATA.map(s => calculateDuration(s.executionStartDate, s.executionFinishDate)).filter(d => d);
             const avgDuration = durations.length ? durations.reduce((sum, d) => sum + d.totalSeconds, 0) / durations.length : 0;
             
-            document.getElementById('insightsGrid').innerHTML = `
+            insightsGrid.innerHTML = `
                 <div class="insight-card">
                     <div class="insight-label">Total Records</div>
                     <div class="insight-value">${totalData.toLocaleString()}</div>
@@ -2743,7 +3954,7 @@ Option 4 - Node.js (if installed):
         }
         
         function updatePerformance() {
-            const withDuration = REPORTS_DATA.map(s => ({
+            const withDuration = FILTERED_REPORTS_DATA.map(s => ({
                 name: s.analyticName,
                 duration: calculateDuration(s.executionStartDate, s.executionFinishDate),
                 bqData: parseInt(s.bqTotalData || 0)
@@ -2751,8 +3962,8 @@ Option 4 - Node.js (if installed):
             
             const slowest = [...withDuration].sort((a, b) => b.duration.totalSeconds - a.duration.totalSeconds).slice(0, 5);
             const fastest = [...withDuration].sort((a, b) => a.duration.totalSeconds - b.duration.totalSeconds).slice(0, 5);
-            const highest = [...REPORTS_DATA].filter(s => s.bqTotalData).sort((a, b) => parseInt(b.bqTotalData) - parseInt(a.bqTotalData)).slice(0, 5);
-            const failed = REPORTS_DATA.filter(s => getStatus(s) !== 'success');
+            const highest = [...FILTERED_REPORTS_DATA].filter(s => s.bqTotalData).sort((a, b) => parseInt(b.bqTotalData) - parseInt(a.bqTotalData)).slice(0, 5);
+            const failed = FILTERED_REPORTS_DATA.filter(s => getStatus(s) !== 'success');
             
             let html = '<div class="performance-card"><h3>🐌 Slowest Runs</h3>';
             slowest.forEach(s => html += `<div class="perf-item"><span class="perf-item-name">${s.name}</span><span class="perf-item-value">${formatDuration(s.duration)}</span></div>`);
@@ -2772,15 +3983,18 @@ Option 4 - Node.js (if installed):
                 html += '</div>';
             }
             
-            document.getElementById('performanceGrid').innerHTML = html;
+            const performanceGrid = document.getElementById('performanceGrid');
+            if (performanceGrid) {
+                performanceGrid.innerHTML = html;
+            }
         }
         
         function renderDailyBreakdownChart() {
             console.log('🔍 Rendering Daily Breakdown Chart...');
-            console.log('  REPORTS_DATA length:', REPORTS_DATA.length);
+            console.log('  FILTERED_REPORTS_DATA length:', FILTERED_REPORTS_DATA.length);
             
             const byDate = {};
-            REPORTS_DATA.forEach(s => {
+            FILTERED_REPORTS_DATA.forEach(s => {
                 const date = s.analyticDate;
                 if (!byDate[date]) byDate[date] = { total: 0, success: 0, failed: 0 };
                 byDate[date].total++;
@@ -2791,94 +4005,127 @@ Option 4 - Node.js (if installed):
             const sorted = Object.keys(byDate).sort((a, b) => parseInt(a) - parseInt(b));
             console.log('  Dates found:', sorted.length);
             console.log('  Date data:', byDate);
+            
+            if (sorted.length === 0) {
+                const chartContainer = document.getElementById('dailyBreakdownChart');
+                if (chartContainer) {
+                    chartContainer.innerHTML = '<div style="padding: 3rem; text-align: center; color: var(--gray-500);"><div style="font-size: 3rem; margin-bottom: 1rem;">📊</div><div style="font-size: 1rem;">No data available for the selected date range</div></div>';
+                }
+                return;
+            }
+            
             const maxTotal = Math.max(...sorted.map(date => byDate[date].total));
             console.log('  Max total:', maxTotal);
             
-            // Calculate bar width based on number of dates
-            const barWidth = Math.max(40, Math.min(70, 1400 / sorted.length));
             const chartHeight = 180;
             
-            let html = '<div style="padding: 1rem; background: white; border-radius: 0.5rem;">';
+            let html = '<div style="background: white; border-radius: 0.5rem; padding: 1rem; box-shadow: 0 1px 3px rgba(0,0,0,0.1); width: 100%; box-sizing: border-box;">';
             
-            // Legend
-            html += '<div style="display: flex; gap: 1.5rem; margin-bottom: 1.5rem; justify-content: center; font-size: 0.875rem;">';
-            html += '<div style="display: flex; align-items: center; gap: 0.5rem;">';
-            html += '<div style="width: 18px; height: 18px; background: #10b981; border-radius: 0.25rem; box-shadow: 0 1px 3px rgba(0,0,0,0.1);"></div>';
-            html += '<span style="font-weight: 500;">Success</span></div>';
-            html += '<div style="display: flex; align-items: center; gap: 0.5rem;">';
-            html += '<div style="width: 18px; height: 18px; background: #ef4444; border-radius: 0.25rem; box-shadow: 0 1px 3px rgba(0,0,0,0.1);"></div>';
-            html += '<span style="font-weight: 500;">Failed</span></div>';
-            html += '</div>';
+            // Chart container with better spacing for labels
+            html += `<div style="width: 100%; padding: 0.5rem 0 4rem 0; box-sizing: border-box; overflow: visible;">`;
+            html += `<div style="display: flex; gap: 6px; align-items: flex-end; height: ${chartHeight}px; border-bottom: 2px solid #e5e7eb; position: relative; padding-bottom: 0.75rem; width: 100%; box-sizing: border-box; margin-bottom: 0.5rem;">`;
             
-            // Chart container with proper spacing
-            html += '<div style="overflow-x: auto; padding-bottom: 4rem;">';
-            html += `<div style="min-width: ${sorted.length * (barWidth + 12)}px; padding: 0 1rem;">`;
-            html += `<div style="display: flex; gap: 12px; align-items: flex-end; height: ${chartHeight}px; border-bottom: 2px solid var(--gray-200); position: relative;">`;
-            
-            sorted.forEach(date => {
+            sorted.forEach((date, index) => {
                 const data = byDate[date];
-                const totalHeight = chartHeight - 10;
+                const totalHeight = chartHeight - 50; // More space for labels
                 const successHeightPx = Math.max(4, Math.round((data.success / maxTotal) * totalHeight));
                 const failedHeightPx = Math.max(4, Math.round((data.failed / maxTotal) * totalHeight));
                 const successPct = ((data.success / data.total) * 100).toFixed(0);
                 const failedPct = ((data.failed / data.total) * 100).toFixed(0);
                 
-                html += `<div style="width: ${barWidth}px; display: flex; flex-direction: column; align-items: center; position: relative;">`;
+                // Format date for display
+                const dateObj = new Date(parseInt(date));
+                const dateStr = dateObj.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
                 
-                // Values on top
-                html += `<div style="font-size: 0.75rem; font-weight: 600; color: var(--gray-700); margin-bottom: 0.25rem; text-align: center;">
+                html += `<div style="flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: center; position: relative; max-width: 100%;" class="daily-breakdown-bar">`;
+                
+                // Total count badge on top - more visible
+                html += `<div style="font-size: 0.75rem; font-weight: 700; color: #1e293b; margin-bottom: 0.5rem; text-align: center; 
+                         background: #f1f5f9; padding: 0.25rem 0.5rem; border-radius: 0.375rem; border: 1px solid #cbd5e1; cursor: help; white-space: nowrap;"
+                         title="Total Schedulers: ${data.total}\\n\\nBreakdown:\\n- Success: ${data.success}\\n- Failed: ${data.failed}\\n\\nDate: ${dateStr}">
                     ${data.total}
                 </div>`;
                 
                 // Bar container
-                html += `<div style="width: 100%; display: flex; flex-direction: column; justify-content: flex-end; height: ${chartHeight - 30}px;">`;
+                html += `<div style="width: 100%; display: flex; flex-direction: column; justify-content: flex-end; 
+                         height: ${totalHeight}px; gap: 1px; position: relative;">`;
                 
                 // Success bar
                 if (data.success > 0) {
-                    html += `<div style="width: 100%; background: linear-gradient(180deg, #10b981 0%, #059669 100%); 
-                             border-radius: 0.375rem 0.375rem 0 0; height: ${successHeightPx}px; 
-                             position: relative; cursor: pointer; transition: transform 0.2s ease; border: 1px solid #059669;"
-                             onmouseover="this.style.transform='scaleY(1.05)'" 
-                             onmouseout="this.style.transform='scaleY(1)'"
-                             title="✓ Success: ${data.success} (${successPct}%)">
-                        ${successHeightPx > 20 ? `<div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: white; font-size: 0.75rem; font-weight: 600;">${data.success}</div>` : ''}
+                    html += `<div class="success-bar" 
+                             style="width: 100%; 
+                             background: linear-gradient(180deg, #10b981 0%, #059669 100%); 
+                             border-radius: ${data.failed > 0 ? '0.375rem 0.375rem 0 0' : '0.375rem'}; 
+                             height: ${successHeightPx}px; 
+                             position: relative; 
+                             cursor: help; 
+                             transition: opacity 0.2s ease;
+                             box-shadow: 0 2px 4px rgba(16, 185, 129, 0.2);"
+                             onmouseover="this.style.opacity='0.85'" 
+                             onmouseout="this.style.opacity='1'"
+                             title="Success: ${data.success} schedulers (${successPct}%)">
+                        ${successHeightPx > 20 ? `<div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); 
+                         color: white; font-size: 0.7rem; font-weight: 700; text-shadow: 0 1px 3px rgba(0,0,0,0.4);">${data.success}</div>` : ''}
                     </div>`;
                 }
                 
                 // Failed bar
                 if (data.failed > 0) {
-                    html += `<div style="width: 100%; background: linear-gradient(180deg, #ef4444 0%, #dc2626 100%); 
+                    html += `<div class="failed-bar"
+                             style="width: 100%; 
+                             background: linear-gradient(180deg, #ef4444 0%, #dc2626 100%); 
                              ${data.success > 0 ? 'border-radius: 0 0 0.375rem 0.375rem;' : 'border-radius: 0.375rem;'} 
-                             height: ${failedHeightPx}px; position: relative; cursor: pointer; 
-                             transition: transform 0.2s ease; border: 1px solid #dc2626;"
-                             onmouseover="this.style.transform='scaleY(1.05)'" 
-                             onmouseout="this.style.transform='scaleY(1)'"
-                             title="✗ Failed: ${data.failed} (${failedPct}%)">
-                        ${failedHeightPx > 20 ? `<div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: white; font-size: 0.75rem; font-weight: 600;">${data.failed}</div>` : ''}
+                             height: ${failedHeightPx}px; 
+                             position: relative; 
+                             cursor: help; 
+                             transition: opacity 0.2s ease;
+                             box-shadow: 0 2px 4px rgba(239, 68, 68, 0.2);"
+                             onmouseover="this.style.opacity='0.85'" 
+                             onmouseout="this.style.opacity='1'"
+                             title="Failed: ${data.failed} schedulers (${failedPct}%)">
+                        ${failedHeightPx > 20 ? `<div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); 
+                         color: white; font-size: 0.7rem; font-weight: 700; text-shadow: 0 1px 3px rgba(0,0,0,0.4);">${data.failed}</div>` : ''}
                     </div>`;
                 }
                 
                 html += '</div>'; // End bar container
                 
-                // Date label below the axis
+                // Date label - larger and more visible
                 html += `<div style="position: absolute; top: ${chartHeight + 10}px; left: 50%; transform: translateX(-50%); 
-                         font-size: 0.75rem; color: var(--gray-600); text-align: center; white-space: nowrap; font-weight: 500;">
-                    ${formatDateShort(date).replace(', 2025', '')}
+                         font-size: 0.75rem; color: #1e293b; text-align: center; white-space: nowrap; font-weight: 600; 
+                         width: 100%; overflow: visible; z-index: 2; background: white; padding: 0.125rem 0.25rem; line-height: 1.2;">
+                    ${dateStr}
+                </div>`;
+                
+                // Success and Failed counts below date - always visible with better styling
+                html += `<div style="position: absolute; top: ${chartHeight + 28}px; left: 50%; transform: translateX(-50%); 
+                         font-size: 0.75rem; text-align: center; white-space: nowrap; z-index: 2; background: white; padding: 0.125rem 0.25rem; width: 100%; line-height: 1.4;">
+                    <div style="display: flex; align-items: center; justify-content: center; gap: 0.75rem; flex-wrap: wrap;">
+                        <span style="color: #059669; font-weight: 700; font-size: 0.8rem; display: inline-flex; align-items: center; gap: 0.25rem;">
+                            <span style="font-size: 0.9rem;">✓</span>${data.success}
+                        </span>
+                        ${data.failed > 0 ? `<span style="color: #dc2626; font-weight: 700; font-size: 0.8rem; display: inline-flex; align-items: center; gap: 0.25rem;">
+                            <span style="font-size: 0.9rem;">✗</span>${data.failed}
+                        </span>` : '<span style="color: #94a3b8; font-size: 0.7rem;">No failures</span>'}
+                    </div>
                 </div>`;
                 
                 html += '</div>'; // End bar wrapper
             });
             
-            html += '</div></div></div></div>';
+            html += '</div></div>';
             
             console.log('  Generated HTML length:', html.length);
             console.log('  Setting innerHTML...');
-            document.getElementById('dailyBreakdownChart').innerHTML = html;
-            console.log('✅ Daily Breakdown Chart rendered');
+            const chartContainer = document.getElementById('dailyBreakdownChart');
+            if (chartContainer) {
+                chartContainer.innerHTML = html;
+                console.log('✅ Daily Breakdown Chart rendered');
+            }
         }
         
         function populateDateFilter() {
-            const dates = [...new Set(REPORTS_DATA.map(s => s.analyticDate))].sort((a, b) => parseInt(b) - parseInt(a));
+            const dates = [...new Set(FILTERED_REPORTS_DATA.map(s => s.analyticDate))].sort((a, b) => parseInt(b) - parseInt(a));
             const select = document.getElementById('dateFilter');
             dates.forEach(date => {
                 const opt = document.createElement('option');
@@ -2889,11 +4136,20 @@ Option 4 - Node.js (if installed):
         }
         
         function filterReports() {
-            const search = document.getElementById('reportSearch').value.toLowerCase();
-            const date = document.getElementById('dateFilter').value;
-            const status = document.getElementById('reportStatusFilter').value;
+            const reportSearchEl = document.getElementById('reportSearch');
+            const dateFilterEl = document.getElementById('dateFilter');
+            const reportStatusFilterEl = document.getElementById('reportStatusFilter');
             
-            return REPORTS_DATA.filter(s => {
+            // If elements don't exist, return all filtered data
+            if (!reportSearchEl || !dateFilterEl || !reportStatusFilterEl) {
+                return FILTERED_REPORTS_DATA;
+            }
+            
+            const search = reportSearchEl.value.toLowerCase();
+            const date = dateFilterEl.value;
+            const status = reportStatusFilterEl.value;
+            
+            return FILTERED_REPORTS_DATA.filter(s => {
                 const matchSearch = !search || s.analyticName.toLowerCase().includes(search);
                 const matchDate = !date || s.analyticDate === date;
                 const matchStatus = !status || getStatus(s) === status;
@@ -2926,12 +4182,13 @@ Option 4 - Node.js (if installed):
         }
         
         function renderReportsTable() {
+            const tbody = document.getElementById('reportsTableBody');
+            if (!tbody) return; // Element doesn't exist, skip
+            
             filteredReports = filterReports();
             if (reportSort.column) {
                 filteredReports = sortReports(filteredReports, reportSort.column, reportSort.direction);
             }
-            
-            const tbody = document.getElementById('reportsTableBody');
             
             if (filteredReports.length === 0) {
                 tbody.innerHTML = '<tr><td colspan="7" class="no-results">No results found</td></tr>';
@@ -3167,6 +4424,14 @@ Option 4 - Node.js (if installed):
             return false;
         }
         
+        // Helper function to get environment from job
+        function getTodayJobEnvironment(job) {
+            if (!job || !job.curlCommand) return 'Unknown';
+            if (job.curlCommand.includes('seller-insights-next.gdn-sg.cld')) return 'Canary';
+            if (job.curlCommand.includes('seller-insights.gdn-sg.cld')) return 'Non-Canary';
+            return 'Unknown';
+        }
+        
         // Function to get jobs that run today and match them with today's data
         function getTodayScheduledJobs() {
             // Filter jobs that run today
@@ -3192,13 +4457,15 @@ Option 4 - Node.js (if installed):
             const result = [];
             jobsRunningToday.forEach(job => {
                 const executionData = todayDataMap.get(job.analyticName) || [];
+                const environment = getTodayJobEnvironment(job);
                 
                 if (executionData.length > 0) {
                     // If there's execution data, add each execution as a row
                     executionData.forEach(data => {
                         result.push({
                             ...data,
-                            scheduledJob: job // Keep reference to the scheduled job
+                            scheduledJob: job, // Keep reference to the scheduled job
+                            environment: environment // Add environment info
                         });
                     });
                 } else {
@@ -3206,7 +4473,8 @@ Option 4 - Node.js (if installed):
                     result.push({
                         analyticName: job.analyticName,
                         executionSuccess: undefined,
-                        scheduledJob: job
+                        scheduledJob: job,
+                        environment: environment // Add environment info
                     });
                 }
             });
@@ -3234,18 +4502,51 @@ Option 4 - Node.js (if installed):
             
             const totalJobs = todayScheduledData.length;
             
-            // Calculate success rate (only for jobs that have completed execution)
-            const completedJobs = succeededJobs.length + failedJobs.length;
-            const successRate = completedJobs > 0 
-                ? Math.round((succeededJobs.length / completedJobs) * 100) 
-                : 0;
+            // Helper function to get environment from job
+            const getJobEnv = (job) => {
+                return job.environment || getTodayJobEnvironment(job.scheduledJob || matchJobToScheduler(job.analyticName));
+            };
             
+            // Calculate Canary/Non-Canary counts for each category
+            const totalCanary = todayScheduledData.filter(j => getJobEnv(j) === 'Canary').length;
+            const totalNonCanary = todayScheduledData.filter(j => getJobEnv(j) === 'Non-Canary').length;
+            
+            const pendingCanary = pendingJobs.filter(j => getJobEnv(j) === 'Canary').length;
+            const pendingNonCanary = pendingJobs.filter(j => getJobEnv(j) === 'Non-Canary').length;
+            
+            const inProgressCanary = inProgressJobs.filter(j => getJobEnv(j) === 'Canary').length;
+            const inProgressNonCanary = inProgressJobs.filter(j => getJobEnv(j) === 'Non-Canary').length;
+            
+            const succeededCanary = succeededJobs.filter(j => getJobEnv(j) === 'Canary').length;
+            const succeededNonCanary = succeededJobs.filter(j => getJobEnv(j) === 'Non-Canary').length;
+            
+            const failedCanary = failedJobs.filter(j => getJobEnv(j) === 'Canary').length;
+            const failedNonCanary = failedJobs.filter(j => getJobEnv(j) === 'Non-Canary').length;
+            
+            // Update main counts
             document.getElementById('todaySucceeded').textContent = succeededJobs.length;
             document.getElementById('todayFailed').textContent = failedJobs.length;
             document.getElementById('todayTotal').textContent = totalJobs;
             document.getElementById('todayPending').textContent = pendingJobs.length;
             document.getElementById('todayInProgress').textContent = inProgressJobs.length;
-            document.getElementById('todaySuccessRate').textContent = `${successRate}%`;
+            
+            // Update Canary/Non-Canary counts
+            document.getElementById('todayTotalCanary').textContent = totalCanary;
+            document.getElementById('todayTotalNonCanary').textContent = totalNonCanary;
+            document.getElementById('todayPendingCanary').textContent = pendingCanary;
+            document.getElementById('todayPendingNonCanary').textContent = pendingNonCanary;
+            document.getElementById('todayInProgressCanary').textContent = inProgressCanary;
+            document.getElementById('todayInProgressNonCanary').textContent = inProgressNonCanary;
+            document.getElementById('todaySucceededCanary').textContent = succeededCanary;
+            document.getElementById('todaySucceededNonCanary').textContent = succeededNonCanary;
+            document.getElementById('todayFailedCanary').textContent = failedCanary;
+            document.getElementById('todayFailedNonCanary').textContent = failedNonCanary;
+            
+            // Set initial card active state based on current filter
+            const initialStatusFilter = document.getElementById('todayStatusFilter');
+            if (initialStatusFilter) {
+                updateCardActiveState(initialStatusFilter.value);
+            }
             
             // Render failed schedulers section (only jobs with execution data that failed)
             renderFailedSchedulers(failedJobs);
@@ -3262,6 +4563,7 @@ Option 4 - Node.js (if installed):
                 const searchVal = document.getElementById('todaySearchInput').value.toLowerCase().trim();
                 const statusFilter = document.getElementById('todayStatusFilter').value;
                 const frequencyFilter = document.getElementById('todayFrequencyFilter').value;
+                const environmentFilter = document.getElementById('todayEnvironmentFilter').value;
                 
                 let filtered = todayScheduledData.filter(job => {
                     // Search filter
@@ -3289,6 +4591,14 @@ Option 4 - Node.js (if installed):
                         }
                     }
                     
+                    // Environment filter
+                    if (environmentFilter !== 'All') {
+                        const jobEnvironment = job.environment || getTodayJobEnvironment(job.scheduledJob || matchJobToScheduler(job.analyticName));
+                        if (jobEnvironment !== environmentFilter) {
+                            return false;
+                        }
+                    }
+                    
                     return true;
                 });
                 
@@ -3300,10 +4610,17 @@ Option 4 - Node.js (if installed):
             const searchInput = document.getElementById('todaySearchInput');
             const statusFilter = document.getElementById('todayStatusFilter');
             const frequencyFilter = document.getElementById('todayFrequencyFilter');
+            const environmentFilter = document.getElementById('todayEnvironmentFilter');
             
             searchInput.oninput = applyTodayFilters;
-            statusFilter.onchange = applyTodayFilters;
             frequencyFilter.onchange = applyTodayFilters;
+            environmentFilter.onchange = applyTodayFilters;
+            
+            // Update card active state when status filter changes manually
+            statusFilter.onchange = function() {
+                updateCardActiveState(statusFilter.value);
+                applyTodayFilters();
+            };
             
             // Set up sort handlers (replace any existing handlers)
             document.querySelectorAll('#todaySchedulerTable th.sortable').forEach(th => {
@@ -3354,11 +4671,96 @@ Option 4 - Node.js (if installed):
             });
         }
         
+        function updateCardActiveState(statusValue) {
+            // Remove active class from all cards
+            document.querySelectorAll('.stat-card.clickable').forEach(card => {
+                card.classList.remove('active');
+            });
+            
+            // Add active class to the corresponding card
+            let cardId;
+            if (statusValue === 'All') {
+                cardId = 'todayCardTotal';
+            } else if (statusValue === 'Pending') {
+                cardId = 'todayCardPending';
+            } else if (statusValue === 'In Progress') {
+                cardId = 'todayCardInProgress';
+            } else if (statusValue === 'Success') {
+                cardId = 'todayCardSuccess';
+            } else if (statusValue === 'Failed') {
+                cardId = 'todayCardFailed';
+            }
+            
+            if (cardId) {
+                const card = document.getElementById(cardId);
+                if (card) {
+                    card.classList.add('active');
+                }
+            }
+        }
+        
+        function filterTodayByCard(statusValue) {
+            // Update the status filter dropdown
+            const statusFilter = document.getElementById('todayStatusFilter');
+            if (statusFilter) {
+                statusFilter.value = statusValue;
+                updateCardActiveState(statusValue);
+                
+                // Trigger the filter function
+                const searchInput = document.getElementById('todaySearchInput');
+                const frequencyFilter = document.getElementById('todayFrequencyFilter');
+                const environmentFilter = document.getElementById('todayEnvironmentFilter');
+                const searchVal = searchInput ? searchInput.value.toLowerCase().trim() : '';
+                const freqVal = frequencyFilter ? frequencyFilter.value : 'All';
+                const envVal = environmentFilter ? environmentFilter.value : 'All';
+                
+                let filtered = window.todayScheduledData.filter(job => {
+                    // Search filter
+                    const matchesSearch = (job.analyticName || '').toLowerCase().includes(searchVal);
+                    if (!matchesSearch) return false;
+                    
+                    // Status filter
+                    if (statusValue !== 'All') {
+                        const isPending = !job.executionStartDate && job.executionSuccess === undefined;
+                        const isInProgress = job.executionStartDate && !job.executionFinishDate;
+                        const isSuccess = job.executionSuccess === true;
+                        const isFailed = job.executionSuccess === false;
+                        
+                        if (statusValue === 'Pending' && !isPending) return false;
+                        if (statusValue === 'In Progress' && !isInProgress) return false;
+                        if (statusValue === 'Success' && !isSuccess) return false;
+                        if (statusValue === 'Failed' && !isFailed) return false;
+                    }
+                    
+                    // Frequency filter
+                    if (freqVal !== 'All') {
+                        const scheduledJob = job.scheduledJob || matchJobToScheduler(job.analyticName);
+                        if (!scheduledJob || scheduledJob.frequency !== freqVal) {
+                            return false;
+                        }
+                    }
+                    
+                    // Environment filter
+                    if (envVal !== 'All') {
+                        const jobEnvironment = job.environment || getTodayJobEnvironment(job.scheduledJob || matchJobToScheduler(job.analyticName));
+                        if (jobEnvironment !== envVal) {
+                            return false;
+                        }
+                    }
+                    
+                    return true;
+                });
+                
+                window.todayFilteredData = filtered;
+                renderTodayTable(filtered);
+            }
+        }
+        
         function renderTodayTable(data) {
             const tbody = document.getElementById('todayTableBody');
             
             if (data.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="9" class="no-results">No results found</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="8" class="no-results">No results found</td></tr>';
                 return;
             }
             
@@ -3401,6 +4803,15 @@ Option 4 - Node.js (if installed):
                 
                 // Get frequency from matched job
                 const frequency = matchedJob ? matchedJob.frequency || '-' : '-';
+                
+                // Get environment badge - clean and compact styling
+                const jobEnvironment = job.environment || getTodayJobEnvironment(matchedJob);
+                let environmentBadge = '<span class="badge badge-secondary" style="padding: 0.2rem 0.6rem; border-radius: 0.375rem; font-size: 0.7rem; font-weight: 600; line-height: 1.2;">Unknown</span>';
+                if (jobEnvironment === 'Canary') {
+                    environmentBadge = '<span class="badge badge-warning" style="padding: 0.2rem 0.6rem; border-radius: 0.375rem; background: #fef3c7; color: #92400e; font-weight: 600; font-size: 0.7rem; display: inline-flex; align-items: center; gap: 0.3rem; line-height: 1.2; white-space: nowrap;">🟡 Canary</span>';
+                } else if (jobEnvironment === 'Non-Canary') {
+                    environmentBadge = '<span class="badge badge-info" style="padding: 0.2rem 0.6rem; border-radius: 0.375rem; background: #dbeafe; color: #1e40af; font-weight: 600; font-size: 0.7rem; display: inline-flex; align-items: center; gap: 0.3rem; line-height: 1.2; white-space: nowrap;">🔵 Non-Canary</span>';
+                }
                 
                 if (matchedJob) {
                     const hourString = matchedJob.hour || '0';
@@ -3459,15 +4870,38 @@ Option 4 - Node.js (if installed):
                 const hasMismatch = bqValue > 0 && savedValue > 0 && bqValue !== savedValue;
                 const rowClass = hasMismatch ? 'data-mismatch' : '';
                 
+                // Check if this is a sales funnel scheduler and add validate button next to name
+                const salesFunnelSchedulers = ['SALES_FUNNEL_YESTERDAY', 'SALES_FUNNEL_LAST_THIRTY_DAYS', 'SALES_FUNNEL_PREVIOUS_MONTH'];
+                const isSalesFunnel = salesFunnelSchedulers.includes(job.analyticName);
+                // Combine analytic name with duration below
+                const analyticNameWithDuration = `<div style="display: flex; flex-direction: column; gap: 0.25rem;">
+                    <div style="display: flex; align-items: center; flex-wrap: wrap;">
+                        <span style="font-weight: 600; color: var(--gray-900);">${job.analyticName || ''}</span>
+                        ${isSalesFunnel ? `<button onclick="showSalesFunnelValidationModal('${job.analyticName}')" 
+                              style="margin-left: 0.5rem; padding: 0.1rem 0.4rem; background: var(--primary); color: white; border: none; border-radius: 0.25rem; cursor: pointer; font-size: 0.65rem; font-weight: 500;"
+                              title="Validate Sales Funnel Report">
+                          🔍
+                       </button>` : ''}
+                    </div>
+                    ${durationDisplay !== '-' ? `<div style="color: var(--gray-600); font-size: 0.75rem; font-weight: 500;">Duration: <span style="color: var(--gray-900);">${durationDisplay}</span></div>` : ''}
+                </div>`;
+                
+                // Combine start time and end time in a single column (without duration)
+                const executionTimeDisplay = startTime !== '-' || endTime !== '-'
+                    ? `<div style="display: flex; flex-direction: column; gap: 0.25rem; font-size: 0.875rem;">
+                        ${startTime !== '-' ? `<div style="color: var(--gray-700);"><strong>Start:</strong> <span style="font-family: monospace; color: var(--gray-900);">${startTime}</span></div>` : ''}
+                        ${endTime !== '-' ? `<div style="color: var(--gray-700);"><strong>End:</strong> <span style="font-family: monospace; color: var(--gray-900);">${endTime}</span></div>` : ''}
+                    </div>`
+                    : '-';
+                
                 return `
                     <tr class="${rowClass}" data-duration="${duration ? duration.totalSeconds : 0}">
-                        <td>${job.analyticName || ''}</td>
+                        <td>${analyticNameWithDuration}</td>
                         <td><span class="${statusClass}">${statusText}</span></td>
-                        <td>${frequency}</td>
+                        <td style="color: var(--gray-700); font-size: 0.875rem;">${frequency}</td>
+                        <td>${environmentBadge}</td>
                         <td>${timeSlotsDisplay}</td>
-                        <td>${startTime}</td>
-                        <td>${endTime}</td>
-                        <td>${durationDisplay}</td>
+                        <td>${executionTimeDisplay}</td>
                         <td>${bqData}</td>
                         <td>${savedData}</td>
                     </tr>
@@ -3508,7 +4942,7 @@ Option 4 - Node.js (if installed):
         
         function determineAttemptStatusByTime(scheduler) {
             // Get all runs for this scheduler on this date, sorted by execution start time
-            const runsOnDate = REPORTS_DATA.filter(s => 
+            const runsOnDate = FILTERED_REPORTS_DATA.filter(s => 
                 s.analyticName === scheduler.analyticName && 
                 s.analyticDate === scheduler.analyticDate
             ).sort((a, b) => parseInt(a.executionStartDate || 0) - parseInt(b.executionStartDate || 0));
@@ -3540,7 +4974,7 @@ Option 4 - Node.js (if installed):
         function initPatternAnalysis() {
             // Calculate durations for each scheduler
             schedulerDurations = {};
-            REPORTS_DATA.forEach(s => {
+            FILTERED_REPORTS_DATA.forEach(s => {
                 const duration = calculateDuration(s.executionStartDate, s.executionFinishDate);
                 if (duration && s.analyticName) {
                     if (!schedulerDurations[s.analyticName]) {
@@ -3551,7 +4985,7 @@ Option 4 - Node.js (if installed):
             });
             
             // Build pattern data with job matching and attempt detection
-            patternData = REPORTS_DATA.map(scheduler => {
+            patternData = FILTERED_REPORTS_DATA.map(scheduler => {
                 const matchedJob = matchJobToScheduler(scheduler.analyticName);
                 const attemptInfo = determineAttemptStatusByTime(scheduler);
                 return {
@@ -3564,14 +4998,14 @@ Option 4 - Node.js (if installed):
             });
             
             // Update stats
-            const totalSchedulers = new Set(REPORTS_DATA.map(s => s.analyticName)).size;
-            const totalExecutions = REPORTS_DATA.length;
-            const successfulExecutions = REPORTS_DATA.filter(s => getStatus(s) === 'success').length;
+            const totalSchedulers = new Set(FILTERED_REPORTS_DATA.map(s => s.analyticName)).size;
+            const totalExecutions = FILTERED_REPORTS_DATA.length;
+            const successfulExecutions = FILTERED_REPORTS_DATA.filter(s => getStatus(s) === 'success').length;
             const successRate = totalExecutions > 0 ? ((successfulExecutions / totalExecutions) * 100).toFixed(1) : 0;
             
             // Calculate peak hour
             const hourCounts = {};
-            REPORTS_DATA.forEach(s => {
+            FILTERED_REPORTS_DATA.forEach(s => {
                 if (s.executionStartDate) {
                     const hour = new Date(parseInt(s.executionStartDate)).getHours();
                     hourCounts[hour] = (hourCounts[hour] || 0) + 1;
@@ -3583,15 +5017,20 @@ Option 4 - Node.js (if installed):
             const peakHourFormatted = peakHour !== '--' ? `${peakHour.padStart(2, '0')}:00` : '--:--';
             const peakHourCount = peakHour !== '--' ? hourCounts[peakHour] : 0;
             
-            // Update DOM
-            document.getElementById('patternTotalSchedulers').textContent = totalSchedulers;
-            document.getElementById('patternSchedulersTrend').textContent = `Unique jobs`;
+            // Update DOM (with null checks)
+            const patternTotalSchedulers = document.getElementById('patternTotalSchedulers');
+            const patternSchedulersTrend = document.getElementById('patternSchedulersTrend');
+            const patternSuccessRate = document.getElementById('patternSuccessRate');
+            const patternSuccessTrend = document.getElementById('patternSuccessTrend');
+            const patternPeakHour = document.getElementById('patternPeakHour');
+            const patternPeakTrend = document.getElementById('patternPeakTrend');
             
-            document.getElementById('patternSuccessRate').textContent = `${successRate}%`;
-            document.getElementById('patternSuccessTrend').textContent = `${successfulExecutions}/${totalExecutions} passed`;
-            
-            document.getElementById('patternPeakHour').textContent = peakHourFormatted;
-            document.getElementById('patternPeakTrend').textContent = peakHour !== '--' ? `${peakHourCount} executions` : `No data`;
+            if (patternTotalSchedulers) patternTotalSchedulers.textContent = totalSchedulers;
+            if (patternSchedulersTrend) patternSchedulersTrend.textContent = `Unique jobs`;
+            if (patternSuccessRate) patternSuccessRate.textContent = `${successRate}%`;
+            if (patternSuccessTrend) patternSuccessTrend.textContent = `${successfulExecutions}/${totalExecutions} passed`;
+            if (patternPeakHour) patternPeakHour.textContent = peakHourFormatted;
+            if (patternPeakTrend) patternPeakTrend.textContent = peakHour !== '--' ? `${peakHourCount} executions` : `No data`;
             
             // Render visualizations
             renderDurationChart();
@@ -3628,7 +5067,10 @@ Option 4 - Node.js (if installed):
             });
             html += '</div>';
             
-            document.getElementById('durationChart').innerHTML = html;
+            const durationChart = document.getElementById('durationChart');
+            if (durationChart) {
+                durationChart.innerHTML = html;
+            }
         }
         
         function renderAttemptChart() {
@@ -3659,7 +5101,10 @@ Option 4 - Node.js (if installed):
             });
             html += '</div>';
             
-            document.getElementById('attemptChart').innerHTML = html;
+            const attemptChart = document.getElementById('attemptChart');
+            if (attemptChart) {
+                attemptChart.innerHTML = html;
+            }
         }
         
         function renderSuccessRateChart() {
@@ -3824,7 +5269,7 @@ Option 4 - Node.js (if installed):
         
         function populateTimelineDates() {
             const select = document.getElementById('timelineDate');
-            const dates = [...new Set(REPORTS_DATA.map(s => s.analyticDate))].sort((a, b) => parseInt(b) - parseInt(a));
+            const dates = [...new Set(FILTERED_REPORTS_DATA.map(s => s.analyticDate))].sort((a, b) => parseInt(b) - parseInt(a));
             select.innerHTML = '<option value="">Select a date...</option>' + 
                 dates.map(d => `<option value="${d}">${formatDate(d)}</option>`).join('');
         }
@@ -4002,8 +5447,8 @@ Option 4 - Node.js (if installed):
                         break;
                     case 'successSlot':
                         // Sort by success time
-                        const successA = REPORTS_DATA.find(s => s.analyticName === a.analyticName && s.analyticDate === a.analyticDate && getStatus(s) === 'success');
-                        const successB = REPORTS_DATA.find(s => s.analyticName === b.analyticName && s.analyticDate === b.analyticDate && getStatus(s) === 'success');
+                        const successA = FILTERED_REPORTS_DATA.find(s => s.analyticName === a.analyticName && s.analyticDate === a.analyticDate && getStatus(s) === 'success');
+                        const successB = FILTERED_REPORTS_DATA.find(s => s.analyticName === b.analyticName && s.analyticDate === b.analyticDate && getStatus(s) === 'success');
                         valA = successA && successA.executionStartDate ? parseInt(successA.executionStartDate) : 0;
                         valB = successB && successB.executionStartDate ? parseInt(successB.executionStartDate) : 0;
                         break;
@@ -4041,6 +5486,7 @@ Option 4 - Node.js (if installed):
         
         function renderPatternMatchTable(data = patternData) {
             const tbody = document.getElementById('patternMatchBody');
+            if (!tbody) return; // Element doesn't exist, skip
             
             if (data.length === 0) {
                 tbody.innerHTML = '<tr><td colspan="7" class="no-results">No data to display</td></tr>';
@@ -4070,7 +5516,7 @@ Option 4 - Node.js (if installed):
                 
                 // Get success time slot - find when this scheduler succeeded for this date
                 let successTimeSlot = '<span style="color: var(--gray-400);">—</span>';
-                const successRun = REPORTS_DATA.find(s => 
+                const successRun = FILTERED_REPORTS_DATA.find(s => 
                     s.analyticName === scheduler.analyticName && 
                     s.analyticDate === scheduler.analyticDate && 
                     getStatus(s) === 'success'
@@ -4148,8 +5594,13 @@ Option 4 - Node.js (if installed):
         
         // Filter pattern match table with both search and date
         function filterPatternTable() {
-            const searchTerm = document.getElementById('patternSearchInput').value.toLowerCase();
-            const selectedDate = document.getElementById('patternDateFilter').value;
+            const patternSearchInput = document.getElementById('patternSearchInput');
+            const patternDateFilter = document.getElementById('patternDateFilter');
+            
+            if (!patternSearchInput || !patternDateFilter) return; // Elements don't exist, skip
+            
+            const searchTerm = patternSearchInput.value.toLowerCase();
+            const selectedDate = patternDateFilter.value;
             
             let filtered = patternData;
             
@@ -4175,8 +5626,13 @@ Option 4 - Node.js (if installed):
         
         // Populate date filter for pattern analysis
         function populatePatternDateFilter() {
-            const dates = [...new Set(REPORTS_DATA.map(s => s.analyticDate))].sort((a, b) => parseInt(b) - parseInt(a));
             const select = document.getElementById('patternDateFilter');
+            if (!select) return; // Element doesn't exist, skip
+            
+            // Clear existing options except "All Dates"
+            select.innerHTML = '<option value="">All Dates</option>';
+            
+            const dates = [...new Set(FILTERED_REPORTS_DATA.map(s => s.analyticDate))].sort((a, b) => parseInt(b) - parseInt(a));
             dates.forEach(date => {
                 const opt = document.createElement('option');
                 opt.value = date;
@@ -4191,6 +5647,8 @@ Option 4 - Node.js (if installed):
             const refreshBtn = document.getElementById('refreshDataBtn');
             if (refreshBtn) {
                 const isTodayReport = document.getElementById('today-report-section')?.classList.contains('active');
+                const isReportsOverview = document.getElementById('reports-overview-section')?.classList.contains('active');
+                
                 if (isTodayReport) {
                     refreshBtn.style.display = 'inline-flex';
                     const refreshText = document.getElementById('refreshText');
@@ -4204,6 +5662,15 @@ Option 4 - Node.js (if installed):
                     }
                     // Load last updated time for Today's Report page
                     loadLastUpdatedTime(true);
+                } else if (isReportsOverview) {
+                    // Load last updated time for Reports Overview page
+                    loadPastDataLastUpdatedTime();
+                    refreshBtn.style.display = 'none';
+                    // Hide refresh button container on other pages
+                    const refreshContainer = document.getElementById('refreshButtonContainer');
+                    if (refreshContainer) {
+                        refreshContainer.style.display = 'none';
+                    }
                 } else {
                     refreshBtn.style.display = 'none';
                     // Hide refresh button container on other pages
@@ -4217,7 +5684,7 @@ Option 4 - Node.js (if installed):
             // Jobs
             updateJobsStats();
             renderJobsTable();
-            renderJobsHeatmap();
+            renderJobsHeatmap(currentJobsHeatmapTryFilter, currentJobsHeatmapStatusFilter, currentJobsHeatmapEnvironmentFilter);
             
             // Add search event listener for pattern analysis
             const patternSearch = document.getElementById('patternSearchInput');
@@ -4228,7 +5695,8 @@ Option 4 - Node.js (if installed):
             // Today's Report
             initTodayReport();
             
-            // Reports
+            // Reports - Initialize filtered data first
+            FILTERED_REPORTS_DATA = getFilteredReportsData();
             displayReportsDateRange();
             renderDailyBreakdownChart();
             
@@ -4278,6 +5746,8 @@ Option 4 - Node.js (if installed):
             window.onclick = (event) => {
                 const modal = document.getElementById('curlModal');
                 if (event.target === modal) closeModal();
+                const salesFunnelModal = document.getElementById('salesFunnelValidationModal');
+                if (event.target === salesFunnelModal) closeSalesFunnelValidationModal();
             };
         });
     </script>
