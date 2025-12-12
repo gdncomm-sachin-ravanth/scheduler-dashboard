@@ -21,6 +21,11 @@ class DashboardHandler(BaseHTTPRequestHandler):
         parsed_path = urlparse(self.path)
         path = parsed_path.path
         
+        # Handle API endpoints
+        if path == '/api/get-last-updated':
+            self.handle_get_last_updated()
+            return
+        
         # API endpoint to refresh data
         if path == '/api/refresh':
             self.handle_refresh()
@@ -84,6 +89,9 @@ class DashboardHandler(BaseHTTPRequestHandler):
             return
         elif path == '/api/fetch-past-data':
             self.handle_fetch_past_data()
+            return
+        elif path == '/api/set-last-updated':
+            self.handle_set_last_updated()
             return
         else:
             self.send_error(404, "Not found")
@@ -487,6 +495,234 @@ class DashboardHandler(BaseHTTPRequestHandler):
             self.end_headers()
             self.wfile.write(json.dumps(response).encode('utf-8'))
             print(f"Error in handle_fetch_past_data: {error_traceback}")
+    
+    def get_last_updated_cache_file(self):
+        """Get the cache file path for last updated timestamps."""
+        script_dir = Path(__file__).parent
+        cache_dir = script_dir / ".validation_cache"
+        cache_dir.mkdir(exist_ok=True)
+        return cache_dir / "last_updated.json"
+    
+    def load_last_updated_cache(self, cache_type):
+        """Load last updated timestamp from cache file with expiry check (1 day)."""
+        try:
+            cache_file = self.get_last_updated_cache_file()
+            if not cache_file.exists():
+                return None
+            
+            with open(cache_file, 'r') as f:
+                cache_list = json.load(f)
+            
+            # Ensure cache_list is a list
+            if not isinstance(cache_list, list):
+                return None
+            
+            # Find entry for the requested cache_type
+            entry = None
+            for item in cache_list:
+                if item.get('type') == cache_type:
+                    entry = item
+                    break
+            
+            if not entry:
+                return None
+            
+            fetched_at = entry.get('fetched_at', 0)
+            if not fetched_at:
+                return None
+            
+            # Check if cache is expired (older than 1 day = 86400000 milliseconds)
+            current_time = int(time.time() * 1000)
+            age_ms = current_time - fetched_at
+            one_day_ms = 24 * 60 * 60 * 1000  # 86400000 milliseconds
+            
+            if age_ms > one_day_ms:
+                # Cache expired, remove entry from list
+                cache_list = [item for item in cache_list if item.get('type') != cache_type]
+                # Save updated cache (remove expired entry)
+                if cache_list:
+                    with open(cache_file, 'w') as f:
+                        json.dump(cache_list, f, indent=2)
+                else:
+                    # If no entries left, delete file
+                    cache_file.unlink()
+                return None
+            
+            return {
+                'fetched_at': fetched_at,
+                'timestamp': entry.get('timestamp')
+            }
+        except Exception as e:
+            print(f"Warning: Failed to load last updated cache for {cache_type}: {e}")
+            return None
+    
+    def save_last_updated_cache(self, cache_type, timestamp):
+        """Save last updated timestamp to cache file."""
+        try:
+            cache_file = self.get_last_updated_cache_file()
+            
+            # Load existing cache
+            cache_list = []
+            if cache_file.exists():
+                try:
+                    with open(cache_file, 'r') as f:
+                        existing_data = json.load(f)
+                        if isinstance(existing_data, list):
+                            cache_list = existing_data
+                        elif isinstance(existing_data, dict):
+                            # Migrate from old dict format to list format
+                            cache_list = [{'type': k, **v} for k, v in existing_data.items()]
+                except Exception:
+                    cache_list = []
+            
+            # Find and update existing entry or add new one
+            found = False
+            for item in cache_list:
+                if item.get('type') == cache_type:
+                    item['fetched_at'] = int(time.time() * 1000)
+                    item['timestamp'] = timestamp
+                    found = True
+                    break
+            
+            if not found:
+                # Add new entry
+                cache_list.append({
+                    'type': cache_type,
+                    'fetched_at': int(time.time() * 1000),  # Timestamp in milliseconds
+                    'timestamp': timestamp  # ISO string timestamp
+                })
+            
+            # Save updated cache
+            with open(cache_file, 'w') as f:
+                json.dump(cache_list, f, indent=2)
+        except Exception as e:
+            print(f"Warning: Failed to save last updated cache for {cache_type}: {e}")
+    
+    def handle_get_last_updated(self):
+        """Handle GET request for last updated timestamp."""
+        try:
+            # Get cache_type from query string
+            parsed_url = urlparse(self.path)
+            query_params = parse_qs(parsed_url.query)
+            cache_type = query_params.get('type', ['pastData'])[0]  # Default to 'pastData'
+            
+            if cache_type not in ['pastData', 'todayData']:
+                response = {
+                    'success': False,
+                    'error': 'Invalid cache type. Must be "pastData" or "todayData"'
+                }
+                self.send_response(400)
+                self.send_header('Content-Type', 'application/json')
+                self.send_header('Access-Control-Allow-Origin', '*')
+                self.end_headers()
+                self.wfile.write(json.dumps(response).encode('utf-8'))
+                return
+            
+            cache_result = self.load_last_updated_cache(cache_type)
+            
+            if cache_result:
+                response = {
+                    'success': True,
+                    'fetched_at': cache_result['fetched_at'],
+                    'timestamp': cache_result['timestamp']
+                }
+            else:
+                response = {
+                    'success': True,
+                    'fetched_at': None,
+                    'timestamp': None
+                }
+            
+            self.send_response(200)
+            self.send_header('Content-Type', 'application/json')
+            self.send_header('Access-Control-Allow-Origin', '*')
+            self.end_headers()
+            self.wfile.write(json.dumps(response).encode('utf-8'))
+            
+        except Exception as e:
+            import traceback
+            error_traceback = traceback.format_exc()
+            response = {
+                'success': False,
+                'error': f'Server Error: {str(e)}'
+            }
+            self.send_response(500)
+            self.send_header('Content-Type', 'application/json')
+            self.send_header('Access-Control-Allow-Origin', '*')
+            self.end_headers()
+            self.wfile.write(json.dumps(response).encode('utf-8'))
+            print(f"Error in handle_get_last_updated: {error_traceback}")
+    
+    def handle_set_last_updated(self):
+        """Handle POST request to set last updated timestamp."""
+        try:
+            # Read request body
+            content_length = int(self.headers.get('Content-Length', 0))
+            body = self.rfile.read(content_length) if content_length > 0 else b'{}'
+            request_data = json.loads(body.decode('utf-8'))
+            cache_type = request_data.get('type', 'pastData')
+            timestamp = request_data.get('timestamp')
+            
+            if cache_type not in ['pastData', 'todayData']:
+                response = {
+                    'success': False,
+                    'error': 'Invalid cache type. Must be "pastData" or "todayData"'
+                }
+                self.send_response(400)
+                self.send_header('Content-Type', 'application/json')
+                self.send_header('Access-Control-Allow-Origin', '*')
+                self.end_headers()
+                self.wfile.write(json.dumps(response).encode('utf-8'))
+                return
+            
+            if not timestamp:
+                response = {
+                    'success': False,
+                    'error': 'Timestamp is required'
+                }
+                self.send_response(400)
+                self.send_header('Content-Type', 'application/json')
+                self.send_header('Access-Control-Allow-Origin', '*')
+                self.end_headers()
+                self.wfile.write(json.dumps(response).encode('utf-8'))
+                return
+            
+            # Save to cache
+            self.save_last_updated_cache(cache_type, timestamp)
+            
+            response = {
+                'success': True,
+                'message': f'Last updated timestamp saved for {cache_type}'
+            }
+            self.send_response(200)
+            self.send_header('Content-Type', 'application/json')
+            self.send_header('Access-Control-Allow-Origin', '*')
+            self.end_headers()
+            self.wfile.write(json.dumps(response).encode('utf-8'))
+            
+        except json.JSONDecodeError as e:
+            response = {
+                'success': False,
+                'error': f'Invalid JSON: {str(e)}'
+            }
+            self.send_response(400)
+            self.send_header('Content-Type', 'application/json')
+            self.send_header('Access-Control-Allow-Origin', '*')
+            self.end_headers()
+            self.wfile.write(json.dumps(response).encode('utf-8'))
+        except Exception as e:
+            import traceback
+            error_traceback = traceback.format_exc()
+            response = {
+                'success': False,
+                'error': f'Server Error: {str(e)}'
+            }
+            self.send_response(500)
+            self.send_header('Content-Type', 'application/json')
+            self.send_header('Access-Control-Allow-Origin', '*')
+            self.end_headers()
+            self.wfile.write(json.dumps(response).encode('utf-8'))
+            print(f"Error in handle_set_last_updated: {error_traceback}")
     
     def log_message(self, format, *args):
         """Override to customize log format."""

@@ -2126,7 +2126,7 @@ Option 4 - Node.js (if installed):
         }
         
         // Function to update last updated time for past data
-        function updatePastDataLastUpdatedTime() {
+        async function updatePastDataLastUpdatedTime() {
             const lastUpdatedEl = document.getElementById('pastDataLastUpdatedTime');
             if (!lastUpdatedEl) return;
             
@@ -2145,41 +2145,61 @@ Option 4 - Node.js (if installed):
             lastUpdatedEl.textContent = `Last updated: ${dateStr} ${timeStr}`;
             lastUpdatedEl.style.display = 'inline';
             
-            // Store in localStorage for persistence
-            localStorage.setItem('pastDataLastUpdated', now.toISOString());
+            // Store in validation cache (server-side) with 1-day expiry
+            try {
+                await fetch('/api/set-last-updated', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        type: 'pastData',
+                        timestamp: now.toISOString()
+                    })
+                });
+            } catch (error) {
+                console.error('Failed to save past data last updated time:', error);
+            }
         }
         
         // Function to load and display last updated time for past data
-        function loadPastDataLastUpdatedTime() {
+        async function loadPastDataLastUpdatedTime() {
             const lastUpdatedEl = document.getElementById('pastDataLastUpdatedTime');
             if (!lastUpdatedEl) return;
             
-            const lastUpdatedStr = localStorage.getItem('pastDataLastUpdated');
-            
-            if (lastUpdatedStr) {
-                const lastUpdated = new Date(lastUpdatedStr);
-                const timeStr = lastUpdated.toLocaleTimeString('en-US', {
-                    hour: '2-digit',
-                    minute: '2-digit',
-                    second: '2-digit',
-                    hour12: false
-                });
-                const dateStr = lastUpdated.toLocaleDateString('en-US', {
-                    month: 'short',
-                    day: 'numeric'
-                });
+            try {
+                const response = await fetch('/api/get-last-updated?type=pastData');
+                const result = await response.json();
                 
-                lastUpdatedEl.textContent = `Last updated: ${dateStr} ${timeStr}`;
-                lastUpdatedEl.style.display = 'inline';
-            } else {
-                // Show "-" when no last updated time exists
+                if (result.success && result.timestamp) {
+                    const lastUpdated = new Date(result.timestamp);
+                    const timeStr = lastUpdated.toLocaleTimeString('en-US', {
+                        hour: '2-digit',
+                        minute: '2-digit',
+                        second: '2-digit',
+                        hour12: false
+                    });
+                    const dateStr = lastUpdated.toLocaleDateString('en-US', {
+                        month: 'short',
+                        day: 'numeric'
+                    });
+                    
+                    lastUpdatedEl.textContent = `Last updated: ${dateStr} ${timeStr}`;
+                    lastUpdatedEl.style.display = 'inline';
+                } else {
+                    // Show "-" when no last updated time exists or cache expired
+                    lastUpdatedEl.textContent = 'Last updated: -';
+                    lastUpdatedEl.style.display = 'inline';
+                }
+            } catch (error) {
+                console.error('Failed to load past data last updated time:', error);
                 lastUpdatedEl.textContent = 'Last updated: -';
                 lastUpdatedEl.style.display = 'inline';
             }
         }
         
         // Function to update last updated time display
-        function updateLastUpdatedTime(isTodayReport = false) {
+        async function updateLastUpdatedTime(isTodayReport = false) {
             const lastUpdatedEl = document.getElementById('lastUpdatedTime');
             if (!lastUpdatedEl) return;
             
@@ -2200,15 +2220,27 @@ Option 4 - Node.js (if installed):
             // Show the element if on Today's Report page
             if (isTodayReport) {
                 lastUpdatedEl.style.display = 'inline';
+                
+                // Store in validation cache (server-side) with 1-day expiry
+                try {
+                    await fetch('/api/set-last-updated', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            type: 'todayData',
+                            timestamp: now.toISOString()
+                        })
+                    });
+                } catch (error) {
+                    console.error('Failed to save today data last updated time:', error);
+                }
             }
-            
-            // Store in localStorage for persistence
-            const storageKey = isTodayReport ? 'todayDataLastUpdated' : 'dataLastUpdated';
-            localStorage.setItem(storageKey, now.toISOString());
         }
         
         // Function to load and display last updated time
-        function loadLastUpdatedTime(isTodayReport = false) {
+        async function loadLastUpdatedTime(isTodayReport = false) {
             const lastUpdatedEl = document.getElementById('lastUpdatedTime');
             if (!lastUpdatedEl || !isTodayReport) {
                 if (lastUpdatedEl) {
@@ -2217,26 +2249,40 @@ Option 4 - Node.js (if installed):
                 return;
             }
             
-            const storageKey = 'todayDataLastUpdated';
-            const lastUpdatedStr = localStorage.getItem(storageKey);
-            
-            if (lastUpdatedStr) {
-                const lastUpdated = new Date(lastUpdatedStr);
-                const timeStr = lastUpdated.toLocaleTimeString('en-US', {
-                    hour: '2-digit',
-                    minute: '2-digit',
-                    second: '2-digit',
-                    hour12: false
-                });
-                const dateStr = lastUpdated.toLocaleDateString('en-US', {
-                    month: 'short',
-                    day: 'numeric'
-                });
+            try {
+                const response = await fetch('/api/get-last-updated?type=todayData');
+                const result = await response.json();
                 
-                lastUpdatedEl.textContent = `Last updated: ${dateStr} ${timeStr}`;
-                lastUpdatedEl.style.display = 'inline';
-            } else {
-                // Show "-" when no last updated time exists
+                if (result.success && result.timestamp) {
+                    const lastUpdated = new Date(result.timestamp);
+                    const timeStr = lastUpdated.toLocaleTimeString('en-US', {
+                        hour: '2-digit',
+                        minute: '2-digit',
+                        second: '2-digit',
+                        hour12: false
+                    });
+                    const dateStr = lastUpdated.toLocaleDateString('en-US', {
+                        month: 'short',
+                        day: 'numeric'
+                    });
+                    
+                    lastUpdatedEl.textContent = `Last updated: ${dateStr} ${timeStr}`;
+                    lastUpdatedEl.style.display = 'inline';
+                } else {
+                    // Show "-" when no last updated time exists or cache expired
+                    lastUpdatedEl.textContent = 'Last updated: -';
+                    lastUpdatedEl.style.display = 'inline';
+                    
+                    // Prompt user to refresh data
+                    setTimeout(() => {
+                        const shouldRefresh = confirm('Today\'s data has not been refreshed yet. Would you like to refresh it now?');
+                        if (shouldRefresh) {
+                            refreshData();
+                        }
+                    }, 500); // Small delay to let the page finish loading
+                }
+            } catch (error) {
+                console.error('Failed to load today data last updated time:', error);
                 lastUpdatedEl.textContent = 'Last updated: -';
                 lastUpdatedEl.style.display = 'inline';
                 
@@ -2246,7 +2292,7 @@ Option 4 - Node.js (if installed):
                     if (shouldRefresh) {
                         refreshData();
                     }
-                }, 500); // Small delay to let the page finish loading
+                }, 500);
             }
         }
         
