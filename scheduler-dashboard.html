@@ -288,6 +288,59 @@
             border-color: var(--gray-300);
         }
         
+        /* Search box with clear button */
+        .search-wrapper {
+            position: relative;
+            width: 100%;
+        }
+        
+        .search-wrapper input {
+            padding-right: 2.5rem;
+        }
+        
+        .search-clear-btn {
+            position: absolute;
+            right: 0.5rem;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 0.25rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--gray-400);
+            transition: color 0.2s, opacity 0.2s;
+            font-size: 1.25rem;
+            line-height: 1;
+            width: 1.5rem;
+            height: 1.5rem;
+            opacity: 0;
+            pointer-events: none;
+            border-radius: 50%;
+        }
+        
+        .search-clear-btn.visible {
+            opacity: 1;
+            pointer-events: auto;
+        }
+        
+        .search-wrapper:has(input:not(:placeholder-shown)) .search-clear-btn,
+        .search-wrapper input:focus ~ .search-clear-btn {
+            opacity: 1;
+            pointer-events: auto;
+        }
+        
+        .search-clear-btn:hover {
+            color: var(--gray-600);
+        }
+        
+        .search-clear-btn:active {
+            color: var(--gray-800);
+        }
+        
+        
         /* Buttons */
         .btn {
             padding: 0.5rem 1rem;
@@ -1472,7 +1525,10 @@
                                 <span class="filter-icon">🔍</span>
                                 <span>Search</span>
                             </label>
-                            <input type="text" id="jobSearch" placeholder="Search by job name...">
+                            <div class="search-wrapper">
+                                <input type="text" id="jobSearch" placeholder="Search by job name...">
+                                <button class="search-clear-btn" onclick="clearJobSearch()" title="Clear search">×</button>
+                            </div>
                         </div>
                         <div class="filter-group">
                             <label>
@@ -1541,7 +1597,6 @@
                                         <th class="sortable" data-sort="frequency">Frequency / Day Info</th>
                                         <th class="sortable" data-sort="status">Status</th>
                                         <th class="sortable" data-sort="environment">Environment</th>
-                                        <th>Tab</th>
                                         <th>Command</th>
                                     </tr>
                                 </thead>
@@ -1610,7 +1665,10 @@
                         <div class="filters" style="padding: 1rem;">
                             <div class="filter-group">
                                 <label>🔍 Search</label>
-                                <input type="text" id="todaySearchInput" placeholder="Search analytic name...">
+                                <div class="search-wrapper">
+                                    <input type="text" id="todaySearchInput" placeholder="Search analytic name...">
+                                    <button class="search-clear-btn" onclick="clearTodaySearch()" title="Clear search">×</button>
+                                </div>
                             </div>
                             <div class="filter-group">
                                 <label>📊 Status</label>
@@ -1639,6 +1697,12 @@
                                     <option value="Non-Canary">🔵 Non-Canary</option>
                                 </select>
                             </div>
+                            <div class="filter-group">
+                                <label>📁 Tab</label>
+                                <select id="todayTabFilter">
+                                    <option value="All">All</option>
+                                </select>
+                            </div>
                         </div>
                         <div class="table-wrapper">
                             <table id="todaySchedulerTable">
@@ -1646,12 +1710,12 @@
                                     <tr>
                                         <th class="sortable" data-key="analyticName">Analytic Name</th>
                                         <th class="sortable" data-key="executionSuccess">Status</th>
-                                        <th>Frequency</th>
-                                        <th>Environment</th>
                                         <th>Time Slots</th>
                                         <th class="sortable" data-key="executionStartDate">Execution Time</th>
+                                        <th class="sortable" data-key="duration">Duration</th>
                                         <th class="sortable" data-key="bqTotalData">BQ Data Fetch</th>
                                         <th class="sortable" data-key="analyticTotalData">Saved Data</th>
+                                        <th>Env /<br>Frequency</th>
                                     </tr>
                                 </thead>
                                 <tbody id="todayTableBody">
@@ -3335,6 +3399,25 @@ Option 4 - Node.js (if installed):
             document.getElementById('nonCanaryJobs').textContent = nonCanaryJobs;
         }
         
+        function clearJobSearch() {
+            const searchInput = document.getElementById('jobSearch');
+            searchInput.value = '';
+            updateSearchClearButton('jobSearch');
+            renderJobsTable();
+        }
+        
+        function updateSearchClearButton(inputId) {
+            const input = document.getElementById(inputId);
+            const clearBtn = input.parentElement.querySelector('.search-clear-btn');
+            if (clearBtn) {
+                if (input.value.trim() !== '') {
+                    clearBtn.classList.add('visible');
+                } else {
+                    clearBtn.classList.remove('visible');
+                }
+            }
+        }
+        
         function renderJobsTable() {
             const search = document.getElementById('jobSearch').value.toLowerCase();
             const frequency = document.getElementById('frequencyFilter').value;
@@ -3406,7 +3489,7 @@ Option 4 - Node.js (if installed):
             const tbody = document.getElementById('jobsTableBody');
             
             if (filteredJobs.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="7" class="no-results">No jobs found</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="6" class="no-results">No jobs found</td></tr>';
                 // Count is already updated above, so just return
                 return;
             }
@@ -3436,11 +3519,19 @@ Option 4 - Node.js (if installed):
                 // Escape quotes in job name for onclick
                 const escapedJobName = job.name.replace(/'/g, "\\'");
                 
-                // Get tab display
-                const tabDisplay = job.tab ? `<span style="font-weight: 600; color: var(--gray-700);">${job.tab}</span>` : '<span style="color: var(--gray-400);">-</span>';
+                // Get tab display for analyticName
+                const tabDisplay = job.tab ? `<div style="color: var(--gray-600); font-size: 0.75rem; font-weight: 500;">Tab: <span style="color: var(--gray-900);">${job.tab}</span></div>` : '';
                 
-                // Combine frequency and dayInfo
-                const frequencyDayInfo = job.dayInfo ? `${job.frequency} (${job.dayInfo})` : job.frequency;
+                // Get tab display for Tab column
+                const tabColumnDisplay = job.tab ? `<span style="font-weight: 600; color: var(--gray-700);">${job.tab}</span>` : '<span style="color: var(--gray-400);">-</span>';
+                
+                // Combine frequency and dayInfo - display dayInfo on next line
+                const frequencyDayInfo = job.dayInfo ? 
+                    `<div style="display: flex; flex-direction: column; gap: 0.25rem;">
+                        <div>${job.frequency}</div>
+                        <div style="color: var(--gray-600); font-size: 0.75rem;">${job.dayInfo}</div>
+                    </div>` : 
+                    job.frequency;
                 
                 // Make analyticName clickable - show BQ Details modal if available, otherwise show curl modal
                 const hasBqDetails = job.bqDetails && job.bqDetails.source;
@@ -3454,14 +3545,19 @@ Option 4 - Node.js (if installed):
                     'clickable-analytic-name-bq' : 
                     'clickable-analytic-name';
                 
+                // Combine analyticName with tab below
+                const analyticNameWithTab = `<div style="display: flex; flex-direction: column; gap: 0.25rem;">
+                    <strong class="${analyticNameClass}" title="${analyticNameTitle}" onclick="${analyticNameClickHandler}">${job.analyticName}</strong>
+                    ${tabDisplay}
+                </div>`;
+                
                 return `
                     <tr>
-                        <td><strong class="${analyticNameClass}" title="${analyticNameTitle}" onclick="${analyticNameClickHandler}">${job.analyticName}</strong></td>
+                        <td>${analyticNameWithTab}</td>
                         <td>${timeDisplay}</td>
                         <td>${frequencyDayInfo}</td>
                         <td>${statusBadge}</td>
                         <td>${environmentBadge}</td>
-                        <td>${tabDisplay}</td>
                         <td>
                             <button class="action-btn-icon" onclick="showCurlModal('${escapedJobName}')" title="View Details">
                                 👁️
@@ -4974,6 +5070,31 @@ Option 4 - Node.js (if installed):
         }
         
         function initTodayReport() {
+            // Populate Tab filter dropdown
+            const todayTabFilter = document.getElementById('todayTabFilter');
+            if (todayTabFilter) {
+                const uniqueTabs = [...new Set(JOBS_DATA.map(job => job.tab).filter(tab => tab !== null && tab !== undefined))].sort();
+                
+                // Clear existing options except "All"
+                todayTabFilter.innerHTML = '<option value="All">All</option>';
+                
+                // Add unique tabs
+                uniqueTabs.forEach(tab => {
+                    const option = document.createElement('option');
+                    option.value = tab;
+                    option.textContent = tab;
+                    todayTabFilter.appendChild(option);
+                });
+                
+                // Add "None" option if there are jobs without tabs
+                if (JOBS_DATA.some(job => !job.tab)) {
+                    const noneOption = document.createElement('option');
+                    noneOption.value = 'None';
+                    noneOption.textContent = 'None';
+                    todayTabFilter.appendChild(noneOption);
+                }
+            }
+            
             // Get jobs scheduled for today with their execution data
             const todayScheduledData = getTodayScheduledJobs();
             
@@ -5049,12 +5170,39 @@ Option 4 - Node.js (if installed):
             window.todayScheduledData = todayScheduledData;
             window.todayFilteredData = todayScheduledData; // Store current filtered data for sorting
             
+            // Function to clear today's search (make it globally accessible)
+            window.clearTodaySearch = function() {
+                const searchInput = document.getElementById('todaySearchInput');
+                if (searchInput) {
+                    searchInput.value = '';
+                    updateTodaySearchClearButton();
+                    if (typeof applyTodayFilters === 'function') {
+                        applyTodayFilters();
+                    }
+                }
+            };
+            
+            function updateTodaySearchClearButton() {
+                const input = document.getElementById('todaySearchInput');
+                if (input) {
+                    const clearBtn = input.parentElement.querySelector('.search-clear-btn');
+                    if (clearBtn) {
+                        if (input.value.trim() !== '') {
+                            clearBtn.classList.add('visible');
+                        } else {
+                            clearBtn.classList.remove('visible');
+                        }
+                    }
+                }
+            }
+            
             // Function to apply all filters
             function applyTodayFilters() {
                 const searchVal = document.getElementById('todaySearchInput').value.toLowerCase().trim();
                 const statusFilter = document.getElementById('todayStatusFilter').value;
                 const frequencyFilter = document.getElementById('todayFrequencyFilter').value;
                 const environmentFilter = document.getElementById('todayEnvironmentFilter').value;
+                const tabFilter = document.getElementById('todayTabFilter') ? document.getElementById('todayTabFilter').value : 'All';
                 
                 let filtered = todayScheduledData.filter(job => {
                     // Search filter
@@ -5090,6 +5238,14 @@ Option 4 - Node.js (if installed):
                         }
                     }
                     
+                    // Tab filter
+                    if (tabFilter !== 'All') {
+                        const scheduledJob = job.scheduledJob || matchJobToScheduler(job.analyticName);
+                        const jobTab = scheduledJob ? scheduledJob.tab : null;
+                        if (tabFilter === 'None' && jobTab) return false;
+                        if (tabFilter !== 'None' && jobTab !== tabFilter) return false;
+                    }
+                    
                     return true;
                 });
                 
@@ -5102,10 +5258,17 @@ Option 4 - Node.js (if installed):
             const statusFilter = document.getElementById('todayStatusFilter');
             const frequencyFilter = document.getElementById('todayFrequencyFilter');
             const environmentFilter = document.getElementById('todayEnvironmentFilter');
+            const tabFilter = document.getElementById('todayTabFilter');
             
-            searchInput.oninput = applyTodayFilters;
+            searchInput.oninput = function() {
+                updateTodaySearchClearButton();
+                applyTodayFilters();
+            };
             frequencyFilter.onchange = applyTodayFilters;
             environmentFilter.onchange = applyTodayFilters;
+            if (tabFilter) {
+                tabFilter.onchange = applyTodayFilters;
+            }
             
             // Update card active state when status filter changes manually
             statusFilter.onchange = function() {
@@ -5295,6 +5458,9 @@ Option 4 - Node.js (if installed):
                 // Get frequency from matched job
                 const frequency = matchedJob ? matchedJob.frequency || '-' : '-';
                 
+                // Get tab from matched job
+                const tab = matchedJob ? (matchedJob.tab || '-') : '-';
+                
                 // Get environment badge - clean and compact styling
                 const jobEnvironment = job.environment || getTodayJobEnvironment(matchedJob);
                 let environmentBadge = '<span class="badge badge-secondary" style="padding: 0.2rem 0.6rem; border-radius: 0.375rem; font-size: 0.7rem; font-weight: 600; line-height: 1.2;">Unknown</span>';
@@ -5364,8 +5530,9 @@ Option 4 - Node.js (if installed):
                 // Check if this is a sales funnel scheduler and add validate button next to name
                 const salesFunnelSchedulers = ['SALES_FUNNEL_YESTERDAY', 'SALES_FUNNEL_LAST_THIRTY_DAYS', 'SALES_FUNNEL_PREVIOUS_MONTH'];
                 const isSalesFunnel = salesFunnelSchedulers.includes(job.analyticName);
-                // Combine analytic name with duration below
-                const analyticNameWithDuration = `<div style="display: flex; flex-direction: column; gap: 0.25rem;">
+                // Combine analytic name with tab (duration removed, will be in separate column)
+                const tabDisplay = tab && tab !== '-' ? `<div style="color: var(--gray-600); font-size: 0.75rem; font-weight: 500;">Tab: <span style="color: var(--gray-900);">${tab}</span></div>` : '';
+                const analyticNameWithTab = `<div style="display: flex; flex-direction: column; gap: 0.25rem;">
                     <div style="display: flex; align-items: center; flex-wrap: wrap;">
                         <span style="font-weight: 600; color: var(--gray-900);">${job.analyticName || ''}</span>
                         ${isSalesFunnel ? `<button onclick="showSalesFunnelValidationModal('${job.analyticName}')" 
@@ -5374,7 +5541,7 @@ Option 4 - Node.js (if installed):
                           🔍
                        </button>` : ''}
                     </div>
-                    ${durationDisplay !== '-' ? `<div style="color: var(--gray-600); font-size: 0.75rem; font-weight: 500;">Duration: <span style="color: var(--gray-900);">${durationDisplay}</span></div>` : ''}
+                    ${tabDisplay}
                 </div>`;
                 
                 // Combine start time and end time in a single column (without duration)
@@ -5385,16 +5552,22 @@ Option 4 - Node.js (if installed):
                     </div>`
                     : '-';
                 
+                // Combine Environment and Frequency in a single column
+                const environmentFrequencyDisplay = `<div style="display: flex; flex-direction: column; gap: 0.25rem;">
+                    ${environmentBadge}
+                    <div style="color: var(--gray-700); font-size: 0.875rem;">${frequency}</div>
+                </div>`;
+                
                 return `
                     <tr class="${rowClass}" data-duration="${duration ? duration.totalSeconds : 0}">
-                        <td>${analyticNameWithDuration}</td>
+                        <td>${analyticNameWithTab}</td>
                         <td><span class="${statusClass}">${statusText}</span></td>
-                        <td style="color: var(--gray-700); font-size: 0.875rem;">${frequency}</td>
-                        <td>${environmentBadge}</td>
                         <td>${timeSlotsDisplay}</td>
                         <td>${executionTimeDisplay}</td>
+                        <td data-sort-value="${duration ? duration.totalSeconds : 0}" style="color: var(--gray-700); font-size: 0.875rem;">${durationDisplay}</td>
                         <td>${bqData}</td>
                         <td>${savedData}</td>
+                        <td>${environmentFrequencyDisplay}</td>
                     </tr>
                 `;
             }).join('');
@@ -6262,7 +6435,11 @@ Option 4 - Node.js (if installed):
             init();
             
             // Event Listeners
-            document.getElementById('jobSearch').addEventListener('input', renderJobsTable);
+            const jobSearchInput = document.getElementById('jobSearch');
+            jobSearchInput.addEventListener('input', function() {
+                updateSearchClearButton('jobSearch');
+                renderJobsTable();
+            });
             document.getElementById('frequencyFilter').addEventListener('change', renderJobsTable);
             document.getElementById('jobStatusFilter').addEventListener('change', renderJobsTable);
             document.getElementById('environmentFilter').addEventListener('change', renderJobsTable);
