@@ -58,5 +58,41 @@
         "executionFinishDate": "1766093435597",
         "executionStartDate": "1766093402838",
         "executionSuccess": true
+    },
+    {
+        "_class": "com.gdn.partners.seller.insights.repository.model.scheduler.Scheduler",
+        "_id": "69447e114a5f3b1a9696e3b1",
+        "analyticDate": "1766077200000",
+        "analyticName": "SALES_ITEM_MONTHLY",
+        "analyticTotalData": "81496",
+        "bqFetchEndDate": "1766096730955",
+        "bqTotalData": "81496",
+        "executionFinishDate": "1766096815136",
+        "executionStartDate": "1766096401980",
+        "executionSuccess": true
+    },
+    {
+        "_class": "com.gdn.partners.seller.insights.repository.model.scheduler.Scheduler",
+        "_id": "694482c1dea9355d8d73b2b8",
+        "analyticDate": "1766077200000",
+        "analyticName": "SALES_ITEM_HOURLY",
+        "analyticTotalData": "28307",
+        "bqFetchEndDate": "1766097781802",
+        "bqTotalData": "28307",
+        "executionFinishDate": "1766097799679",
+        "executionStartDate": "1766097601804",
+        "executionSuccess": true
+    },
+    {
+        "_class": "com.gdn.partners.seller.insights.repository.model.scheduler.Scheduler",
+        "_id": "694483eddea9355d8d74214e",
+        "analyticDate": "1766077200000",
+        "analyticName": "SALES_ITEM_DAILY",
+        "analyticTotalData": "310408",
+        "bqFetchEndDate": "1766098173465",
+        "bqTotalData": "310408",
+        "executionFinishDate": "1766098408466",
+        "executionStartDate": "1766097901494",
+        "executionSuccess": true
     }
 ]
