@@ -679,6 +679,28 @@
             transform: scale(0.95);
         }
         
+        .clickable-analytic-name {
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .clickable-analytic-name:hover {
+            opacity: 0.8;
+            text-decoration: underline;
+        }
+        
+        .clickable-analytic-name-bq {
+            cursor: pointer;
+            color: var(--primary);
+            text-decoration: underline;
+            transition: all 0.2s;
+        }
+        
+        .clickable-analytic-name-bq:hover {
+            opacity: 0.8;
+            color: var(--primary);
+        }
+        
         .toggle-switch {
             display: inline-flex;
             align-items: center;
@@ -880,16 +902,27 @@
         
         .modal-content {
             background: white;
-            margin: 5% auto;
+            margin: 3% auto;
             padding: 0;
             border-radius: 0.75rem;
             max-width: 800px;
+            max-height: 90vh;
             box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+            display: flex;
+            flex-direction: column;
+        }
+        
+        #bqDetailsModal .modal-content {
+            max-height: 95vh;
+        }
+        
+        #bqDetailsModal .modal-body {
+            max-height: calc(95vh - 120px);
         }
         
         .modal-header {
             background: var(--gray-50);
-            padding: 1.25rem 1.5rem;
+            padding: 1rem 1.25rem;
             border-bottom: 1px solid var(--gray-200);
             border-radius: 0.75rem 0.75rem 0 0;
             display: flex;
@@ -898,9 +931,19 @@
         }
         
         .modal-header h3 {
-            font-size: 1.125rem;
+            font-size: 1rem;
             font-weight: 600;
             color: var(--gray-900);
+            margin: 0;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+        
+        .modal-header h3 span {
+            font-weight: 500;
+            color: var(--gray-700);
         }
         
         .close {
@@ -1841,6 +1884,49 @@
                             <button onclick="document.getElementById('curlExecutionResults').style.display='none'" style="background: none; border: none; color: var(--gray-600); cursor: pointer; font-size: 1.25rem; padding: 0;">&times;</button>
                         </div>
                         <div id="curlExecutionOutput" style="background: white; padding: 0.75rem; border-radius: 0.375rem; border: 1px solid var(--gray-200); max-height: 400px; overflow-y: auto; font-family: monospace; font-size: 0.8125rem; white-space: pre-wrap; word-wrap: break-word;"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- BQ Details Modal -->
+    <div id="bqDetailsModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>📊 BigQuery Details - <span id="bqModalJobNameHeader"></span></h3>
+                <button class="close" onclick="closeBqDetailsModal()">&times;</button>
+            </div>
+            <div class="modal-body" style="padding: 1rem;">
+                <!-- BQ Projects Used -->
+                <div style="margin-bottom: 1rem;">
+                    <div style="font-size: 0.75rem; font-weight: 600; color: var(--gray-700); margin-bottom: 0.375rem; display: flex; align-items: center; gap: 0.375rem;">
+                        <span>🏢 BQ Projects Used:</span>
+                        <span id="bqModalProjectCount" style="font-size: 0.6875rem; font-weight: 500; color: var(--gray-500);"></span>
+                    </div>
+                    <div id="bqModalProjects" style="background: var(--gray-50); padding: 0.75rem; border-radius: 0.375rem; border: 1px solid var(--gray-200);">
+                        <!-- Projects will be populated here -->
+                    </div>
+                </div>
+                
+                <!-- Source (UDF/Datamarts) -->
+                <div style="margin-bottom: 1rem;">
+                    <div style="font-size: 0.75rem; font-weight: 600; color: var(--gray-700); margin-bottom: 0.375rem; display: flex; align-items: center; gap: 0.375rem;">
+                        <span>🔗 Source (UDF/Datamarts):</span>
+                    </div>
+                    <div style="background: var(--gray-50); padding: 0.625rem 0.75rem; border-radius: 0.375rem; border: 1px solid var(--gray-200);">
+                        <code id="bqModalSource" style="font-size: 0.8125rem; color: var(--gray-900); font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace; word-break: break-all;"></code>
+                    </div>
+                </div>
+                
+                <!-- Dependant Tables -->
+                <div>
+                    <div style="font-size: 0.75rem; font-weight: 600; color: var(--gray-700); margin-bottom: 0.375rem; display: flex; align-items: center; gap: 0.375rem;">
+                        <span>📋 Dependant Tables:</span>
+                        <span id="bqModalTableCount" style="font-size: 0.6875rem; font-weight: 500; color: var(--gray-500);"></span>
+                    </div>
+                    <div id="bqModalDependantTables" style="background: var(--gray-50); padding: 0.75rem; border-radius: 0.375rem; border: 1px solid var(--gray-200);">
+                        <!-- Tables will be populated here -->
                     </div>
                 </div>
             </div>
@@ -3356,9 +3442,21 @@ Option 4 - Node.js (if installed):
                 // Combine frequency and dayInfo
                 const frequencyDayInfo = job.dayInfo ? `${job.frequency} (${job.dayInfo})` : job.frequency;
                 
+                // Make analyticName clickable - show BQ Details modal if available, otherwise show curl modal
+                const hasBqDetails = job.bqDetails && job.bqDetails.source;
+                const analyticNameClickHandler = hasBqDetails ? 
+                    `showBqDetailsModal('${escapedJobName}')` : 
+                    `showCurlModal('${escapedJobName}')`;
+                const analyticNameTitle = hasBqDetails ? 
+                    'Click to view BQ Details' : 
+                    'Click to view Details';
+                const analyticNameClass = hasBqDetails ? 
+                    'clickable-analytic-name-bq' : 
+                    'clickable-analytic-name';
+                
                 return `
                     <tr>
-                        <td><strong title="Job Name: ${job.name}" style="cursor: help;">${job.analyticName}</strong></td>
+                        <td><strong class="${analyticNameClass}" title="${analyticNameTitle}" onclick="${analyticNameClickHandler}">${job.analyticName}</strong></td>
                         <td>${timeDisplay}</td>
                         <td>${frequencyDayInfo}</td>
                         <td>${statusBadge}</td>
@@ -3915,6 +4013,101 @@ Option 4 - Node.js (if installed):
             document.getElementById('curlModal').style.display = 'none';
             // Hide execution results when closing modal
             document.getElementById('curlExecutionResults').style.display = 'none';
+        }
+        
+        function showBqDetailsModal(jobName) {
+            const job = JOBS_DATA.find(j => j.name === jobName);
+            if (!job) {
+                console.error('Job not found:', jobName);
+                return;
+            }
+            
+            const modal = document.getElementById('bqDetailsModal');
+            const bqDetails = job.bqDetails;
+            
+            // Set job name in header
+            document.getElementById('bqModalJobNameHeader').textContent = job.analyticName;
+            
+            if (!bqDetails || !bqDetails.source) {
+                // No BQ details available
+                document.getElementById('bqModalSource').textContent = 'No BQ details available';
+                document.getElementById('bqModalProjectCount').textContent = '(0 projects)';
+                document.getElementById('bqModalProjects').innerHTML = 
+                    '<div style="color: var(--gray-500); font-style: italic; text-align: center; padding: 0.75rem;">No projects found</div>';
+                document.getElementById('bqModalTableCount').textContent = '(0 tables)';
+                document.getElementById('bqModalDependantTables').innerHTML = 
+                    '<div style="color: var(--gray-500); font-style: italic; text-align: center; padding: 0.75rem;">No dependant tables found</div>';
+            } else {
+                // Set source
+                document.getElementById('bqModalSource').textContent = bqDetails.source;
+                
+                // Extract unique BQ projects from source and dependantTables
+                const projects = new Set();
+                
+                // Extract project from source (first part before first dot)
+                if (bqDetails.source) {
+                    const sourceProject = bqDetails.source.split('.')[0];
+                    if (sourceProject) {
+                        projects.add(sourceProject);
+                    }
+                }
+                
+                // Extract projects from dependantTables
+                if (bqDetails.dependantTables && Array.isArray(bqDetails.dependantTables)) {
+                    bqDetails.dependantTables.forEach(table => {
+                        if (table && typeof table === 'string') {
+                            const tableProject = table.split('.')[0];
+                            if (tableProject) {
+                                projects.add(tableProject);
+                            }
+                        }
+                    });
+                }
+                
+                // Sort projects alphabetically
+                const sortedProjects = Array.from(projects).sort();
+                
+                // Set project count
+                const projectCount = sortedProjects.length;
+                document.getElementById('bqModalProjectCount').textContent = `(${projectCount} project${projectCount !== 1 ? 's' : ''})`;
+                
+                // Populate projects
+                const projectsContainer = document.getElementById('bqModalProjects');
+                if (sortedProjects.length > 0) {
+                    projectsContainer.innerHTML = sortedProjects.map((project, index) => `
+                        <div style="padding: 0.5rem 0.625rem; background: white; border-radius: 0.25rem; margin-bottom: 0.375rem; border-left: 2px solid var(--primary); display: flex; align-items: center; gap: 0.5rem;">
+                            <span style="font-size: 0.75rem; font-weight: 600; color: var(--gray-600); min-width: 1.5rem;">${index + 1}.</span>
+                            <code style="font-size: 0.8125rem; color: var(--gray-900); font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace; word-break: break-all; flex: 1;">${project}</code>
+                        </div>
+                    `).join('');
+                } else {
+                    projectsContainer.innerHTML = '<div style="color: var(--gray-500); font-style: italic; text-align: center; padding: 0.75rem;">No projects found</div>';
+                }
+                
+                // Set table count
+                const tableCount = bqDetails.dependantTables ? bqDetails.dependantTables.length : 0;
+                document.getElementById('bqModalTableCount').textContent = `(${tableCount} table${tableCount !== 1 ? 's' : ''})`;
+                
+                // Populate dependant tables
+                const tablesContainer = document.getElementById('bqModalDependantTables');
+                if (bqDetails.dependantTables && bqDetails.dependantTables.length > 0) {
+                    tablesContainer.innerHTML = bqDetails.dependantTables.map((table, index) => `
+                        <div style="padding: 0.5rem 0.625rem; background: white; border-radius: 0.25rem; margin-bottom: 0.375rem; border-left: 2px solid var(--primary); display: flex; align-items: center; gap: 0.5rem;">
+                            <span style="font-size: 0.75rem; font-weight: 600; color: var(--gray-600); min-width: 1.5rem;">${index + 1}.</span>
+                            <code style="font-size: 0.8125rem; color: var(--gray-900); font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace; word-break: break-all; flex: 1;">${table}</code>
+                        </div>
+                    `).join('');
+                } else {
+                    tablesContainer.innerHTML = '<div style="color: var(--gray-500); font-style: italic; text-align: center; padding: 0.75rem;">No dependant tables found</div>';
+                }
+            }
+            
+            // Show modal
+            modal.style.display = 'block';
+        }
+        
+        function closeBqDetailsModal() {
+            document.getElementById('bqDetailsModal').style.display = 'none';
         }
         
         function closeSchedulerRunsModal() {
@@ -6100,6 +6293,8 @@ Option 4 - Node.js (if installed):
             window.onclick = (event) => {
                 const modal = document.getElementById('curlModal');
                 if (event.target === modal) closeModal();
+                const bqModal = document.getElementById('bqDetailsModal');
+                if (event.target === bqModal) closeBqDetailsModal();
                 const schedulerRunsModal = document.getElementById('schedulerRunsModal');
                 if (event.target === schedulerRunsModal) closeSchedulerRunsModal();
                 const salesFunnelModal = document.getElementById('salesFunnelValidationModal');
