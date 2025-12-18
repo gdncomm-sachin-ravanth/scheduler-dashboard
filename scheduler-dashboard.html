@@ -212,46 +212,80 @@
         
         /* Filters */
         .filters {
-            display: flex;
-            gap: 0.75rem;
-            flex-wrap: wrap;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 1rem;
             margin-bottom: 1.5rem;
-            padding: 1rem;
-            background: white;
-            border-radius: 0.5rem;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            padding: 1.5rem;
+            background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+            border-radius: 0.75rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            border: 1px solid rgba(226, 232, 240, 0.8);
         }
         
         .filter-group {
-            flex: 1;
-            min-width: 200px;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
         }
         
         .filter-group label {
-            display: block;
-            font-size: 0.75rem;
-            font-weight: 600;
-            color: var(--gray-700);
-            margin-bottom: 0.25rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.7rem;
+            font-weight: 700;
+            color: var(--gray-600);
             text-transform: uppercase;
-            letter-spacing: 0.5px;
+            letter-spacing: 0.8px;
+            margin: 0;
+        }
+        
+        .filter-group label .filter-icon {
+            font-size: 1rem;
+            opacity: 0.8;
         }
         
         .filter-group input,
         .filter-group select {
             width: 100%;
-            padding: 0.5rem 0.75rem;
-            border: 1px solid var(--gray-300);
-            border-radius: 0.375rem;
+            padding: 0.625rem 0.875rem;
+            border: 2px solid var(--gray-200);
+            border-radius: 0.5rem;
             font-size: 0.875rem;
-            transition: all 0.2s;
+            background: white;
+            color: var(--gray-900);
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+        }
+        
+        .filter-group input::placeholder {
+            color: var(--gray-400);
         }
         
         .filter-group input:focus,
         .filter-group select:focus {
             outline: none;
             border-color: var(--primary);
-            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+            transform: translateY(-1px);
+        }
+        
+        .filter-group select {
+            cursor: pointer;
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%236b7280' d='M6 9L1 4h10z'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 0.75rem center;
+            padding-right: 2.5rem;
+        }
+        
+        .filter-group select:hover {
+            border-color: var(--gray-300);
+        }
+        
+        .filter-group input:hover {
+            border-color: var(--gray-300);
         }
         
         /* Buttons */
@@ -645,6 +679,28 @@
             transform: scale(0.95);
         }
         
+        .clickable-analytic-name {
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .clickable-analytic-name:hover {
+            opacity: 0.8;
+            text-decoration: underline;
+        }
+        
+        .clickable-analytic-name-bq {
+            cursor: pointer;
+            color: var(--primary);
+            text-decoration: underline;
+            transition: all 0.2s;
+        }
+        
+        .clickable-analytic-name-bq:hover {
+            opacity: 0.8;
+            color: var(--primary);
+        }
+        
         .toggle-switch {
             display: inline-flex;
             align-items: center;
@@ -846,16 +902,27 @@
         
         .modal-content {
             background: white;
-            margin: 5% auto;
+            margin: 3% auto;
             padding: 0;
             border-radius: 0.75rem;
             max-width: 800px;
+            max-height: 90vh;
             box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+            display: flex;
+            flex-direction: column;
+        }
+        
+        #bqDetailsModal .modal-content {
+            max-height: 95vh;
+        }
+        
+        #bqDetailsModal .modal-body {
+            max-height: calc(95vh - 120px);
         }
         
         .modal-header {
             background: var(--gray-50);
-            padding: 1.25rem 1.5rem;
+            padding: 1rem 1.25rem;
             border-bottom: 1px solid var(--gray-200);
             border-radius: 0.75rem 0.75rem 0 0;
             display: flex;
@@ -864,9 +931,19 @@
         }
         
         .modal-header h3 {
-            font-size: 1.125rem;
+            font-size: 1rem;
             font-weight: 600;
             color: var(--gray-900);
+            margin: 0;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+        
+        .modal-header h3 span {
+            font-weight: 500;
+            color: var(--gray-700);
         }
         
         .close {
@@ -1166,7 +1243,13 @@
             }
             
             .filters {
-                flex-direction: column;
+                grid-template-columns: 1fr;
+                padding: 1rem;
+                gap: 0.875rem;
+            }
+            
+            .filter-group {
+                min-width: 100%;
             }
             
             .filter-group {
@@ -1385,11 +1468,17 @@
                     
                     <div class="filters">
                         <div class="filter-group">
-                            <label>🔍 Search</label>
+                            <label>
+                                <span class="filter-icon">🔍</span>
+                                <span>Search</span>
+                            </label>
                             <input type="text" id="jobSearch" placeholder="Search by job name...">
                         </div>
                         <div class="filter-group">
-                            <label>📅 Frequency</label>
+                            <label>
+                                <span class="filter-icon">📅</span>
+                                <span>Frequency</span>
+                            </label>
                             <select id="frequencyFilter">
                                 <option value="All">All</option>
                                 <option value="Daily">Daily</option>
@@ -1398,7 +1487,10 @@
                             </select>
                         </div>
                         <div class="filter-group">
-                            <label>⚡ Status</label>
+                            <label>
+                                <span class="filter-icon">⚡</span>
+                                <span>Status</span>
+                            </label>
                             <select id="jobStatusFilter">
                                 <option value="All">All</option>
                                 <option value="Enabled">Enabled</option>
@@ -1406,11 +1498,23 @@
                             </select>
                         </div>
                         <div class="filter-group">
-                            <label>🌐 Environment</label>
+                            <label>
+                                <span class="filter-icon">🌐</span>
+                                <span>Environment</span>
+                            </label>
                             <select id="environmentFilter">
                                 <option value="All">All</option>
                                 <option value="Canary">🟡 Canary</option>
                                 <option value="Non-Canary">🔵 Non-Canary</option>
+                            </select>
+                        </div>
+                        <div class="filter-group">
+                            <label>
+                                <span class="filter-icon">📁</span>
+                                <span>Tab</span>
+                            </label>
+                            <select id="tabFilter">
+                                <option value="All">All</option>
                             </select>
                         </div>
                     </div>
@@ -1434,10 +1538,10 @@
                                     <tr>
                                         <th class="sortable" data-sort="name">Job Name</th>
                                         <th class="sortable" data-sort="time">Schedule Time</th>
-                                        <th class="sortable" data-sort="frequency">Frequency</th>
-                                        <th>Day Info</th>
+                                        <th class="sortable" data-sort="frequency">Frequency / Day Info</th>
                                         <th class="sortable" data-sort="status">Status</th>
                                         <th class="sortable" data-sort="environment">Environment</th>
+                                        <th>Tab</th>
                                         <th>Command</th>
                                     </tr>
                                 </thead>
@@ -1786,6 +1890,62 @@
         </div>
     </div>
     
+    <!-- BQ Details Modal -->
+    <div id="bqDetailsModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>📊 BigQuery Details - <span id="bqModalJobNameHeader"></span></h3>
+                <button class="close" onclick="closeBqDetailsModal()">&times;</button>
+            </div>
+            <div class="modal-body" style="padding: 1rem;">
+                <!-- BQ Projects Used -->
+                <div style="margin-bottom: 1rem;">
+                    <div style="font-size: 0.75rem; font-weight: 600; color: var(--gray-700); margin-bottom: 0.375rem; display: flex; align-items: center; gap: 0.375rem;">
+                        <span>🏢 BQ Projects Used:</span>
+                        <span id="bqModalProjectCount" style="font-size: 0.6875rem; font-weight: 500; color: var(--gray-500);"></span>
+                    </div>
+                    <div id="bqModalProjects" style="background: var(--gray-50); padding: 0.75rem; border-radius: 0.375rem; border: 1px solid var(--gray-200);">
+                        <!-- Projects will be populated here -->
+                    </div>
+                </div>
+                
+                <!-- Source (UDF/Datamarts) -->
+                <div style="margin-bottom: 1rem;">
+                    <div style="font-size: 0.75rem; font-weight: 600; color: var(--gray-700); margin-bottom: 0.375rem; display: flex; align-items: center; gap: 0.375rem;">
+                        <span>🔗 Source (UDF/Datamarts):</span>
+                    </div>
+                    <div style="background: var(--gray-50); padding: 0.625rem 0.75rem; border-radius: 0.375rem; border: 1px solid var(--gray-200);">
+                        <code id="bqModalSource" style="font-size: 0.8125rem; color: var(--gray-900); font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace; word-break: break-all;"></code>
+                    </div>
+                </div>
+                
+                <!-- Dependant Tables -->
+                <div>
+                    <div style="font-size: 0.75rem; font-weight: 600; color: var(--gray-700); margin-bottom: 0.375rem; display: flex; align-items: center; gap: 0.375rem;">
+                        <span>📋 Dependant Tables:</span>
+                        <span id="bqModalTableCount" style="font-size: 0.6875rem; font-weight: 500; color: var(--gray-500);"></span>
+                    </div>
+                    <div id="bqModalDependantTables" style="background: var(--gray-50); padding: 0.75rem; border-radius: 0.375rem; border: 1px solid var(--gray-200);">
+                        <!-- Tables will be populated here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Scheduler Runs Modal -->
+    <div id="schedulerRunsModal" class="modal">
+        <div class="modal-content" style="max-width: 1000px;">
+            <div class="modal-header">
+                <h3 id="schedulerRunsModalTitle">🔥 Scheduler Run Details</h3>
+                <button class="close" onclick="closeSchedulerRunsModal()">&times;</button>
+            </div>
+            <div class="modal-body" style="padding: 0.75rem;">
+                <div id="schedulerRunsModalContent"></div>
+            </div>
+        </div>
+    </div>
+    
     <!-- Sales Funnel Validation Modal -->
     <div id="salesFunnelValidationModal" class="modal">
         <div class="modal-content" style="max-width: 900px; max-height: 90vh; display: flex; flex-direction: column;">
@@ -2126,7 +2286,7 @@ Option 4 - Node.js (if installed):
         }
         
         // Function to update last updated time for past data
-        function updatePastDataLastUpdatedTime() {
+        async function updatePastDataLastUpdatedTime() {
             const lastUpdatedEl = document.getElementById('pastDataLastUpdatedTime');
             if (!lastUpdatedEl) return;
             
@@ -2145,41 +2305,61 @@ Option 4 - Node.js (if installed):
             lastUpdatedEl.textContent = `Last updated: ${dateStr} ${timeStr}`;
             lastUpdatedEl.style.display = 'inline';
             
-            // Store in localStorage for persistence
-            localStorage.setItem('pastDataLastUpdated', now.toISOString());
+            // Store in validation cache (server-side) with 1-day expiry
+            try {
+                await fetch('/api/set-last-updated', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        type: 'pastData',
+                        timestamp: now.toISOString()
+                    })
+                });
+            } catch (error) {
+                console.error('Failed to save past data last updated time:', error);
+            }
         }
         
         // Function to load and display last updated time for past data
-        function loadPastDataLastUpdatedTime() {
+        async function loadPastDataLastUpdatedTime() {
             const lastUpdatedEl = document.getElementById('pastDataLastUpdatedTime');
             if (!lastUpdatedEl) return;
             
-            const lastUpdatedStr = localStorage.getItem('pastDataLastUpdated');
-            
-            if (lastUpdatedStr) {
-                const lastUpdated = new Date(lastUpdatedStr);
-                const timeStr = lastUpdated.toLocaleTimeString('en-US', {
-                    hour: '2-digit',
-                    minute: '2-digit',
-                    second: '2-digit',
-                    hour12: false
-                });
-                const dateStr = lastUpdated.toLocaleDateString('en-US', {
-                    month: 'short',
-                    day: 'numeric'
-                });
+            try {
+                const response = await fetch('/api/get-last-updated?type=pastData');
+                const result = await response.json();
                 
-                lastUpdatedEl.textContent = `Last updated: ${dateStr} ${timeStr}`;
-                lastUpdatedEl.style.display = 'inline';
-            } else {
-                // Show "-" when no last updated time exists
+                if (result.success && result.timestamp) {
+                    const lastUpdated = new Date(result.timestamp);
+                    const timeStr = lastUpdated.toLocaleTimeString('en-US', {
+                        hour: '2-digit',
+                        minute: '2-digit',
+                        second: '2-digit',
+                        hour12: false
+                    });
+                    const dateStr = lastUpdated.toLocaleDateString('en-US', {
+                        month: 'short',
+                        day: 'numeric'
+                    });
+                    
+                    lastUpdatedEl.textContent = `Last updated: ${dateStr} ${timeStr}`;
+                    lastUpdatedEl.style.display = 'inline';
+                } else {
+                    // Show "-" when no last updated time exists or cache expired
+                    lastUpdatedEl.textContent = 'Last updated: -';
+                    lastUpdatedEl.style.display = 'inline';
+                }
+            } catch (error) {
+                console.error('Failed to load past data last updated time:', error);
                 lastUpdatedEl.textContent = 'Last updated: -';
                 lastUpdatedEl.style.display = 'inline';
             }
         }
         
         // Function to update last updated time display
-        function updateLastUpdatedTime(isTodayReport = false) {
+        async function updateLastUpdatedTime(isTodayReport = false) {
             const lastUpdatedEl = document.getElementById('lastUpdatedTime');
             if (!lastUpdatedEl) return;
             
@@ -2200,15 +2380,27 @@ Option 4 - Node.js (if installed):
             // Show the element if on Today's Report page
             if (isTodayReport) {
                 lastUpdatedEl.style.display = 'inline';
+                
+                // Store in validation cache (server-side) with 1-day expiry
+                try {
+                    await fetch('/api/set-last-updated', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            type: 'todayData',
+                            timestamp: now.toISOString()
+                        })
+                    });
+                } catch (error) {
+                    console.error('Failed to save today data last updated time:', error);
+                }
             }
-            
-            // Store in localStorage for persistence
-            const storageKey = isTodayReport ? 'todayDataLastUpdated' : 'dataLastUpdated';
-            localStorage.setItem(storageKey, now.toISOString());
         }
         
         // Function to load and display last updated time
-        function loadLastUpdatedTime(isTodayReport = false) {
+        async function loadLastUpdatedTime(isTodayReport = false) {
             const lastUpdatedEl = document.getElementById('lastUpdatedTime');
             if (!lastUpdatedEl || !isTodayReport) {
                 if (lastUpdatedEl) {
@@ -2217,26 +2409,57 @@ Option 4 - Node.js (if installed):
                 return;
             }
             
-            const storageKey = 'todayDataLastUpdated';
-            const lastUpdatedStr = localStorage.getItem(storageKey);
-            
-            if (lastUpdatedStr) {
-                const lastUpdated = new Date(lastUpdatedStr);
-                const timeStr = lastUpdated.toLocaleTimeString('en-US', {
-                    hour: '2-digit',
-                    minute: '2-digit',
-                    second: '2-digit',
-                    hour12: false
-                });
-                const dateStr = lastUpdated.toLocaleDateString('en-US', {
-                    month: 'short',
-                    day: 'numeric'
-                });
+            try {
+                const response = await fetch('/api/get-last-updated?type=todayData');
+                const result = await response.json();
                 
-                lastUpdatedEl.textContent = `Last updated: ${dateStr} ${timeStr}`;
-                lastUpdatedEl.style.display = 'inline';
-            } else {
-                // Show "-" when no last updated time exists
+                if (result.success && result.timestamp) {
+                    const lastUpdated = new Date(result.timestamp);
+                    const now = new Date();
+                    
+                    // Check if the timestamp is from today
+                    const isFromToday = lastUpdated.getFullYear() === now.getFullYear() &&
+                                      lastUpdated.getMonth() === now.getMonth() &&
+                                      lastUpdated.getDate() === now.getDate();
+                    
+                    const timeStr = lastUpdated.toLocaleTimeString('en-US', {
+                        hour: '2-digit',
+                        minute: '2-digit',
+                        second: '2-digit',
+                        hour12: false
+                    });
+                    const dateStr = lastUpdated.toLocaleDateString('en-US', {
+                        month: 'short',
+                        day: 'numeric'
+                    });
+                    
+                    lastUpdatedEl.textContent = `Last updated: ${dateStr} ${timeStr}`;
+                    lastUpdatedEl.style.display = 'inline';
+                    
+                    // If timestamp is not from today, prompt user to refresh
+                    if (!isFromToday) {
+                        setTimeout(() => {
+                            const shouldRefresh = confirm('Today\'s data has not been refreshed yet. Would you like to refresh it now?');
+                            if (shouldRefresh) {
+                                refreshData();
+                            }
+                        }, 500); // Small delay to let the page finish loading
+                    }
+                } else {
+                    // Show "-" when no last updated time exists or cache expired
+                    lastUpdatedEl.textContent = 'Last updated: -';
+                    lastUpdatedEl.style.display = 'inline';
+                    
+                    // Prompt user to refresh data
+                    setTimeout(() => {
+                        const shouldRefresh = confirm('Today\'s data has not been refreshed yet. Would you like to refresh it now?');
+                        if (shouldRefresh) {
+                            refreshData();
+                        }
+                    }, 500); // Small delay to let the page finish loading
+                }
+            } catch (error) {
+                console.error('Failed to load today data last updated time:', error);
                 lastUpdatedEl.textContent = 'Last updated: -';
                 lastUpdatedEl.style.display = 'inline';
                 
@@ -2246,7 +2469,7 @@ Option 4 - Node.js (if installed):
                     if (shouldRefresh) {
                         refreshData();
                     }
-                }, 500); // Small delay to let the page finish loading
+                }, 500);
             }
         }
         
@@ -2469,7 +2692,9 @@ Option 4 - Node.js (if installed):
                 if (result.success) {
                     // Use scheduler_record from API response, or fall back to current page data
                     const schedulerRecord = result.scheduler_record || currentSchedulerRecord;
-                    displaySingleSalesFunnelResults(result.validation, result.scheduler_report_details, result.report, schedulerRecord);
+                    // Use report.schedulerReport directly instead of scheduler_report_details
+                    const schedulerReportDetails = result.report?.schedulerReport || {};
+                    displaySingleSalesFunnelResults(result.validation, schedulerReportDetails, result.report, schedulerRecord);
                     
                     // Show toast with cache info if applicable
                     let toastMessage = `${currentSchedulerName} validated successfully`;
@@ -2699,14 +2924,16 @@ Option 4 - Node.js (if installed):
                                 <tbody>
             `;
                 
-                // Sort pods by schedulerNo
+                // Sort pods by schedulerNo (schedulerReportDetails is now report.schedulerReport)
                 const sortedPods = Object.entries(schedulerReportDetails).sort((a, b) => {
-                    const aNo = a[1].schedulerNo || 0;
-                    const bNo = b[1].schedulerNo || 0;
+                    const aNo = a[1]?.schedulerNo ?? 0;
+                    const bNo = b[1]?.schedulerNo ?? 0;
                     return aNo - bNo;
                 });
                 
                 sortedPods.forEach(([podKey, podData]) => {
+                    if (!podData || typeof podData !== 'object') return;
+                    
                     const podSuccess = podData.executionSuccess;
                     const podSuccessColor = podSuccess ? '#d1fae5' : '#fee2e2';
                     const podSuccessTextColor = podSuccess ? '#065f46' : '#991b1b';
@@ -3061,6 +3288,33 @@ Option 4 - Node.js (if installed):
         }
         
         // Jobs Functions
+        function populateTabFilter() {
+            const tabFilter = document.getElementById('tabFilter');
+            if (!tabFilter) return;
+            
+            // Get unique tab values from JOBS_DATA
+            const uniqueTabs = [...new Set(JOBS_DATA.map(job => job.tab).filter(tab => tab !== null && tab !== undefined))].sort();
+            
+            // Clear existing options except "All"
+            tabFilter.innerHTML = '<option value="All">All</option>';
+            
+            // Add unique tab values
+            uniqueTabs.forEach(tab => {
+                const option = document.createElement('option');
+                option.value = tab;
+                option.textContent = tab;
+                tabFilter.appendChild(option);
+            });
+            
+            // Add "None" option for jobs without a tab
+            if (JOBS_DATA.some(job => !job.tab)) {
+                const noneOption = document.createElement('option');
+                noneOption.value = 'None';
+                noneOption.textContent = 'None';
+                tabFilter.appendChild(noneOption);
+            }
+        }
+        
         function updateJobsStats() {
             const dailyEnabled = JOBS_DATA.filter(j => j.frequency === 'Daily' && j.scheduleEnabled).length;
             const weeklyEnabled = JOBS_DATA.filter(j => j.frequency === 'Weekly' && j.scheduleEnabled).length;
@@ -3086,6 +3340,7 @@ Option 4 - Node.js (if installed):
             const frequency = document.getElementById('frequencyFilter').value;
             const status = document.getElementById('jobStatusFilter').value;
             const environment = document.getElementById('environmentFilter').value;
+            const tab = document.getElementById('tabFilter') ? document.getElementById('tabFilter').value : 'All';
             
             filteredJobs = JOBS_DATA.filter(job => {
                 const matchesSearch = job.name.toLowerCase().includes(search) || 
@@ -3105,7 +3360,10 @@ Option 4 - Node.js (if installed):
                     }
                 }
                 
-                return matchesSearch && matchesFrequency && matchesStatus && matchesEnvironment;
+                // Tab filter
+                const matchesTab = tab === 'All' || job.tab === tab || (tab === 'None' && !job.tab);
+                
+                return matchesSearch && matchesFrequency && matchesStatus && matchesEnvironment && matchesTab;
             });
             
             // Sort the filtered jobs
@@ -3178,14 +3436,32 @@ Option 4 - Node.js (if installed):
                 // Escape quotes in job name for onclick
                 const escapedJobName = job.name.replace(/'/g, "\\'");
                 
+                // Get tab display
+                const tabDisplay = job.tab ? `<span style="font-weight: 600; color: var(--gray-700);">${job.tab}</span>` : '<span style="color: var(--gray-400);">-</span>';
+                
+                // Combine frequency and dayInfo
+                const frequencyDayInfo = job.dayInfo ? `${job.frequency} (${job.dayInfo})` : job.frequency;
+                
+                // Make analyticName clickable - show BQ Details modal if available, otherwise show curl modal
+                const hasBqDetails = job.bqDetails && job.bqDetails.source;
+                const analyticNameClickHandler = hasBqDetails ? 
+                    `showBqDetailsModal('${escapedJobName}')` : 
+                    `showCurlModal('${escapedJobName}')`;
+                const analyticNameTitle = hasBqDetails ? 
+                    'Click to view BQ Details' : 
+                    'Click to view Details';
+                const analyticNameClass = hasBqDetails ? 
+                    'clickable-analytic-name-bq' : 
+                    'clickable-analytic-name';
+                
                 return `
                     <tr>
-                        <td><strong title="Job Name: ${job.name}" style="cursor: help;">${job.analyticName}</strong></td>
+                        <td><strong class="${analyticNameClass}" title="${analyticNameTitle}" onclick="${analyticNameClickHandler}">${job.analyticName}</strong></td>
                         <td>${timeDisplay}</td>
-                        <td>${job.frequency}</td>
-                        <td>${job.dayInfo || '-'}</td>
+                        <td>${frequencyDayInfo}</td>
                         <td>${statusBadge}</td>
                         <td>${environmentBadge}</td>
+                        <td>${tabDisplay}</td>
                         <td>
                             <button class="action-btn-icon" onclick="showCurlModal('${escapedJobName}')" title="View Details">
                                 👁️
@@ -3737,6 +4013,221 @@ Option 4 - Node.js (if installed):
             document.getElementById('curlModal').style.display = 'none';
             // Hide execution results when closing modal
             document.getElementById('curlExecutionResults').style.display = 'none';
+        }
+        
+        function showBqDetailsModal(jobName) {
+            const job = JOBS_DATA.find(j => j.name === jobName);
+            if (!job) {
+                console.error('Job not found:', jobName);
+                return;
+            }
+            
+            const modal = document.getElementById('bqDetailsModal');
+            const bqDetails = job.bqDetails;
+            
+            // Set job name in header
+            document.getElementById('bqModalJobNameHeader').textContent = job.analyticName;
+            
+            if (!bqDetails || !bqDetails.source) {
+                // No BQ details available
+                document.getElementById('bqModalSource').textContent = 'No BQ details available';
+                document.getElementById('bqModalProjectCount').textContent = '(0 projects)';
+                document.getElementById('bqModalProjects').innerHTML = 
+                    '<div style="color: var(--gray-500); font-style: italic; text-align: center; padding: 0.75rem;">No projects found</div>';
+                document.getElementById('bqModalTableCount').textContent = '(0 tables)';
+                document.getElementById('bqModalDependantTables').innerHTML = 
+                    '<div style="color: var(--gray-500); font-style: italic; text-align: center; padding: 0.75rem;">No dependant tables found</div>';
+            } else {
+                // Set source
+                document.getElementById('bqModalSource').textContent = bqDetails.source;
+                
+                // Extract unique BQ projects from source and dependantTables
+                const projects = new Set();
+                
+                // Extract project from source (first part before first dot)
+                if (bqDetails.source) {
+                    const sourceProject = bqDetails.source.split('.')[0];
+                    if (sourceProject) {
+                        projects.add(sourceProject);
+                    }
+                }
+                
+                // Extract projects from dependantTables
+                if (bqDetails.dependantTables && Array.isArray(bqDetails.dependantTables)) {
+                    bqDetails.dependantTables.forEach(table => {
+                        if (table && typeof table === 'string') {
+                            const tableProject = table.split('.')[0];
+                            if (tableProject) {
+                                projects.add(tableProject);
+                            }
+                        }
+                    });
+                }
+                
+                // Sort projects alphabetically
+                const sortedProjects = Array.from(projects).sort();
+                
+                // Set project count
+                const projectCount = sortedProjects.length;
+                document.getElementById('bqModalProjectCount').textContent = `(${projectCount} project${projectCount !== 1 ? 's' : ''})`;
+                
+                // Populate projects
+                const projectsContainer = document.getElementById('bqModalProjects');
+                if (sortedProjects.length > 0) {
+                    projectsContainer.innerHTML = sortedProjects.map((project, index) => `
+                        <div style="padding: 0.5rem 0.625rem; background: white; border-radius: 0.25rem; margin-bottom: 0.375rem; border-left: 2px solid var(--primary); display: flex; align-items: center; gap: 0.5rem;">
+                            <span style="font-size: 0.75rem; font-weight: 600; color: var(--gray-600); min-width: 1.5rem;">${index + 1}.</span>
+                            <code style="font-size: 0.8125rem; color: var(--gray-900); font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace; word-break: break-all; flex: 1;">${project}</code>
+                        </div>
+                    `).join('');
+                } else {
+                    projectsContainer.innerHTML = '<div style="color: var(--gray-500); font-style: italic; text-align: center; padding: 0.75rem;">No projects found</div>';
+                }
+                
+                // Set table count
+                const tableCount = bqDetails.dependantTables ? bqDetails.dependantTables.length : 0;
+                document.getElementById('bqModalTableCount').textContent = `(${tableCount} table${tableCount !== 1 ? 's' : ''})`;
+                
+                // Populate dependant tables
+                const tablesContainer = document.getElementById('bqModalDependantTables');
+                if (bqDetails.dependantTables && bqDetails.dependantTables.length > 0) {
+                    tablesContainer.innerHTML = bqDetails.dependantTables.map((table, index) => `
+                        <div style="padding: 0.5rem 0.625rem; background: white; border-radius: 0.25rem; margin-bottom: 0.375rem; border-left: 2px solid var(--primary); display: flex; align-items: center; gap: 0.5rem;">
+                            <span style="font-size: 0.75rem; font-weight: 600; color: var(--gray-600); min-width: 1.5rem;">${index + 1}.</span>
+                            <code style="font-size: 0.8125rem; color: var(--gray-900); font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace; word-break: break-all; flex: 1;">${table}</code>
+                        </div>
+                    `).join('');
+                } else {
+                    tablesContainer.innerHTML = '<div style="color: var(--gray-500); font-style: italic; text-align: center; padding: 0.75rem;">No dependant tables found</div>';
+                }
+            }
+            
+            // Show modal
+            modal.style.display = 'block';
+        }
+        
+        function closeBqDetailsModal() {
+            document.getElementById('bqDetailsModal').style.display = 'none';
+        }
+        
+        function closeSchedulerRunsModal() {
+            document.getElementById('schedulerRunsModal').style.display = 'none';
+        }
+        
+        function showSchedulerRunsModal(schedulerName, hour) {
+            // Filter patternData to get runs for this scheduler at this hour
+            const runs = patternData.filter(p => {
+                if (p.analyticName !== schedulerName) return false;
+                if (!p.executionStartDate) return false;
+                const runHour = new Date(parseInt(p.executionStartDate)).getHours();
+                return runHour === hour;
+            });
+            
+            // Sort by execution start date (most recent first)
+            runs.sort((a, b) => {
+                const dateA = parseInt(a.executionStartDate || 0);
+                const dateB = parseInt(b.executionStartDate || 0);
+                return dateB - dateA;
+            });
+            
+            // Update modal title
+            const matchedJob = matchJobToScheduler(schedulerName);
+            let scheduledTime = '';
+            if (matchedJob) {
+                const hourString = matchedJob.hour || '0';
+                const minute = matchedJob.minute || '0';
+                const hours = hourString.split(',').map(h => parseInt(h.trim()));
+                const scheduledSlot = hours.find(h => h === hour);
+                if (scheduledSlot !== undefined) {
+                    scheduledTime = ` (Scheduled: ${formatTime(scheduledSlot.toString(), minute, matchedJob.seconds || '0')})`;
+                }
+            }
+            
+            document.getElementById('schedulerRunsModalTitle').textContent = 
+                `🔥 ${schedulerName} at ${hour.toString().padStart(2, '0')}:00${scheduledTime}`;
+            
+            // Build content
+            let html = '';
+            
+            if (runs.length === 0) {
+                html = '<div class="no-results">No runs found for this scheduler at this hour.</div>';
+            } else {
+                html = `<div style="margin-bottom: 0.5rem; padding: 0.375rem 0.5rem; background: var(--gray-50); border-radius: 0.25rem; display: inline-block;">
+                    <span style="font-size: 0.6875rem; color: var(--gray-600);">Total Runs: </span>
+                    <span style="font-size: 0.8125rem; font-weight: 600; color: var(--gray-900);">${runs.length}</span>
+                </div>`;
+                
+                html += `<table style="width: 100%; border-collapse: collapse; font-size: 0.75rem;">
+                    <thead>
+                        <tr style="background: var(--gray-50); border-bottom: 2px solid var(--gray-200);">
+                            <th style="padding: 0.375rem 0.5rem; text-align: left; font-weight: 600; color: var(--gray-700); font-size: 0.6875rem;">#</th>
+                            <th style="padding: 0.375rem 0.5rem; text-align: left; font-weight: 600; color: var(--gray-700); font-size: 0.6875rem;">Date</th>
+                            <th style="padding: 0.375rem 0.5rem; text-align: left; font-weight: 600; color: var(--gray-700); font-size: 0.6875rem;">Status</th>
+                            <th style="padding: 0.375rem 0.5rem; text-align: left; font-weight: 600; color: var(--gray-700); font-size: 0.6875rem;">Start</th>
+                            <th style="padding: 0.375rem 0.5rem; text-align: left; font-weight: 600; color: var(--gray-700); font-size: 0.6875rem;">End</th>
+                            <th style="padding: 0.375rem 0.5rem; text-align: left; font-weight: 600; color: var(--gray-700); font-size: 0.6875rem;">Duration</th>
+                            <th style="padding: 0.375rem 0.5rem; text-align: right; font-weight: 600; color: var(--gray-700); font-size: 0.6875rem;">BQ Data</th>
+                            <th style="padding: 0.375rem 0.5rem; text-align: right; font-weight: 600; color: var(--gray-700); font-size: 0.6875rem;">Saved</th>
+                        </tr>
+                    </thead>
+                    <tbody>`;
+                
+                runs.forEach((run, index) => {
+                    const isSuccess = run.executionSuccess === true;
+                    const isFailed = run.executionSuccess === false;
+                    const isInProgress = run.executionStartDate && !run.executionFinishDate;
+                    
+                    let statusText, statusClass, statusBgColor;
+                    if (isInProgress) {
+                        statusText = 'In Progress';
+                        statusClass = 'status-in-progress';
+                        statusBgColor = '#dbeafe';
+                    } else if (isSuccess) {
+                        statusText = 'Success';
+                        statusClass = 'status-success';
+                        statusBgColor = '#d1fae5';
+                    } else {
+                        statusText = 'Failed';
+                        statusClass = 'status-fail';
+                        statusBgColor = '#fee2e2';
+                    }
+                    
+                    const startTime = run.executionStartDate ? formatTimeOnly(run.executionStartDate) : '-';
+                    const endTime = run.executionFinishDate ? formatTimeOnly(run.executionFinishDate) : '-';
+                    const duration = run.executionStartDate && run.executionFinishDate 
+                        ? calculateDuration(run.executionStartDate, run.executionFinishDate) 
+                        : null;
+                    const durationDisplay = duration ? duration.formatted : '-';
+                    
+                    const date = run.analyticDate ? formatDate(run.analyticDate) : '-';
+                    const attemptStatus = run.attemptStatus || '-';
+                    const bqData = run.bqTotalData !== undefined ? run.bqTotalData.toLocaleString() : '-';
+                    const savedData = run.analyticTotalData !== undefined ? run.analyticTotalData.toLocaleString() : '-';
+                    
+                    const borderColor = isSuccess ? '#10b981' : isFailed ? '#ef4444' : '#3b82f6';
+                    
+                    html += `
+                        <tr style="border-bottom: 1px solid var(--gray-200); border-left: 3px solid ${borderColor};">
+                            <td style="padding: 0.375rem 0.5rem; color: var(--gray-700); font-weight: 500;">${runs.length - index}</td>
+                            <td style="padding: 0.375rem 0.5rem; color: var(--gray-900); white-space: nowrap;">${date}</td>
+                            <td style="padding: 0.375rem 0.5rem;">
+                                <span style="background: ${statusBgColor}; padding: 0.125rem 0.375rem; border-radius: 0.25rem; font-size: 0.625rem; font-weight: 600; display: inline-block; margin-right: 0.25rem;">${statusText}</span>
+                                ${attemptStatus !== '-' ? `<span style="background: var(--gray-100); padding: 0.125rem 0.375rem; border-radius: 0.25rem; font-size: 0.625rem; color: var(--gray-700);">${attemptStatus}</span>` : ''}
+                            </td>
+                            <td style="padding: 0.375rem 0.5rem; color: var(--gray-900); font-family: monospace; font-size: 0.6875rem; white-space: nowrap;">${startTime}</td>
+                            <td style="padding: 0.375rem 0.5rem; color: var(--gray-900); font-family: monospace; font-size: 0.6875rem; white-space: nowrap;">${endTime}</td>
+                            <td style="padding: 0.375rem 0.5rem; color: var(--gray-900); white-space: nowrap;">${durationDisplay}</td>
+                            <td style="padding: 0.375rem 0.5rem; text-align: right; color: var(--gray-900);">${bqData}</td>
+                            <td style="padding: 0.375rem 0.5rem; text-align: right; color: var(--gray-900);">${savedData}</td>
+                        </tr>
+                    `;
+                });
+                
+                html += '</tbody></table>';
+            }
+            
+            document.getElementById('schedulerRunsModalContent').innerHTML = html;
+            document.getElementById('schedulerRunsModal').style.display = 'block';
         }
         
         async function executeCurlCommand() {
@@ -5244,20 +5735,71 @@ Option 4 - Node.js (if installed):
                 html += '<div class="heatmap-row">';
                 html += `<div class="heatmap-label" style="font-size: 0.7rem;">${scheduler.length > 25 ? scheduler.substring(0, 25) + '...' : scheduler}</div>`;
                 
+                // Get scheduled time slots from Rundeck Jobs
+                const matchedJob = matchJobToScheduler(scheduler);
+                const scheduledSlots = [];
+                if (matchedJob) {
+                    const hourString = matchedJob.hour || '0';
+                    const minute = matchedJob.minute || '0';
+                    const seconds = matchedJob.seconds || '0';
+                    const hours = hourString.split(',').map(h => parseInt(h.trim()));
+                    
+                    hours.forEach(hour => {
+                        const timeStr = formatTime(hour.toString(), minute, seconds);
+                        scheduledSlots.push({
+                            hour: hour,
+                            time: timeStr
+                        });
+                    });
+                }
+                
                 for (let h = 0; h < 24; h++) {
                     const data = schedulersByHour[scheduler][h];
                     const total = data.success + data.retry + data.failed;
                     
+                    // Check if this hour is a scheduled time slot
+                    const scheduledSlot = scheduledSlots.find(slot => slot.hour === h);
+                    const isScheduled = scheduledSlot !== undefined;
+                    
+                    // Build tooltip with scheduled time info
+                    let tooltip = `${scheduler} at ${h}:00`;
+                    if (isScheduled) {
+                        tooltip += `\n📅 Scheduled: ${scheduledSlot.time}`;
+                        // If there are multiple scheduled slots, show all of them
+                        if (scheduledSlots.length > 1) {
+                            const allScheduledTimes = scheduledSlots.map(s => s.time).join(', ');
+                            tooltip += `\nAll scheduled times: ${allScheduledTimes}`;
+                        }
+                    } else if (scheduledSlots.length > 0) {
+                        // Show all scheduled times even if this hour is not scheduled
+                        const allScheduledTimes = scheduledSlots.map(s => s.time).join(', ');
+                        tooltip += `\n📅 Scheduled times: ${allScheduledTimes}`;
+                    }
+                    if (total > 0) {
+                        tooltip += `\nSuccess: ${data.success}, Retry: ${data.retry}, Failed: ${data.failed}`;
+                    }
+                    
                     if (total === 0) {
-                        html += '<div class="heatmap-cell empty" title="No activity"></div>';
+                        // No activity - show scheduled slot with border if it's scheduled
+                        if (isScheduled) {
+                            html += `<div class="heatmap-cell empty" style="border: 2px solid #3b82f6; border-style: dashed;" 
+                                     title="${tooltip}">📅</div>`;
+                        } else {
+                            html += `<div class="heatmap-cell empty" title="${tooltip}"></div>`;
+                        }
                     } else {
                         let bgColor = '#10b981'; // green
                         if (data.failed > 0) bgColor = '#ef4444'; // red
                         else if (data.retry > 0) bgColor = '#f59e0b'; // orange
                         
                         const opacity = 0.3 + (Math.min(total, 10) / 10) * 0.7;
-                        html += `<div class="heatmap-cell" style="background: ${bgColor}; opacity: ${opacity};" 
-                                 title="${scheduler} at ${h}:00\nSuccess: ${data.success}, Retry: ${data.retry}, Failed: ${data.failed}">${total}</div>`;
+                        // Add border for scheduled slots
+                        const borderStyle = isScheduled ? 'border: 2px solid #1e40af;' : '';
+                        // Add click handler and cursor pointer for cells with activity
+                        const escapedScheduler = scheduler.replace(/'/g, "\\'");
+                        html += `<div class="heatmap-cell" style="background: ${bgColor}; opacity: ${opacity}; ${borderStyle}; cursor: pointer;" 
+                                 onclick="showSchedulerRunsModal('${escapedScheduler}', ${h})"
+                                 title="${tooltip}\n\nClick to view run details">${total}</div>`;
                     }
                 }
                 html += '</div>';
@@ -5682,6 +6224,7 @@ Option 4 - Node.js (if installed):
             }
             
             // Jobs
+            populateTabFilter();
             updateJobsStats();
             renderJobsTable();
             renderJobsHeatmap(currentJobsHeatmapTryFilter, currentJobsHeatmapStatusFilter, currentJobsHeatmapEnvironmentFilter);
@@ -5723,6 +6266,10 @@ Option 4 - Node.js (if installed):
             document.getElementById('frequencyFilter').addEventListener('change', renderJobsTable);
             document.getElementById('jobStatusFilter').addEventListener('change', renderJobsTable);
             document.getElementById('environmentFilter').addEventListener('change', renderJobsTable);
+            const tabFilterEl = document.getElementById('tabFilter');
+            if (tabFilterEl) {
+                tabFilterEl.addEventListener('change', renderJobsTable);
+            }
             
             document.querySelectorAll('#jobs-section th.sortable').forEach(th => {
                 th.addEventListener('click', () => {
@@ -5746,6 +6293,10 @@ Option 4 - Node.js (if installed):
             window.onclick = (event) => {
                 const modal = document.getElementById('curlModal');
                 if (event.target === modal) closeModal();
+                const bqModal = document.getElementById('bqDetailsModal');
+                if (event.target === bqModal) closeBqDetailsModal();
+                const schedulerRunsModal = document.getElementById('schedulerRunsModal');
+                if (event.target === schedulerRunsModal) closeSchedulerRunsModal();
                 const salesFunnelModal = document.getElementById('salesFunnelValidationModal');
                 if (event.target === salesFunnelModal) closeSalesFunnelValidationModal();
             };
