@@ -11,7 +11,8 @@
     "frequency": "Weekly",
     "dayInfo": "SUN",
     "curlCommand": "curl -X POST 'seller-insights.gdn-sg.cld/seller-insights/v2/scheduler/products/products-category-brands-list' |grep '\"data\":true'",
-    "timeout": "1m"
+    "timeout": "1m",
+    "tab": "Common schedulers"
   },
   {
     "name": "sa_0250_daily_latest_brand",
@@ -25,7 +26,8 @@
     "frequency": "Daily",
     "dayInfo": "",
     "curlCommand": "curl -X POST seller-insights-next.gdn-sg.cld/seller-insights/v2/scheduler/products/latest-brands |grep '\"data\":true'",
-    "timeout": "1m"
+    "timeout": "1m",
+    "tab": "Common schedulers"
   },
   {
     "name": "sa_0300_daily_order_item",
@@ -39,7 +41,8 @@
     "frequency": "Daily",
     "dayInfo": "",
     "curlCommand": "curl -X POST seller-insights.gdn-sg.cld/seller-insights/v2/scheduler/demographics/order-items |grep '\"data\":true'",
-    "timeout": "1m"
+    "timeout": "1m",
+    "tab": "Demographics"
   },
   {
     "name": "sa_0300_daily_product-low-stock",
@@ -53,7 +56,8 @@
     "frequency": "Daily",
     "dayInfo": "",
     "curlCommand": "curl -X POST seller-insights-next.gdn-sg.cld/seller-insights/v2/scheduler/products/low-stock |grep '\"data\":true'",
-    "timeout": "1m"
+    "timeout": "1m",
+    "tab": "Overview"
   },
   {
     "name": "sa_0310_daily_sales_item",
@@ -67,7 +71,8 @@
     "frequency": "Daily",
     "dayInfo": "",
     "curlCommand": "curl -X POST seller-insights-next.gdn-sg.cld/seller-insights/v2/scheduler/sales/sales-item |grep '\"data\":true'",
-    "timeout": "1m"
+    "timeout": "1m",
+    "tab": "Sales"
   },
   {
     "name": "sa_0320_daily_sales_item_customer",
@@ -81,7 +86,8 @@
     "frequency": "Daily",
     "dayInfo": "",
     "curlCommand": "curl -X POST seller-insights.gdn-sg.cld/seller-insights/v2/scheduler/sales/sales-item-customer |grep '\"data\":true'",
-    "timeout": "1m"
+    "timeout": "1m",
+    "tab": "Sales"
   },
   {
     "name": "sa_0320_monthly_order_by_customer_age",
@@ -95,7 +101,8 @@
     "frequency": "Monthly",
     "dayInfo": "Day 1,2,3",
     "curlCommand": "curl -X POST 'seller-insights-next.gdn-sg.cld/seller-insights/v2/scheduler/demographics/customer-ages?ranges=LAST_THREE_MONTHS&ranges=LAST_TWELVE_MONTHS&dataCorrectionDuration=2' |grep '\"data\":true'",
-    "timeout": "1m"
+    "timeout": "1m",
+    "tab": "Demographics"
   },
   {
     "name": "sa_0330_daily_sales_filter_update",
@@ -109,7 +116,8 @@
     "frequency": "Weekly",
     "dayInfo": "TUE,WED,THU,FRI,SAT,SUN",
     "curlCommand": "curl -X POST seller-insights-next.gdn-sg.cld/seller-insights/v2/scheduler/sales-v2/sales-item-filter-daily |grep '\"data\":true'",
-    "timeout": "1m"
+    "timeout": "1m",
+    "tab": "Common schedulers"
   },
   {
     "name": "sa_0330_monthly_sales_item_twelve_months",
@@ -123,7 +131,8 @@
     "frequency": "Monthly",
     "dayInfo": "Day 1,2,3,21",
     "curlCommand": "curl -X POST seller-insights.gdn-sg.cld/seller-insights/v2/scheduler/sales/sales-item-twelve-months |grep '\"data\":true'",
-    "timeout": "1m"
+    "timeout": "1m",
+    "tab": "Sales"
   },
   {
     "name": "sa_0345_daily_product-uncompetitive-price",
@@ -137,7 +146,8 @@
     "frequency": "Daily",
     "dayInfo": "",
     "curlCommand": "curl -X POST seller-insights.gdn-sg.cld/seller-insights/v2/scheduler/products/uncompetitive-price |grep '\"data\":true'",
-    "timeout": "1m"
+    "timeout": "1m",
+    "tab": "Overview"
   },
   {
     "name": "sa_0400_weekly_sales_item_filter",
@@ -151,7 +161,8 @@
     "frequency": "Weekly",
     "dayInfo": "MON",
     "curlCommand": "curl -X POST seller-insights.gdn-sg.cld/seller-insights/v2/scheduler/sales-v2/sales-item-filter |grep '\"data\":true'",
-    "timeout": "1m"
+    "timeout": "1m",
+    "tab": "Common schedulers"
   },
   {
     "name": "sa_0430_daily_seller-ranking",
@@ -165,7 +176,8 @@
     "frequency": "Daily",
     "dayInfo": "",
     "curlCommand": "curl -X POST seller-insights.gdn-sg.cld/seller-insights/v2/scheduler/sellers/rankings |grep '\"data\":true'",
-    "timeout": "1m"
+    "timeout": "1m",
+    "tab": "Overview"
   },
   {
     "name": "sa_0430_weekly_product-recommended-sku",
@@ -179,7 +191,8 @@
     "frequency": "Weekly",
     "dayInfo": "MON",
     "curlCommand": "curl -X POST seller-insights-next.gdn-sg.cld/seller-insights/v2/scheduler/products/recommended-skus |grep '\"data\":true'",
-    "timeout": "1m"
+    "timeout": "1m",
+    "tab": "Overview"
   },
   {
     "name": "sa_0445_monthly_order_by_customer_gender",
@@ -193,7 +206,8 @@
     "frequency": "Monthly",
     "dayInfo": "Day 1,2,3",
     "curlCommand": "curl -X POST 'seller-insights-next.gdn-sg.cld/seller-insights/v2/scheduler/demographics/customer-genders?ranges=LAST_THREE_MONTHS&ranges=LAST_TWELVE_MONTHS&dataCorrectionDuration=2' |grep '\"data\":true'",
-    "timeout": "1m"
+    "timeout": "1m",
+    "tab": "Demographics"
   },
   {
     "name": "sa_0445_monthly_order_by_customer_recurrence_type",
@@ -207,7 +221,8 @@
     "frequency": "Monthly",
     "dayInfo": "Day 1,2,3",
     "curlCommand": "curl -X POST 'seller-insights.gdn-sg.cld/seller-insights/v2/scheduler/demographics/customer-recurrence-types?ranges=LAST_THREE_MONTHS&ranges=LAST_TWELVE_MONTHS&dataCorrectionDuration=2' |grep '\"data\":true'",
-    "timeout": "1m"
+    "timeout": "1m",
+    "tab": "Demographics"
   },
   {
     "name": "sa_0500_weekly_order_trend",
@@ -221,7 +236,8 @@
     "frequency": "Weekly",
     "dayInfo": "MON",
     "curlCommand": "curl -X POST seller-insights-next.gdn-sg.cld/seller-insights/v2/scheduler/demographics/trends |grep '\"data\":true'",
-    "timeout": "1m"
+    "timeout": "1m",
+    "tab": "Demographics"
   },
   {
     "name": "sa_0515_monthly_order_by_platform",
@@ -235,7 +251,8 @@
     "frequency": "Monthly",
     "dayInfo": "Day 1,2,3",
     "curlCommand": "curl -X POST 'seller-insights.gdn-sg.cld/seller-insights/v2/scheduler/demographics/platforms?ranges=LAST_THREE_MONTHS&ranges=LAST_TWELVE_MONTHS&dataCorrectionDuration=2' |grep '\"data\":true'",
-    "timeout": "1m"
+    "timeout": "1m",
+    "tab": "Demographics"
   },
   {
     "name": "sa_0520_daily_sales_item_this_year.yaml",
@@ -249,7 +266,8 @@
     "frequency": "Daily",
     "dayInfo": "",
     "curlCommand": "curl -X POST seller-insights.gdn-sg.cld/seller-insights/v2/scheduler/sales-v2/sales-item-this-year |grep '\"data\":true'",
-    "timeout": "1m"
+    "timeout": "1m",
+    "tab": "Sales"
   },
   {
     "name": "sa_0530_monthly_order_by_shipping_destination",
@@ -263,7 +281,8 @@
     "frequency": "Monthly",
     "dayInfo": "Day 1,2,3",
     "curlCommand": "curl -X POST 'seller-insights-next.gdn-sg.cld/seller-insights/v2/scheduler/demographics/shipping-destinations?ranges=LAST_THREE_MONTHS&ranges=LAST_TWELVE_MONTHS&dataCorrectionDuration=2' |grep '\"data\":true'",
-    "timeout": "1m"
+    "timeout": "1m",
+    "tab": "Demographics"
   },
   {
     "name": "sa_0540_daily_declining_sales_funnel",
@@ -277,7 +296,8 @@
     "frequency": "Daily",
     "dayInfo": "",
     "curlCommand": "curl -X POST seller-insights-next.gdn-sg.cld/seller-insights/v2/scheduler/products/declining-sales |grep '\"data\":true'",
-    "timeout": "1m"
+    "timeout": "1m",
+    "tab": "Product"
   },
   {
     "name": "sa_0540_daily_sales_item_hourly.yaml",
@@ -291,7 +311,8 @@
     "frequency": "Daily",
     "dayInfo": "",
     "curlCommand": "curl -X POST seller-insights.gdn-sg.cld/seller-insights/v2/scheduler/sales-v2/sales-item-hourly |grep '\"data\":true'",
-    "timeout": "1m"
+    "timeout": "1m",
+    "tab": "Sales"
   },
   {
     "name": "sa_0545_daily_sales_item_daily.yaml",
@@ -305,7 +326,8 @@
     "frequency": "Daily",
     "dayInfo": "",
     "curlCommand": "curl -X POST seller-insights.gdn-sg.cld/seller-insights/v2/scheduler/sales-v2/sales-item-daily |grep '\"data\":true'",
-    "timeout": "1m"
+    "timeout": "1m",
+    "tab": "Sales"
   },
   {
     "name": "sa_0550_daily_declining_conversion_funnel",
@@ -319,7 +341,8 @@
     "frequency": "Daily",
     "dayInfo": "",
     "curlCommand": "curl -X POST seller-insights-next.gdn-sg.cld/seller-insights/v2/scheduler/products/declining-conversion |grep '\"data\":true'",
-    "timeout": "1m"
+    "timeout": "1m",
+    "tab": "Product"
   },
   {
     "name": "sa_0600_daily_declining_impression_funnel",
@@ -333,7 +356,8 @@
     "frequency": "Daily",
     "dayInfo": "",
     "curlCommand": "curl -X POST seller-insights-next.gdn-sg.cld/seller-insights/v2/scheduler/products/declining-impression |grep '\"data\":true'",
-    "timeout": "1m"
+    "timeout": "1m",
+    "tab": "Product"
   },
   {
     "name": "sa_0615_daily_followers",
@@ -347,7 +371,8 @@
     "frequency": "Daily",
     "dayInfo": "",
     "curlCommand": "curl -X POST seller-insights-next.gdn-sg.cld/seller-insights/v2/scheduler/followers/daily |grep '\"data\":true'",
-    "timeout": "1m"
+    "timeout": "1m",
+    "tab": "Demographics"
   },
   {
     "name": "sa_0630_monthly_followers",
@@ -361,7 +386,8 @@
     "frequency": "Monthly",
     "dayInfo": "Day 1",
     "curlCommand": "curl -X POST seller-insights-next.gdn-sg.cld/seller-insights/v2/scheduler/followers/monthly |grep '\"data\":true'",
-    "timeout": "1m"
+    "timeout": "1m",
+    "tab": "Demographics"
   },
   {
     "name": "sa_0645_monthly_sales_funnel_previous_month.yaml",
@@ -375,7 +401,8 @@
     "frequency": "Daily",
     "dayInfo": "",
     "curlCommand": "curl -X POST seller-insights.gdn-sg.cld/seller-insights/v2/scheduler/products/v2/performance?range=PREVIOUS_MONTH |grep '\"data\":true'",
-    "timeout": "1m"
+    "timeout": "1m",
+    "tab": "Product"
   },
   {
     "name": "sa_0650_daily_overview-items",
@@ -389,7 +416,8 @@
     "frequency": "Daily",
     "dayInfo": "",
     "curlCommand": "curl -X POST seller-insights-next.gdn-sg.cld/seller-insights/v2/scheduler/overview |grep '\"data\":true'",
-    "timeout": "1m"
+    "timeout": "1m",
+    "tab": "Overview"
   },
   {
     "name": "sa_0700_daily_sales_funnel_cancelled_orders",
@@ -403,7 +431,8 @@
     "frequency": "Daily",
     "dayInfo": "",
     "curlCommand": "curl -X POST 'seller-insights-next.gdn-sg.cld/seller-insights/v2/scheduler/products/cancelled-order-v2' |grep '\"data\":true'",
-    "timeout": "1m"
+    "timeout": "1m",
+    "tab": "Product"
   },
   {
     "name": "sa_0710_daily_high_engagement",
@@ -417,7 +446,8 @@
     "frequency": "Daily",
     "dayInfo": "",
     "curlCommand": "curl -X POST seller-insights-next.gdn-sg.cld/seller-insights/v2/scheduler/products/high-engagement |grep '\"data\":true'",
-    "timeout": "1m"
+    "timeout": "1m",
+    "tab": "Product"
   },
   {
     "name": "sa_0720_daily_order_item_operational",
@@ -431,7 +461,8 @@
     "frequency": "Daily",
     "dayInfo": "",
     "curlCommand": "curl -X POST seller-insights-next.gdn-sg.cld/seller-insights/v2/scheduler/operational/cancellation-fulfilment |grep '\"data\":true'",
-    "timeout": "1m"
+    "timeout": "1m",
+    "tab": "Operational"
   },
   {
     "name": "sa_0720_daily_product_insights",
@@ -445,7 +476,8 @@
     "frequency": "Daily",
     "dayInfo": "",
     "curlCommand": "curl -X POST seller-insights.gdn-sg.cld/seller-insights/v2/scheduler/products/product-insights |grep '\"data\":true'",
-    "timeout": "1m"
+    "timeout": "1m",
+    "tab": "Product"
   },
   {
     "name": "sa_0720_daily_traffic",
@@ -459,7 +491,8 @@
     "frequency": "Daily",
     "dayInfo": "",
     "curlCommand": "curl -X POST seller-insights-next.gdn-sg.cld/seller-insights/v2/scheduler/traffic-v2 |grep '\"data\":true'",
-    "timeout": "1m"
+    "timeout": "1m",
+    "tab": "Traffic"
   },
   {
     "name": "sa_0730_daily_customer_range",
@@ -473,7 +506,8 @@
     "frequency": "Daily",
     "dayInfo": "",
     "curlCommand": "curl -X POST seller-insights-next.gdn-sg.cld/seller-insights/v2/scheduler/customer/range |grep '\"data\":true'",
-    "timeout": "1m"
+    "timeout": "1m",
+    "tab": "Customer"
   },
   {
     "name": "sa_0730_daily_sales_funnel_thirty_days",
@@ -487,7 +521,8 @@
     "frequency": "Daily",
     "dayInfo": "",
     "curlCommand": "curl -X POST seller-insights.gdn-sg.cld/seller-insights/v2/scheduler/products/v2/performance?range=LAST_THIRTY_DAYS |grep '\"data\":true'",
-    "timeout": "1m"
+    "timeout": "1m",
+    "tab": "Product"
   },
   {
     "name": "sa_0735_daily_sales_insights",
@@ -501,7 +536,8 @@
     "frequency": "Daily",
     "dayInfo": "",
     "curlCommand": "curl -X POST seller-insights-next.gdn-sg.cld/seller-insights/v2/scheduler/sales-v2/sales-insights |grep '\"data\":true'",
-    "timeout": "1m"
+    "timeout": "1m",
+    "tab": "Sales"
   },
   {
     "name": "sa_0740_daily_customer_insights",
@@ -515,7 +551,8 @@
     "frequency": "Daily",
     "dayInfo": "",
     "curlCommand": "curl -X POST seller-insights.gdn-sg.cld/seller-insights/v2/scheduler/customer/customer-insights |grep '\"data\":true'",
-    "timeout": "1m"
+    "timeout": "1m",
+    "tab": "Customer"
   },
   {
     "name": "sa_0740_daily_sales_insights",
@@ -529,7 +566,8 @@
     "frequency": "Daily",
     "dayInfo": "",
     "curlCommand": "curl -X POST seller-insights-next.gdn-sg.cld/seller-insights/v2/scheduler/sales-v2/sales-insights |grep '\"data\":true'",
-    "timeout": "1m"
+    "timeout": "1m",
+    "tab": "Sales"
   },
   {
     "name": "sa_0745_daily_traffic",
@@ -543,21 +581,8 @@
     "frequency": "Daily",
     "dayInfo": "",
     "curlCommand": "curl -X POST seller-insights-next.gdn-sg.cld/seller-insights/v2/scheduler/traffic-v2 |grep '\"data\":true'",
-    "timeout": "1m"
-  },
-  {
-    "name": "sa_0750_daily_order_item_operational",
-    "analyticName": "CANCELLATION_FULFILMENT_OPERATIONAL",
-    "hour": "07,13,19",
-    "minute": "50",
-    "seconds": "00",
-    "retry": "0",
-    "scheduleEnabled": false,
-    "executionEnabled": true,
-    "frequency": "Daily",
-    "dayInfo": "",
-    "curlCommand": "curl -X POST seller-insights-next.gdn-sg.cld/seller-insights/v2/scheduler/operational/cancellation-fulfilment |grep '\"data\":true'",
-    "timeout": "1m"
+    "timeout": "1m",
+    "tab": "Traffic"
   },
   {
     "name": "sa_0800_daily_sales_yesterday",
@@ -571,7 +596,8 @@
     "frequency": "Daily",
     "dayInfo": "",
     "curlCommand": "curl -X POST seller-insights.gdn-sg.cld/seller-insights/v2/scheduler/products/v2/performance?range=YESTERDAY |grep '\"data\":true'",
-    "timeout": "1m"
+    "timeout": "1m",
+    "tab": "Product"
   },
   {
     "name": "sa_0805_daily_sales_insights",
@@ -585,7 +611,8 @@
     "frequency": "Daily",
     "dayInfo": "",
     "curlCommand": "curl -X POST seller-insights-next.gdn-sg.cld/seller-insights/v2/scheduler/sales-v2/sales-insights |grep '\"data\":true'",
-    "timeout": "1m"
+    "timeout": "1m",
+    "tab": "Sales"
   },
   {
     "name": "sa_0820_chat_response_operational",
@@ -599,7 +626,8 @@
     "frequency": "Daily",
     "dayInfo": "",
     "curlCommand": "curl -X POST seller-insights-next.gdn-sg.cld/seller-insights/v2/scheduler/operational/chat-response |grep '\"data\":true'",
-    "timeout": "1m"
+    "timeout": "1m",
+    "tab": "Operational"
   },
   {
     "name": "sa_0835_customer_daily",
@@ -613,7 +641,8 @@
     "frequency": "Daily",
     "dayInfo": "",
     "curlCommand": "curl -X POST seller-insights.gdn-sg.cld/seller-insights/v2/scheduler/customer/daily |grep '\"data\":true'",
-    "timeout": "1m"
+    "timeout": "1m",
+    "tab": "Customer"
   },
   {
     "name": "sa_0900_weekly_notification",
@@ -627,7 +656,8 @@
     "frequency": "Weekly",
     "dayInfo": "MON",
     "curlCommand": "curl -X POST seller-insights.gdn-sg.cld/seller-insights/v2/scheduler/WeeklyNotification?range=LAST_SEVEN_DAYS |grep '\"data\":true'",
-    "timeout": "1m"
+    "timeout": "1m",
+    "tab": "Common schedulers"
   },
   {
     "name": "sa_0910_daily_product-wishlist-last-thirty-days",
@@ -641,7 +671,8 @@
     "frequency": "Daily",
     "dayInfo": "",
     "curlCommand": "curl -X POST seller-insights.gdn-sg.cld/seller-insights/v2/scheduler/products/wishlist?range=LAST_THIRTY_DAYS |grep '\"data\":true'",
-    "timeout": "1m"
+    "timeout": "1m",
+    "tab": "Overview"
   },
   {
     "name": "sa_0910_weekly_product-wishlist",
@@ -655,7 +686,8 @@
     "frequency": "Weekly",
     "dayInfo": "MON",
     "curlCommand": "curl -X POST seller-insights.gdn-sg.cld/seller-insights/v2/scheduler/products/wishlist |grep '\"data\":true'",
-    "timeout": "1m"
+    "timeout": "1m",
+    "tab": "Overview"
   },
   {
     "name": "sa_0920_daily_product-search-keyword-last-thirty-days",
@@ -669,7 +701,8 @@
     "frequency": "Daily",
     "dayInfo": "",
     "curlCommand": "curl -X POST 'seller-insights-next.gdn-sg.cld/seller-insights/v2/scheduler/products/search-keywords?range=LAST_THIRTY_DAYS' |grep '\"data\":true'",
-    "timeout": "1m"
+    "timeout": "1m",
+    "tab": "Overview"
   },
   {
     "name": "sa_0920_daily_remove-analytic-data",
@@ -683,7 +716,8 @@
     "frequency": "Daily",
     "dayInfo": "",
     "curlCommand": "curl -X POST seller-insights-next.gdn-sg.cld/seller-insights/v2/scheduler/remove-analytic-data |grep '\"data\":true'",
-    "timeout": "1m"
+    "timeout": "1m",
+    "tab": "Common schedulers"
   },
   {
     "name": "sa_1130_daily_scheduler_report",
@@ -697,6 +731,7 @@
     "frequency": "Daily",
     "dayInfo": "",
     "curlCommand": "curl -X POST 'seller-insights-next.gdn-sg.cld/seller-insights/v2/scheduler/trigger-daily-scheduler-report' |grep '\"data\":true'",
-    "timeout": "1m"
+    "timeout": "1m",
+    "tab": "Common schedulers"
   }
 ]
