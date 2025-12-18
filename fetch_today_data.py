@@ -444,27 +444,115 @@ def validate_sales_funnel_reports(today_data_file=None, sso_token=None, silent=F
     }
 
 
-def get_validation_cache_file(scheduler_name):
-    """Get the cache file path for a scheduler."""
+def get_sales_funnel_cache_file():
+    """Get the consolidated cache file path for sales funnel validation results."""
     script_dir = Path(__file__).parent
     cache_dir = script_dir / ".validation_cache"
     cache_dir.mkdir(exist_ok=True)
-    # Sanitize scheduler name for filename
-    safe_name = scheduler_name.replace('/', '_').replace('\\', '_')
-    return cache_dir / f"{safe_name}.json"
+    return cache_dir / "sales_funnel_cache.json"
+
+
+def migrate_old_cache_files():
+    """Migrate old separate cache files to consolidated file."""
+    script_dir = Path(__file__).parent
+    cache_dir = script_dir / ".validation_cache"
+    cache_file = get_sales_funnel_cache_file()
+    
+    # Load existing consolidated cache
+    cache_list = []
+    if cache_file.exists():
+        try:
+            with open(cache_file, 'r') as f:
+                existing_data = json.load(f)
+                if isinstance(existing_data, list):
+                    cache_list = existing_data
+        except Exception:
+            cache_list = []
+    
+    # Check for old separate files and migrate them
+    scheduler_names = ['SALES_FUNNEL_YESTERDAY', 'SALES_FUNNEL_LAST_THIRTY_DAYS', 'SALES_FUNNEL_PREVIOUS_MONTH']
+    migrated_count = 0
+    
+    for scheduler_name in scheduler_names:
+        safe_name = scheduler_name.replace('/', '_').replace('\\', '_')
+        old_cache_file = cache_dir / f"{safe_name}.json"
+        
+        if old_cache_file.exists():
+            try:
+                with open(old_cache_file, 'r') as f:
+                    old_cache_data = json.load(f)
+                
+                # Check if already in consolidated cache
+                exists = any(item.get('scheduler_name') == scheduler_name for item in cache_list)
+                if not exists:
+                    cache_list.append({
+                        'scheduler_name': scheduler_name,
+                        'fetched_at': old_cache_data.get('fetched_at', int(time.time() * 1000)),
+                        'result': old_cache_data.get('result', {})
+                    })
+                    migrated_count += 1
+                
+                # Delete old file after migration
+                old_cache_file.unlink()
+            except Exception as e:
+                print(f"Warning: Failed to migrate {old_cache_file.name}: {e}")
+    
+    # Save consolidated cache if migrations occurred
+    if migrated_count > 0:
+        try:
+            with open(cache_file, 'w') as f:
+                json.dump(cache_list, f, indent=2)
+            print(f"Migrated {migrated_count} sales funnel cache files to consolidated file")
+        except Exception as e:
+            print(f"Warning: Failed to save consolidated cache: {e}")
 
 
 def save_validation_cache(scheduler_name, result, silent=False):
-    """Save validation result to cache file."""
+    """Save validation result to consolidated cache file."""
     try:
-        cache_file = get_validation_cache_file(scheduler_name)
-        cache_data = {
-            'scheduler_name': scheduler_name,
-            'fetched_at': int(time.time() * 1000),  # Timestamp in milliseconds
-            'result': result
-        }
+        cache_file = get_sales_funnel_cache_file()
+        
+        # Migrate old files if they exist
+        migrate_old_cache_files()
+        
+        # Load existing cache
+        cache_list = []
+        if cache_file.exists():
+            try:
+                with open(cache_file, 'r') as f:
+                    existing_data = json.load(f)
+                    if isinstance(existing_data, list):
+                        cache_list = existing_data
+                    elif isinstance(existing_data, dict):
+                        # Handle old single-file format (shouldn't happen, but handle gracefully)
+                        if existing_data.get('scheduler_name') == scheduler_name:
+                            cache_list = [existing_data]
+                        else:
+                            cache_list = []
+            except Exception:
+                cache_list = []
+        
+        # Find and update existing entry or add new one
+        found = False
+        for item in cache_list:
+            if item.get('scheduler_name') == scheduler_name:
+                item['fetched_at'] = int(time.time() * 1000)
+                item['result'] = result
+                found = True
+                break
+        
+        if not found:
+            # Add new entry
+            cache_list.append({
+                'scheduler_name': scheduler_name,
+                'fetched_at': int(time.time() * 1000),  # Timestamp in milliseconds
+                'result': result
+            })
+        
+        # Save updated cache
         with open(cache_file, 'w') as f:
-            json.dump(cache_data, f, indent=2)
+            json.dump(cache_list, f, indent=2)
+        
         if not silent:
             print(f"Validation result cached for {scheduler_name}")
     except Exception as e:
@@ -473,17 +561,38 @@ def save_validation_cache(scheduler_name, result, silent=False):
 
 
 def load_validation_cache(scheduler_name, silent=False):
-    """Load validation result from cache if available and valid."""
+    """Load validation result from consolidated cache file if available and valid."""
     try:
-        cache_file = get_validation_cache_file(scheduler_name)
+        cache_file = get_sales_funnel_cache_file()
         if not cache_file.exists():
-            return None
+            # Try migrating old files
+            migrate_old_cache_files()
+            if not cache_file.exists():
+                return None
         
         with open(cache_file, 'r') as f:
             cache_data = json.load(f)
         
+        # Handle both list format (new) and dict format (old single entry)
+        cache_list = []
+        if isinstance(cache_data, list):
+            cache_list = cache_data
+        elif isinstance(cache_data, dict):
+            # Old format - single entry
+            cache_list = [cache_data]
+        
+        # Find entry for the requested scheduler
+        entry = None
+        for item in cache_list:
+            if item.get('scheduler_name') == scheduler_name:
+                entry = item
+                break
+        
+        if not entry:
+            return None
+        
         # Check if cache is from today (same day)
-        fetched_at = cache_data.get('fetched_at', 0)
+        fetched_at = entry.get('fetched_at', 0)
         cache_date = datetime.fromtimestamp(fetched_at / 1000, tz=timezone(timedelta(hours=7)))
         today_timestamp = get_current_day_start_timestamp()
         today_date = datetime.fromtimestamp(today_timestamp / 1000, tz=timezone(timedelta(hours=7)))
@@ -492,11 +601,53 @@ def load_validation_cache(scheduler_name, silent=False):
         if cache_date.date() != today_date.date():
             if not silent:
                 print(f"Cache expired: from {cache_date.date()}, today is {today_date.date()}")
+            # Remove expired entry from cache
+            cache_list = [item for item in cache_list if item.get('scheduler_name') != scheduler_name]
+            if cache_list:
+                with open(cache_file, 'w') as f:
+                    json.dump(cache_list, f, indent=2)
+            else:
+                cache_file.unlink()
             return None
         
         # Check if result is valid (successful and matched)
-        result = cache_data.get('result', {})
+        result = entry.get('result', {})
         validation = result.get('validation', {})
+        
+        # Migrate old cache format: if scheduler_report_details exists, remove it
+        # and ensure report has schedulerReport
+        if 'scheduler_report_details' in result:
+            # Old format detected - migrate it
+            if 'report' in result and isinstance(result['report'], dict):
+                # If report doesn't have schedulerReport but scheduler_report_details exists,
+                # reconstruct it (shouldn't happen in practice, but handle gracefully)
+                if 'schedulerReport' not in result['report'] and result.get('scheduler_report_details'):
+                    result['report']['schedulerReport'] = result['scheduler_report_details']
+            # Remove redundant scheduler_report_details
+            result.pop('scheduler_report_details', None)
+        
+        # Migrate old validation format: remove scheduler_name if present
+        if 'scheduler_name' in validation:
+            validation.pop('scheduler_name')
+        
+        # Migrate old report format: if full MongoDB document, extract only needed fields
+        if 'report' in result and isinstance(result['report'], dict):
+            report = result['report']
+            # Check if it's a full MongoDB document (has _id, _class, etc.)
+            if '_id' in report or '_class' in report:
+                # Extract only needed fields
+                result['report'] = {
+                    'schedulerReport': report.get('schedulerReport', {}),
+                    'date': report.get('date'),
+                    'schedulerName': report.get('schedulerName')
+                }
+                # Save migrated cache back
+                entry['result'] = result
+                cache_list = [item for item in cache_list if item.get('scheduler_name') != scheduler_name]
+                cache_list.append(entry)
+                with open(cache_file, 'w') as f:
+                    json.dump(cache_list, f, indent=2)
+        
         if validation.get('execution_success') and validation.get('match'):
             if not silent:
                 print(f"Using cached validation result for {scheduler_name} (fetched at {cache_date.strftime('%Y-%m-%d %H:%M:%S')})")
@@ -601,20 +752,12 @@ def validate_single_sales_funnel_report(scheduler_name, today_data_file=None, ss
             'today_date': date_str
         }
     
-    # Extract scheduler report details (all pods)
+    # Extract scheduler report and calculate total rows inserted
     scheduler_report = target_report.get('schedulerReport', {})
-    scheduler_report_details = {}
     total_rows_inserted = 0
     
     for pod_key, pod_data in scheduler_report.items():
         if isinstance(pod_data, dict):
-            scheduler_report_details[pod_key] = {
-                'schedulerNo': pod_data.get('schedulerNo'),
-                'startTime': pod_data.get('startTime'),
-                'endTime': pod_data.get('endTime'),
-                'rowsInserted': pod_data.get('rowsInserted', 0),
-                'executionSuccess': pod_data.get('executionSuccess', False)
-            }
             rows_inserted = pod_data.get('rowsInserted', 0)
             if rows_inserted is not None:
                 total_rows_inserted += rows_inserted
@@ -624,10 +767,14 @@ def validate_single_sales_funnel_report(scheduler_name, today_data_file=None, ss
         with open(today_data_file, 'r') as f:
             today_data = json.load(f)
     except FileNotFoundError:
+        optimized_report = {
+            'schedulerReport': target_report.get('schedulerReport', {}),
+            'date': target_report.get('date'),
+            'schedulerName': target_report.get('schedulerName')
+        }
         return {
             'error': f'{today_data_file} not found. Cannot compare with today\'s data.',
-            'report': target_report,
-            'scheduler_report_details': scheduler_report_details
+            'report': optimized_report
         }
     
     # Extract scheduler record and expected value from today's data
@@ -647,14 +794,13 @@ def validate_single_sales_funnel_report(scheduler_name, today_data_file=None, ss
     
     # Calculate validation result
     match = total_rows_inserted == expected_total
-    pod_count = len(scheduler_report_details)
+    pod_count = len(scheduler_report)
     execution_success = any(
         pod.get('executionSuccess', False) 
-        for pod in scheduler_report_details.values()
+        for pod in scheduler_report.values() if isinstance(pod, dict)
     )
     
     validation_result = {
-        'scheduler_name': scheduler_name,
         'rows_inserted': total_rows_inserted,
         'expected_total': expected_total,
         'match': match,
@@ -663,10 +809,17 @@ def validate_single_sales_funnel_report(scheduler_name, today_data_file=None, ss
         'difference': total_rows_inserted - expected_total
     }
     
+    # Store only necessary fields from report (schedulerReport and date)
+    # Remove redundant scheduler_report_details - use report.schedulerReport directly
+    optimized_report = {
+        'schedulerReport': target_report.get('schedulerReport', {}),
+        'date': target_report.get('date'),
+        'schedulerName': target_report.get('schedulerName')
+    }
+    
     result = {
         'validation': validation_result,
-        'report': target_report,
-        'scheduler_report_details': scheduler_report_details,
+        'report': optimized_report,
         'scheduler_record': scheduler_record  # Include the full scheduler record from today-data.json
     }
     
@@ -678,6 +831,8 @@ def validate_single_sales_funnel_report(scheduler_name, today_data_file=None, ss
 
 
 def main():
+    # Migrate old cache files to consolidated format on startup
+    migrate_old_cache_files()
     """Main function to fetch and save today's scheduler data."""
     # Parse command line arguments
     parser = argparse.ArgumentParser(description='Fetch today\'s scheduler data')

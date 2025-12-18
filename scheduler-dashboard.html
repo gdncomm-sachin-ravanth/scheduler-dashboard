@@ -2255,6 +2255,13 @@ Option 4 - Node.js (if installed):
                 
                 if (result.success && result.timestamp) {
                     const lastUpdated = new Date(result.timestamp);
+                    const now = new Date();
+                    
+                    // Check if the timestamp is from today
+                    const isFromToday = lastUpdated.getFullYear() === now.getFullYear() &&
+                                      lastUpdated.getMonth() === now.getMonth() &&
+                                      lastUpdated.getDate() === now.getDate();
+                    
                     const timeStr = lastUpdated.toLocaleTimeString('en-US', {
                         hour: '2-digit',
                         minute: '2-digit',
@@ -2268,6 +2275,16 @@ Option 4 - Node.js (if installed):
                     
                     lastUpdatedEl.textContent = `Last updated: ${dateStr} ${timeStr}`;
                     lastUpdatedEl.style.display = 'inline';
+                    
+                    // If timestamp is not from today, prompt user to refresh
+                    if (!isFromToday) {
+                        setTimeout(() => {
+                            const shouldRefresh = confirm('Today\'s data has not been refreshed yet. Would you like to refresh it now?');
+                            if (shouldRefresh) {
+                                refreshData();
+                            }
+                        }, 500); // Small delay to let the page finish loading
+                    }
                 } else {
                     // Show "-" when no last updated time exists or cache expired
                     lastUpdatedEl.textContent = 'Last updated: -';
@@ -2515,7 +2532,9 @@ Option 4 - Node.js (if installed):
                 if (result.success) {
                     // Use scheduler_record from API response, or fall back to current page data
                     const schedulerRecord = result.scheduler_record || currentSchedulerRecord;
-                    displaySingleSalesFunnelResults(result.validation, result.scheduler_report_details, result.report, schedulerRecord);
+                    // Use report.schedulerReport directly instead of scheduler_report_details
+                    const schedulerReportDetails = result.report?.schedulerReport || {};
+                    displaySingleSalesFunnelResults(result.validation, schedulerReportDetails, result.report, schedulerRecord);
                     
                     // Show toast with cache info if applicable
                     let toastMessage = `${currentSchedulerName} validated successfully`;
@@ -2745,14 +2764,16 @@ Option 4 - Node.js (if installed):
                                 <tbody>
             `;
                 
-                // Sort pods by schedulerNo
+                // Sort pods by schedulerNo (schedulerReportDetails is now report.schedulerReport)
                 const sortedPods = Object.entries(schedulerReportDetails).sort((a, b) => {
-                    const aNo = a[1].schedulerNo || 0;
-                    const bNo = b[1].schedulerNo || 0;
+                    const aNo = a[1]?.schedulerNo ?? 0;
+                    const bNo = b[1]?.schedulerNo ?? 0;
                     return aNo - bNo;
                 });
                 
                 sortedPods.forEach(([podKey, podData]) => {
+                    if (!podData || typeof podData !== 'object') return;
+                    
                     const podSuccess = podData.executionSuccess;
                     const podSuccessColor = podSuccess ? '#d1fae5' : '#fee2e2';
                     const podSuccessTextColor = podSuccess ? '#065f46' : '#991b1b';

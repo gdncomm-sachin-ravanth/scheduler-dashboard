@@ -228,7 +228,6 @@ class DashboardHandler(BaseHTTPRequestHandler):
                     'message': 'Sales funnel validation completed',
                     'validation': result.get('validation', {}),
                     'report': result.get('report'),
-                    'scheduler_report_details': result.get('scheduler_report_details', {}),
                     'scheduler_record': result.get('scheduler_record'),
                     'from_cache': result.get('from_cache', False),
                     'fetched_at': result.get('fetched_at')
