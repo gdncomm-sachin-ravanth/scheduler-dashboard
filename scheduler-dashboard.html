@@ -3533,21 +3533,23 @@ Option 4 - Node.js (if installed):
                     </div>` : 
                     job.frequency;
                 
-                // Make analyticName clickable - show BQ Details modal if available, otherwise show curl modal
+                // Make analyticName clickable only if BQ Details are available
                 const hasBqDetails = job.bqDetails && job.bqDetails.source;
                 const analyticNameClickHandler = hasBqDetails ? 
                     `showBqDetailsModal('${escapedJobName}')` : 
-                    `showCurlModal('${escapedJobName}')`;
+                    '';
                 const analyticNameTitle = hasBqDetails ? 
                     'Click to view BQ Details' : 
-                    'Click to view Details';
+                    '';
                 const analyticNameClass = hasBqDetails ? 
                     'clickable-analytic-name-bq' : 
-                    'clickable-analytic-name';
+                    '';
+                const onclickAttr = hasBqDetails ? `onclick="${analyticNameClickHandler}"` : '';
+                const titleAttr = hasBqDetails ? `title="${analyticNameTitle}"` : '';
                 
                 // Combine analyticName with tab below
                 const analyticNameWithTab = `<div style="display: flex; flex-direction: column; gap: 0.25rem;">
-                    <strong class="${analyticNameClass}" title="${analyticNameTitle}" onclick="${analyticNameClickHandler}">${job.analyticName}</strong>
+                    <strong class="${analyticNameClass}" ${titleAttr} ${onclickAttr}>${job.analyticName}</strong>
                     ${tabDisplay}
                 </div>`;
                 
