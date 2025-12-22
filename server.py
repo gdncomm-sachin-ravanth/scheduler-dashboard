@@ -131,8 +131,8 @@ class DashboardHandler(BaseHTTPRequestHandler):
                 today_count = 0
                 
                 for line in output_lines:
-                    if 'Saved' in line and 'today-data.json' in line:
-                        # Extract number from "Saved X records to today-data.json"
+                    if 'Saved' in line and ('today-data.json' in line or '.validation_cache/today-data.json' in line):
+                        # Extract number from "Saved X records to today-data.json" or ".validation_cache/today-data.json"
                         try:
                             today_count = int(line.split()[1])
                         except:
@@ -438,10 +438,15 @@ class DashboardHandler(BaseHTTPRequestHandler):
                     response_data = json.loads(result.stdout)
                     data_list = response_data.get('data', [])
                     
-                    # Save to past-data.json
-                    past_data_file = Path(__file__).parent / 'past-data.json'
+                    # Save to past-data.json in cache directory
+                    cache_dir = Path(__file__).parent / '.validation_cache'
+                    cache_dir.mkdir(exist_ok=True)
+                    past_data_file = cache_dir / 'past-data.json'
                     with open(past_data_file, 'w') as f:
                         json.dump(data_list, f, indent=4)
+                    
+                    # Update last_updated cache
+                    self.save_last_updated_cache('pastData', datetime.now(timezone.utc).isoformat() + 'Z')
                     
                     response = {
                         'success': True,
