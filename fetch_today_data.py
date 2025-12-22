@@ -760,7 +760,12 @@ def validate_single_sales_funnel_report(scheduler_name, today_data_file=None, ss
         if isinstance(pod_data, dict):
             rows_inserted = pod_data.get('rowsInserted', 0)
             if rows_inserted is not None:
-                total_rows_inserted += rows_inserted
+                # Convert to int - rowsInserted comes as string from API (e.g., "334239")
+                try:
+                    total_rows_inserted += int(rows_inserted)
+                except (ValueError, TypeError):
+                    # If conversion fails, treat as 0
+                    pass
     
     # Load today's data for comparison
     try:
@@ -784,7 +789,12 @@ def validate_single_sales_funnel_report(scheduler_name, today_data_file=None, ss
         record_name = record.get('analyticName', '')
         if record_name == scheduler_name:
             scheduler_record = record
-            expected_total = record.get('analyticTotalData', 0)
+            expected_total_raw = record.get('analyticTotalData', 0)
+            # Convert to int - analyticTotalData might come as string
+            try:
+                expected_total = int(expected_total_raw)
+            except (ValueError, TypeError):
+                expected_total = 0
             break
     
     # Debug: Log if scheduler_record was found
@@ -792,21 +802,25 @@ def validate_single_sales_funnel_report(scheduler_name, today_data_file=None, ss
         found_names = [r.get('analyticName', '') for r in today_data if 'SALES_FUNNEL' in r.get('analyticName', '')]
         print(f"Warning: Scheduler record not found for {scheduler_name}. Found sales funnel schedulers: {found_names}")
     
-    # Calculate validation result
-    match = total_rows_inserted == expected_total
+    # Calculate validation result - ensure both are int for comparison
+    match = int(total_rows_inserted) == int(expected_total)
     pod_count = len(scheduler_report)
     execution_success = any(
         pod.get('executionSuccess', False) 
         for pod in scheduler_report.values() if isinstance(pod, dict)
     )
     
+    # Ensure both are int for subtraction
+    total_rows_inserted_int = int(total_rows_inserted)
+    expected_total_int = int(expected_total)
+    
     validation_result = {
-        'rows_inserted': total_rows_inserted,
-        'expected_total': expected_total,
+        'rows_inserted': total_rows_inserted_int,
+        'expected_total': expected_total_int,
         'match': match,
         'pod_count': pod_count,
         'execution_success': execution_success,
-        'difference': total_rows_inserted - expected_total
+        'difference': total_rows_inserted_int - expected_total_int
     }
     
     # Store only necessary fields from report (schedulerReport and date)
