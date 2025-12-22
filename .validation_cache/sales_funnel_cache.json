@@ -1,0 +1,62 @@
+[
+  {
+    "scheduler_name": "SALES_FUNNEL_PREVIOUS_MONTH",
+    "fetched_at": 1766418752261,
+    "result": {
+      "validation": {
+        "rows_inserted": 1336825,
+        "expected_total": 1336825,
+        "match": true,
+        "pod_count": 4,
+        "execution_success": true,
+        "difference": 0
+      },
+      "report": {
+        "schedulerReport": {
+          "0": {
+            "endTime": "1766364707728",
+            "executionSuccess": true,
+            "rowsInserted": "334239",
+            "schedulerNo": "0",
+            "startTime": "1766364522675"
+          },
+          "1": {
+            "endTime": "1766364769234",
+            "executionSuccess": true,
+            "rowsInserted": "334611",
+            "schedulerNo": "1",
+            "startTime": "1766364567247"
+          },
+          "2": {
+            "endTime": "1766364819634",
+            "executionSuccess": true,
+            "rowsInserted": "334417",
+            "schedulerNo": "2",
+            "startTime": "1766364617322"
+          },
+          "3": {
+            "endTime": "1766364855449",
+            "executionSuccess": true,
+            "rowsInserted": "333558",
+            "schedulerNo": "3",
+            "startTime": "1766364670885"
+          }
+        },
+        "date": "1766336400000",
+        "schedulerName": "SALES_FUNNEL_PREVIOUS_MONTH"
+      },
+      "scheduler_record": {
+        "_class": "com.gdn.partners.seller.insights.repository.model.scheduler.Scheduler",
+        "_id": "6948910a12e2373b8b0f50bf",
+        "analyticDate": "1766336400000",
+        "analyticName": "SALES_FUNNEL_PREVIOUS_MONTH",
+        "analyticTotalData": "1336825",
+        "bqFetchEndDate": "1766364513883",
+        "bqTotalData": "1336825",
+        "executionFinishDate": "1766364713981",
+        "executionStartDate": "1766363402613",
+        "executionSuccess": true
+      }
+    }
+  }
+]

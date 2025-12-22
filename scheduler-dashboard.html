@@ -2920,11 +2920,31 @@ Option 4 - Node.js (if installed):
             
             const statusColor = match ? '#d1fae5' : '#fee2e2';
             const statusTextColor = match ? '#065f46' : '#991b1b';
-            const executionColor = executionSuccess ? '#d1fae5' : '#fee2e2';
-            const executionTextColor = executionSuccess ? '#065f46' : '#991b1b';
             
-            // Calculate number of columns needed (always include Difference)
-            const numColumns = 6; // Pods, Rows Inserted, Expected, Match, Success, Difference
+            // Calculate total duration from all pods
+            let totalDurationMs = 0;
+            let totalDurationFormatted = '-';
+            if (schedulerReportDetails && Object.keys(schedulerReportDetails).length > 0) {
+                Object.values(schedulerReportDetails).forEach(podData => {
+                    if (podData && typeof podData === 'object' && podData.startTime && podData.endTime) {
+                        const start = parseInt(podData.startTime);
+                        const end = parseInt(podData.endTime);
+                        if (!isNaN(start) && !isNaN(end)) {
+                            totalDurationMs += (end - start);
+                        }
+                    }
+                });
+                
+                if (totalDurationMs > 0) {
+                    const hours = Math.floor(totalDurationMs / (1000 * 60 * 60));
+                    const minutes = Math.floor((totalDurationMs % (1000 * 60 * 60)) / (1000 * 60));
+                    const seconds = Math.floor((totalDurationMs % (1000 * 60)) / 1000);
+                    totalDurationFormatted = `${hours}h ${minutes}m ${seconds}s`;
+                }
+            }
+            
+            // Calculate number of columns needed (removed Success, added Total Duration)
+            const numColumns = 6; // Pods, Total Duration, Rows Inserted, SAVED DATA, Difference, Match
             
             // Build validation results HTML (shown after clicking validate)
             // Note: Scheduler details section is already shown above the validate button when modal opens
@@ -2937,6 +2957,10 @@ Option 4 - Node.js (if installed):
                         <div style="text-align: center;">
                             <div style="font-size: 0.7rem; color: var(--gray-600); margin-bottom: 0.125rem;">Pods</div>
                             <div style="font-size: 1rem; font-weight: 600; color: var(--gray-900);">${podCount}</div>
+                        </div>
+                        <div style="text-align: center;">
+                            <div style="font-size: 0.7rem; color: var(--gray-600); margin-bottom: 0.125rem;">Total Duration</div>
+                            <div style="font-size: 1rem; font-weight: 600; color: var(--gray-900);">${totalDurationFormatted}</div>
                         </div>
                         <div style="text-align: center;">
                             <div style="font-size: 0.7rem; color: var(--gray-600); margin-bottom: 0.125rem;">Rows Inserted</div>
@@ -2956,12 +2980,6 @@ Option 4 - Node.js (if installed):
                             <div style="font-size: 0.7rem; color: var(--gray-600); margin-bottom: 0.125rem;">Match</div>
                             <div style="padding: 0.25rem 0.5rem; border-radius: 0.25rem; display: inline-block; font-size: 0.75rem; font-weight: 600; background: ${statusColor}; color: ${statusTextColor};">
                                 ${match ? '✓ YES' : '✗ NO'}
-                            </div>
-                        </div>
-                        <div style="text-align: center;">
-                            <div style="font-size: 0.7rem; color: var(--gray-600); margin-bottom: 0.125rem;">Success</div>
-                            <div style="padding: 0.25rem 0.5rem; border-radius: 0.25rem; display: inline-block; font-size: 0.75rem; font-weight: 600; background: ${executionColor}; color: ${executionTextColor};">
-                                ${executionSuccess ? '✓ YES' : '✗ NO'}
                             </div>
                         </div>
                     </div>
