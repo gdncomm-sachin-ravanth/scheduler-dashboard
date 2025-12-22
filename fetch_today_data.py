@@ -336,10 +336,8 @@ def validate_sales_funnel_reports(today_data_file=None, sso_token=None, silent=F
     Returns:
         Dictionary with validation results
     """
-    script_dir = Path(__file__).parent
-    
     if today_data_file is None:
-        today_data_file = script_dir / "today-data.json"
+        today_data_file = get_today_data_file()
     
     # Get today's start timestamp in WIB timezone
     today_timestamp = get_current_day_start_timestamp()
@@ -444,18 +442,123 @@ def validate_sales_funnel_reports(today_data_file=None, sso_token=None, silent=F
     }
 
 
-def get_sales_funnel_cache_file():
-    """Get the consolidated cache file path for sales funnel validation results."""
+def get_cache_dir():
+    """Get the cache directory path."""
     script_dir = Path(__file__).parent
     cache_dir = script_dir / ".validation_cache"
     cache_dir.mkdir(exist_ok=True)
-    return cache_dir / "sales_funnel_cache.json"
+    return cache_dir
+
+
+def get_today_data_file():
+    """Get the today-data.json file path in cache directory."""
+    return get_cache_dir() / "today-data.json"
+
+
+def get_past_data_file():
+    """Get the past-data.json file path in cache directory."""
+    return get_cache_dir() / "past-data.json"
+
+
+def get_last_updated_file():
+    """Get the last_updated.json file path."""
+    return get_cache_dir() / "last_updated.json"
+
+
+def is_cache_valid(cache_type, ttl_days=1):
+    """
+    Check if cache file is still valid based on TTL.
+    
+    Args:
+        cache_type: 'todayData' or 'pastData'
+        ttl_days: Time to live in days (default: 1 day)
+    
+    Returns:
+        True if cache is valid, False otherwise
+    """
+    try:
+        last_updated_file = get_last_updated_file()
+        if not last_updated_file.exists():
+            return False
+        
+        with open(last_updated_file, 'r') as f:
+            cache_list = json.load(f)
+        
+        if not isinstance(cache_list, list):
+            return False
+        
+        # Find entry for the requested cache_type
+        entry = None
+        for item in cache_list:
+            if item.get('type') == cache_type:
+                entry = item
+                break
+        
+        if not entry:
+            return False
+        
+        fetched_at = entry.get('fetched_at', 0)
+        if not fetched_at:
+            return False
+        
+        # Check if cache is expired (older than TTL)
+        current_time = int(time.time() * 1000)
+        age_ms = current_time - fetched_at
+        ttl_ms = ttl_days * 24 * 60 * 60 * 1000  # Convert days to milliseconds
+        
+        return age_ms <= ttl_ms
+    except Exception:
+        return False
+
+
+def update_last_updated_cache(cache_type):
+    """Update the last_updated.json file with current timestamp."""
+    try:
+        last_updated_file = get_last_updated_file()
+        cache_list = []
+        
+        if last_updated_file.exists():
+            try:
+                with open(last_updated_file, 'r') as f:
+                    cache_list = json.load(f)
+            except Exception:
+                cache_list = []
+        
+        if not isinstance(cache_list, list):
+            cache_list = []
+        
+        # Find and update or add entry
+        found = False
+        current_time = int(time.time() * 1000)
+        timestamp = datetime.now(timezone.utc).isoformat() + 'Z'
+        
+        for item in cache_list:
+            if item.get('type') == cache_type:
+                item['fetched_at'] = current_time
+                item['timestamp'] = timestamp
+                found = True
+                break
+        
+        if not found:
+            cache_list.append({
+                'type': cache_type,
+                'fetched_at': current_time,
+                'timestamp': timestamp
+            })
+        
+        with open(last_updated_file, 'w') as f:
+            json.dump(cache_list, f, indent=2)
+    except Exception as e:
+        print(f"Warning: Failed to update last updated cache for {cache_type}: {e}")
+
+
+def get_sales_funnel_cache_file():
+    """Get the consolidated cache file path for sales funnel validation results."""
+    return get_cache_dir() / "sales_funnel_cache.json"
 
 
 def migrate_old_cache_files():
     """Migrate old separate cache files to consolidated file."""
-    script_dir = Path(__file__).parent
-    cache_dir = script_dir / ".validation_cache"
     cache_file = get_sales_funnel_cache_file()
     
     # Load existing consolidated cache
@@ -472,6 +575,7 @@ def migrate_old_cache_files():
     # Check for old separate files and migrate them
     scheduler_names = ['SALES_FUNNEL_YESTERDAY', 'SALES_FUNNEL_LAST_THIRTY_DAYS', 'SALES_FUNNEL_PREVIOUS_MONTH']
     migrated_count = 0
+    cache_dir = get_cache_dir()
     
     for scheduler_name in scheduler_names:
         safe_name = scheduler_name.replace('/', '_').replace('\\', '_')
@@ -682,10 +786,8 @@ def validate_single_sales_funnel_report(scheduler_name, today_data_file=None, ss
     Returns:
         Dictionary with validation results and detailed scheduler report
     """
-    script_dir = Path(__file__).parent
-    
     if today_data_file is None:
-        today_data_file = script_dir / "today-data.json"
+        today_data_file = get_today_data_file()
     
     # Validate scheduler name
     valid_schedulers = ['SALES_FUNNEL_YESTERDAY', 'SALES_FUNNEL_LAST_THIRTY_DAYS', 'SALES_FUNNEL_PREVIOUS_MONTH']
@@ -766,6 +868,21 @@ def validate_single_sales_funnel_report(scheduler_name, today_data_file=None, ss
                 except (ValueError, TypeError):
                     # If conversion fails, treat as 0
                     pass
+    
+    # Check if cache is valid before loading
+    if not is_cache_valid('todayData', ttl_days=1):
+        if not silent:
+            print(f"Warning: today-data.json cache is expired or missing. Please refresh the data.")
+        # Return error if cache is invalid
+        optimized_report = {
+            'schedulerReport': target_report.get('schedulerReport', {}),
+            'date': target_report.get('date'),
+            'schedulerName': target_report.get('schedulerName')
+        }
+        return {
+            'error': 'today-data.json cache is expired (older than 1 day). Please refresh the data.',
+            'report': optimized_report
+        }
     
     # Load today's data for comparison
     try:
@@ -860,10 +977,8 @@ def main():
         result = validate_sales_funnel_reports(sso_token=args.token)
         return 0 if 'error' not in result else 1
     
-    script_dir = Path(__file__).parent
-    
     # File path
-    today_data_file = script_dir / "today-data.json"
+    today_data_file = get_today_data_file()
     
     # Get today's start timestamp in WIB timezone
     today_timestamp = get_current_day_start_timestamp()
@@ -902,10 +1017,13 @@ def main():
     if correct_date_count != len(data_list):
         print(f"Warning: Only {correct_date_count} out of {len(data_list)} records have analyticDate matching today")
     
-    # Save today's data to today-data.json
+    # Save today's data to cache directory
     with open(today_data_file, 'w') as f:
         json.dump(data_list, f, indent=4)
     print(f"Saved {len(data_list)} records to {today_data_file}")
+    
+    # Update last_updated cache
+    update_last_updated_cache('todayData')
     
     return 0
 

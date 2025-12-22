@@ -1,12 +1,12 @@
 [
   {
-    "type": "pastData",
-    "fetched_at": 1766093702507,
-    "timestamp": "2025-12-18T21:35:02.496Z"
+    "type": "todayData",
+    "fetched_at": 1766422459629,
+    "timestamp": "2025-12-22T16:54:19.614Z"
   },
   {
-    "type": "todayData",
-    "fetched_at": 1766418745830,
-    "timestamp": "2025-12-22T15:52:25.815Z"
+    "type": "pastData",
+    "fetched_at": 1766422228011,
+    "timestamp": "2025-12-22T16:50:27.998Z"
   }
 ]

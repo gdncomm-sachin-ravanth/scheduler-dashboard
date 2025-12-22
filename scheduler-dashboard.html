@@ -1030,6 +1030,19 @@
             margin: 1rem 0;
         }
         
+        #schedulerRunsModalContent table tbody tr:hover {
+            background-color: var(--gray-50);
+            cursor: pointer;
+        }
+        
+        #schedulerRunsModalContent table tbody tr {
+            transition: background-color 0.2s ease;
+        }
+        
+        #schedulerRunsModalContent table thead {
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
         .curl-command {
             font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', monospace;
             font-size: 0.75rem;
@@ -1370,6 +1383,31 @@
                         </button>
                         <span id="lastUpdatedTime" style="display: none; font-size: 0.875rem; color: var(--gray-600); font-style: italic; padding-left: 0.5rem; border-left: 1px solid var(--gray-300);"></span>
                     </div>
+                </div>
+            </div>
+            
+            <!-- Shared Reports Header (visible on Reports Overview, Pattern Analysis, and All Scheduler Data pages) -->
+            <div id="reportsHeader" style="display: none; margin-bottom: 1.5rem; padding: 1rem; background: white; border-radius: 0.5rem; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+                <div style="display: flex; align-items: center; gap: 1rem; flex-wrap: nowrap; overflow-x: auto;">
+                    <label for="pastDataFilter" style="font-weight: 600; color: var(--gray-700); font-size: 0.875rem; white-space: nowrap;">
+                        📅 Date Range Filter:
+                    </label>
+                    <select id="pastDataFilter" onchange="filterPastData()" 
+                            style="padding: 0.5rem 0.75rem; border: 1px solid var(--gray-300); border-radius: 0.375rem; 
+                            font-size: 0.875rem; background: white; min-width: 180px; cursor: pointer; flex-shrink: 0;">
+                        <option value="YESTERDAY" selected>YESTERDAY</option>
+                        <option value="LAST_7_DAYS">LAST 7 DAYS</option>
+                        <option value="LAST_14_DAYS">LAST 14 DAYS</option>
+                    </select>
+                    <button id="refreshPastDataBtn" onclick="refreshPastData()" 
+                            style="padding: 0.5rem 1rem; border: 1px solid var(--gray-300); border-radius: 0.375rem; 
+                            background: var(--primary); color: white; cursor: pointer; font-size: 0.875rem; font-weight: 500;
+                            display: flex; align-items: center; gap: 0.5rem; white-space: nowrap; flex-shrink: 0;">
+                        <span id="refreshPastDataIcon">🔄</span>
+                        <span id="refreshPastDataText">Refresh</span>
+                    </button>
+                    <span id="pastDataLastUpdatedTime" style="font-size: 0.875rem; color: var(--gray-600); font-style: italic; padding-left: 0.5rem; border-left: 1px solid var(--gray-300); white-space: nowrap; flex-shrink: 0;"></span>
+                    <span id="pastDataStatus" style="font-size: 0.875rem; color: var(--gray-600); white-space: nowrap; flex-shrink: 0;"></span>
                 </div>
             </div>
             
@@ -1728,31 +1766,6 @@
                 
                 <!-- Reports Overview Section -->
                 <section id="reports-overview-section" class="page-section">
-                    <!-- Date Range Filter -->
-                    <div style="margin-bottom: 1.5rem; padding: 1rem; background: white; border-radius: 0.5rem; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
-                        <div style="display: flex; align-items: center; gap: 1rem; flex-wrap: wrap;">
-                            <label for="pastDataFilter" style="font-weight: 600; color: var(--gray-700); font-size: 0.875rem;">
-                                📅 Date Range Filter:
-                            </label>
-                            <select id="pastDataFilter" onchange="filterPastData()" 
-                                    style="padding: 0.5rem 0.75rem; border: 1px solid var(--gray-300); border-radius: 0.375rem; 
-                                    font-size: 0.875rem; background: white; min-width: 180px; cursor: pointer;">
-                                <option value="YESTERDAY" selected>YESTERDAY</option>
-                                <option value="LAST_7_DAYS">LAST 7 DAYS</option>
-                                <option value="LAST_14_DAYS">LAST 14 DAYS</option>
-                            </select>
-                            <button id="refreshPastDataBtn" onclick="refreshPastData()" 
-                                    style="padding: 0.5rem 1rem; border: 1px solid var(--gray-300); border-radius: 0.375rem; 
-                                    background: var(--primary); color: white; cursor: pointer; font-size: 0.875rem; font-weight: 500;
-                                    display: flex; align-items: center; gap: 0.5rem;">
-                                <span id="refreshPastDataIcon">🔄</span>
-                                <span id="refreshPastDataText">Refresh</span>
-                            </button>
-                            <span id="pastDataLastUpdatedTime" style="font-size: 0.875rem; color: var(--gray-600); font-style: italic; padding-left: 0.5rem; border-left: 1px solid var(--gray-300);"></span>
-                            <span id="pastDataStatus" style="font-size: 0.875rem; color: var(--gray-600);"></span>
-                        </div>
-                    </div>
-                    
                     <!-- Daily Breakdown Chart -->
                     <div class="chart-container" style="min-height: auto;">
                         <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem; flex-wrap: wrap; gap: 1rem;">
@@ -1999,12 +2012,12 @@
     
     <!-- Scheduler Runs Modal -->
     <div id="schedulerRunsModal" class="modal">
-        <div class="modal-content" style="max-width: 1000px;">
+        <div class="modal-content" style="max-width: 1200px;">
             <div class="modal-header">
-                <h3 id="schedulerRunsModalTitle">🔥 Scheduler Run Details</h3>
-                <button class="close" onclick="closeSchedulerRunsModal()">&times;</button>
+                <h3 id="schedulerRunsModalTitle" style="font-size: 1.25rem;">🔥 Scheduler Run Details</h3>
+                <button class="close" onclick="closeSchedulerRunsModal()" style="font-size: 1.75rem;">&times;</button>
             </div>
-            <div class="modal-body" style="padding: 0.75rem;">
+            <div class="modal-body" style="padding: 1.5rem;">
                 <div id="schedulerRunsModalContent"></div>
             </div>
         </div>
@@ -2082,13 +2095,36 @@
         let REPORTS_DATA = [];
         let FILTERED_REPORTS_DATA = []; // Filtered version of REPORTS_DATA based on selected filter
         
+        // Function to check if cache is valid (TTL: 1 day)
+        async function isCacheValid(cacheType) {
+            try {
+                const response = await fetch(`/api/get-last-updated?type=${cacheType}`);
+                const result = await response.json();
+                return result.success && result.timestamp;
+            } catch (error) {
+                console.error(`Failed to check cache validity for ${cacheType}:`, error);
+                return false;
+            }
+        }
+        
         // Function to load data from JSON files
         async function loadData() {
             try {
+                // Check cache validity before loading
+                const todayCacheValid = await isCacheValid('todayData');
+                const pastCacheValid = await isCacheValid('pastData');
+                
+                if (!todayCacheValid) {
+                    console.warn('today-data.json cache is expired or missing. Consider refreshing.');
+                }
+                if (!pastCacheValid) {
+                    console.warn('past-data.json cache is expired or missing. Consider refreshing.');
+                }
+                
                 const [jobsResponse, todayResponse, reportsResponse] = await Promise.all([
                     fetch('jobs-data.json'),
-                    fetch('today-data.json'),
-                    fetch('past-data.json')
+                    fetch('.validation_cache/today-data.json'),
+                    fetch('.validation_cache/past-data.json')
                 ]);
                 
                 JOBS_DATA = await jobsResponse.json();
@@ -2173,12 +2209,17 @@ Option 4 - Node.js (if installed):
                     if (statusSpan) {
                         statusSpan.textContent = `✓ ${result.message}`;
                         statusSpan.style.color = '#10b981';
-                        // Clear status after 3 seconds
+                        // Clear status after 3 seconds, then reload last updated time to check if it's from today
                         setTimeout(() => {
                             if (statusSpan) {
                                 statusSpan.textContent = '';
                             }
+                            // Reload last updated time to check if it's from today and show warning if needed
+                            loadPastDataLastUpdatedTime();
                         }, 3000);
+                    } else {
+                        // If no statusSpan, just reload last updated time
+                        loadPastDataLastUpdatedTime();
                     }
                     
                     // Reload past data
@@ -2389,6 +2430,7 @@ Option 4 - Node.js (if installed):
         // Function to load and display last updated time for past data
         async function loadPastDataLastUpdatedTime() {
             const lastUpdatedEl = document.getElementById('pastDataLastUpdatedTime');
+            const statusEl = document.getElementById('pastDataStatus');
             if (!lastUpdatedEl) return;
             
             try {
@@ -2397,6 +2439,13 @@ Option 4 - Node.js (if installed):
                 
                 if (result.success && result.timestamp) {
                     const lastUpdated = new Date(result.timestamp);
+                    const now = new Date();
+                    
+                    // Check if the timestamp is from today
+                    const isFromToday = lastUpdated.getFullYear() === now.getFullYear() &&
+                                      lastUpdated.getMonth() === now.getMonth() &&
+                                      lastUpdated.getDate() === now.getDate();
+                    
                     const timeStr = lastUpdated.toLocaleTimeString('en-US', {
                         hour: '2-digit',
                         minute: '2-digit',
@@ -2410,15 +2459,43 @@ Option 4 - Node.js (if installed):
                     
                     lastUpdatedEl.textContent = `Last updated: ${dateStr} ${timeStr}`;
                     lastUpdatedEl.style.display = 'inline';
+                    
+                    // Show warning if data was not refreshed today
+                    if (!isFromToday && statusEl) {
+                        statusEl.innerHTML = `<span style="color: #dc2626; font-weight: 600; padding: 0.25rem 0.5rem; background: #fee2e2; border-radius: 0.25rem; display: inline-flex; align-items: center; gap: 0.25rem;">
+                            ⚠️ Data not refreshed today. Please click Refresh to update.
+                        </span>`;
+                        statusEl.style.display = 'inline';
+                    } else if (statusEl) {
+                        // Clear status if data is fresh
+                        statusEl.textContent = '';
+                        statusEl.style.display = 'none';
+                    }
                 } else {
                     // Show "-" when no last updated time exists or cache expired
                     lastUpdatedEl.textContent = 'Last updated: -';
                     lastUpdatedEl.style.display = 'inline';
+                    
+                    // Show warning to refresh
+                    if (statusEl) {
+                        statusEl.innerHTML = `<span style="color: #dc2626; font-weight: 600; padding: 0.25rem 0.5rem; background: #fee2e2; border-radius: 0.25rem; display: inline-flex; align-items: center; gap: 0.25rem;">
+                            ⚠️ Data not available. Please click Refresh to fetch data.
+                        </span>`;
+                        statusEl.style.display = 'inline';
+                    }
                 }
             } catch (error) {
                 console.error('Failed to load past data last updated time:', error);
                 lastUpdatedEl.textContent = 'Last updated: -';
                 lastUpdatedEl.style.display = 'inline';
+                
+                // Show warning on error
+                if (statusEl) {
+                    statusEl.innerHTML = `<span style="color: #dc2626; font-weight: 600; padding: 0.25rem 0.5rem; background: #fee2e2; border-radius: 0.25rem; display: inline-flex; align-items: center; gap: 0.25rem;">
+                        ⚠️ Unable to check data status. Please click Refresh to ensure data is up to date.
+                    </span>`;
+                    statusEl.style.display = 'inline';
+                }
             }
         }
         
@@ -3269,6 +3346,19 @@ Option 4 - Node.js (if installed):
             // Update title
             document.getElementById('pageTitle').textContent = pageTitles[page] || 'Dashboard';
             
+            // Show/hide shared reports header based on page
+            const reportsHeader = document.getElementById('reportsHeader');
+            const isReportsPage = ['reports-overview', 'reports-patterns', 'reports-data'].includes(page);
+            
+            if (reportsHeader) {
+                reportsHeader.style.display = isReportsPage ? 'block' : 'none';
+            }
+            
+            // Load last updated time for reports pages
+            if (isReportsPage) {
+                loadPastDataLastUpdatedTime();
+            }
+            
             // Show/hide refresh button based on page
             const refreshBtn = document.getElementById('refreshDataBtn');
             const refreshText = document.getElementById('refreshText');
@@ -3287,17 +3377,8 @@ Option 4 - Node.js (if installed):
                     }
                     // Show last updated time
                     loadLastUpdatedTime(true);
-                } else if (page === 'reports-overview') {
-                    // Load last updated time for Reports Overview page
-                    loadPastDataLastUpdatedTime();
-                    // Hide Today's Report refresh button
-                    refreshBtn.style.display = 'none';
-                    const refreshContainer = document.getElementById('refreshButtonContainer');
-                    if (refreshContainer) {
-                        refreshContainer.style.display = 'none';
-                    }
                 } else {
-                    // Hide button on all other pages (including Rundeck Jobs)
+                    // Hide Today's Report refresh button on other pages
                     refreshBtn.style.display = 'none';
                     // Hide refresh button container
                     const refreshContainer = document.getElementById('refreshButtonContainer');
@@ -4266,24 +4347,20 @@ Option 4 - Node.js (if installed):
             let html = '';
             
             if (runs.length === 0) {
-                html = '<div class="no-results">No runs found for this scheduler at this hour.</div>';
+                html = '<div class="no-results" style="font-size: 1rem; padding: 2rem;">No runs found for this scheduler at this hour.</div>';
             } else {
-                html = `<div style="margin-bottom: 0.5rem; padding: 0.375rem 0.5rem; background: var(--gray-50); border-radius: 0.25rem; display: inline-block;">
-                    <span style="font-size: 0.6875rem; color: var(--gray-600);">Total Runs: </span>
-                    <span style="font-size: 0.8125rem; font-weight: 600; color: var(--gray-900);">${runs.length}</span>
-                </div>`;
-                
-                html += `<table style="width: 100%; border-collapse: collapse; font-size: 0.75rem;">
-                    <thead>
-                        <tr style="background: var(--gray-50); border-bottom: 2px solid var(--gray-200);">
-                            <th style="padding: 0.375rem 0.5rem; text-align: left; font-weight: 600; color: var(--gray-700); font-size: 0.6875rem;">#</th>
-                            <th style="padding: 0.375rem 0.5rem; text-align: left; font-weight: 600; color: var(--gray-700); font-size: 0.6875rem;">Date</th>
-                            <th style="padding: 0.375rem 0.5rem; text-align: left; font-weight: 600; color: var(--gray-700); font-size: 0.6875rem;">Status</th>
-                            <th style="padding: 0.375rem 0.5rem; text-align: left; font-weight: 600; color: var(--gray-700); font-size: 0.6875rem;">Start</th>
-                            <th style="padding: 0.375rem 0.5rem; text-align: left; font-weight: 600; color: var(--gray-700); font-size: 0.6875rem;">End</th>
-                            <th style="padding: 0.375rem 0.5rem; text-align: left; font-weight: 600; color: var(--gray-700); font-size: 0.6875rem;">Duration</th>
-                            <th style="padding: 0.375rem 0.5rem; text-align: right; font-weight: 600; color: var(--gray-700); font-size: 0.6875rem;">BQ Data</th>
-                            <th style="padding: 0.375rem 0.5rem; text-align: right; font-weight: 600; color: var(--gray-700); font-size: 0.6875rem;">Saved</th>
+                html = `<div style="overflow-x: auto; overflow-y: auto; max-height: calc(100vh - 300px); border-radius: 0.5rem; border: 1px solid var(--gray-200); box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+                    <table style="width: 100%; border-collapse: collapse; font-size: 0.9375rem;">
+                    <thead style="position: sticky; top: 0; z-index: 10;">
+                        <tr style="background: linear-gradient(135deg, var(--gray-50) 0%, var(--gray-100) 100%); border-bottom: 2px solid var(--gray-300);">
+                            <th style="padding: 0.875rem 1rem; text-align: left; font-weight: 700; color: var(--gray-800); font-size: 0.875rem; letter-spacing: 0.3px;">#</th>
+                            <th style="padding: 0.875rem 1rem; text-align: left; font-weight: 700; color: var(--gray-800); font-size: 0.875rem; letter-spacing: 0.3px;">Date</th>
+                            <th style="padding: 0.875rem 1rem; text-align: left; font-weight: 700; color: var(--gray-800); font-size: 0.875rem; letter-spacing: 0.3px;">Status</th>
+                            <th style="padding: 0.875rem 1rem; text-align: left; font-weight: 700; color: var(--gray-800); font-size: 0.875rem; letter-spacing: 0.3px;">Start</th>
+                            <th style="padding: 0.875rem 1rem; text-align: left; font-weight: 700; color: var(--gray-800); font-size: 0.875rem; letter-spacing: 0.3px;">End</th>
+                            <th style="padding: 0.875rem 1rem; text-align: left; font-weight: 700; color: var(--gray-800); font-size: 0.875rem; letter-spacing: 0.3px;">Duration</th>
+                            <th style="padding: 0.875rem 1rem; text-align: right; font-weight: 700; color: var(--gray-800); font-size: 0.875rem; letter-spacing: 0.3px;">BQ Data</th>
+                            <th style="padding: 0.875rem 1rem; text-align: right; font-weight: 700; color: var(--gray-800); font-size: 0.875rem; letter-spacing: 0.3px;">Saved</th>
                         </tr>
                     </thead>
                     <tbody>`;
@@ -4323,23 +4400,23 @@ Option 4 - Node.js (if installed):
                     const borderColor = isSuccess ? '#10b981' : isFailed ? '#ef4444' : '#3b82f6';
                     
                     html += `
-                        <tr style="border-bottom: 1px solid var(--gray-200); border-left: 3px solid ${borderColor};">
-                            <td style="padding: 0.375rem 0.5rem; color: var(--gray-700); font-weight: 500;">${runs.length - index}</td>
-                            <td style="padding: 0.375rem 0.5rem; color: var(--gray-900); white-space: nowrap;">${date}</td>
-                            <td style="padding: 0.375rem 0.5rem;">
-                                <span style="background: ${statusBgColor}; padding: 0.125rem 0.375rem; border-radius: 0.25rem; font-size: 0.625rem; font-weight: 600; display: inline-block; margin-right: 0.25rem;">${statusText}</span>
-                                ${attemptStatus !== '-' ? `<span style="background: var(--gray-100); padding: 0.125rem 0.375rem; border-radius: 0.25rem; font-size: 0.625rem; color: var(--gray-700);">${attemptStatus}</span>` : ''}
+                        <tr style="border-bottom: 1px solid var(--gray-200); border-left: 4px solid ${borderColor};">
+                            <td style="padding: 0.875rem 1rem; color: var(--gray-700); font-weight: 600; font-size: 0.9375rem;">${runs.length - index}</td>
+                            <td style="padding: 0.875rem 1rem; color: var(--gray-900); white-space: nowrap; font-size: 0.9375rem; font-weight: 500;">${date}</td>
+                            <td style="padding: 0.875rem 1rem;">
+                                <span style="background: ${statusBgColor}; padding: 0.375rem 0.625rem; border-radius: 0.375rem; font-size: 0.8125rem; font-weight: 700; display: inline-block; margin-right: 0.5rem; box-shadow: 0 1px 2px rgba(0,0,0,0.1);">${statusText}</span>
+                                ${attemptStatus !== '-' ? `<span style="background: var(--gray-100); padding: 0.375rem 0.625rem; border-radius: 0.375rem; font-size: 0.8125rem; color: var(--gray-700); font-weight: 600;">${attemptStatus}</span>` : ''}
                             </td>
-                            <td style="padding: 0.375rem 0.5rem; color: var(--gray-900); font-family: monospace; font-size: 0.6875rem; white-space: nowrap;">${startTime}</td>
-                            <td style="padding: 0.375rem 0.5rem; color: var(--gray-900); font-family: monospace; font-size: 0.6875rem; white-space: nowrap;">${endTime}</td>
-                            <td style="padding: 0.375rem 0.5rem; color: var(--gray-900); white-space: nowrap;">${durationDisplay}</td>
-                            <td style="padding: 0.375rem 0.5rem; text-align: right; color: var(--gray-900);">${bqData}</td>
-                            <td style="padding: 0.375rem 0.5rem; text-align: right; color: var(--gray-900);">${savedData}</td>
+                            <td style="padding: 0.875rem 1rem; color: var(--gray-900); font-family: monospace; font-size: 0.9375rem; white-space: nowrap; font-weight: 500;">${startTime}</td>
+                            <td style="padding: 0.875rem 1rem; color: var(--gray-900); font-family: monospace; font-size: 0.9375rem; white-space: nowrap; font-weight: 500;">${endTime}</td>
+                            <td style="padding: 0.875rem 1rem; color: var(--gray-900); white-space: nowrap; font-size: 0.9375rem; font-weight: 500;">${durationDisplay}</td>
+                            <td style="padding: 0.875rem 1rem; text-align: right; color: var(--gray-900); font-size: 0.9375rem; font-weight: 500;">${bqData}</td>
+                            <td style="padding: 0.875rem 1rem; text-align: right; color: var(--gray-900); font-size: 0.9375rem; font-weight: 500;">${savedData}</td>
                         </tr>
                     `;
                 });
                 
-                html += '</tbody></table>';
+                html += '</tbody></table></div>';
             }
             
             document.getElementById('schedulerRunsModalContent').innerHTML = html;
@@ -6378,11 +6455,26 @@ Option 4 - Node.js (if installed):
         
         // Initialize
         function init() {
+            // Set initial reports header visibility based on active page
+            const reportsHeader = document.getElementById('reportsHeader');
+            const isReportsOverview = document.getElementById('reports-overview-section')?.classList.contains('active');
+            const isReportsPatterns = document.getElementById('reports-patterns-section')?.classList.contains('active');
+            const isReportsData = document.getElementById('reports-data-section')?.classList.contains('active');
+            const isReportsPage = isReportsOverview || isReportsPatterns || isReportsData;
+            
+            if (reportsHeader) {
+                reportsHeader.style.display = isReportsPage ? 'block' : 'none';
+            }
+            
+            // Load last updated time for reports pages
+            if (isReportsPage) {
+                loadPastDataLastUpdatedTime();
+            }
+            
             // Set initial refresh button visibility based on active page
             const refreshBtn = document.getElementById('refreshDataBtn');
             if (refreshBtn) {
                 const isTodayReport = document.getElementById('today-report-section')?.classList.contains('active');
-                const isReportsOverview = document.getElementById('reports-overview-section')?.classList.contains('active');
                 
                 if (isTodayReport) {
                     refreshBtn.style.display = 'inline-flex';
@@ -6397,15 +6489,6 @@ Option 4 - Node.js (if installed):
                     }
                     // Load last updated time for Today's Report page
                     loadLastUpdatedTime(true);
-                } else if (isReportsOverview) {
-                    // Load last updated time for Reports Overview page
-                    loadPastDataLastUpdatedTime();
-                    refreshBtn.style.display = 'none';
-                    // Hide refresh button container on other pages
-                    const refreshContainer = document.getElementById('refreshButtonContainer');
-                    if (refreshContainer) {
-                        refreshContainer.style.display = 'none';
-                    }
                 } else {
                     refreshBtn.style.display = 'none';
                     // Hide refresh button container on other pages
