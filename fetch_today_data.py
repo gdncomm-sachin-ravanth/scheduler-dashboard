@@ -251,8 +251,17 @@ def fetch_sales_funnel_reports(today_timestamp=None, sso_token=None, silent=Fals
         ['bash', '-c', curl_command],
         capture_output=True,
         text=True,
-        check=True
+        check=False  # Don't raise exception, check manually
     )
+    
+    # Check for HTTP errors in the response
+    if result.returncode != 0:
+        error_output = result.stderr or result.stdout or ''
+        # Check if this is an authentication error
+        if '401' in error_output or '403' in error_output or 'unauthorized' in error_output.lower() or 'forbidden' in error_output.lower():
+            raise subprocess.CalledProcessError(result.returncode, curl_command, stderr=error_output)
+        # For other errors, raise with the error output
+        raise subprocess.CalledProcessError(result.returncode, curl_command, stderr=error_output)
     
     # Debug: Print response (first 500 chars)
     if not silent and result.stdout:
@@ -261,21 +270,49 @@ def fetch_sales_funnel_reports(today_timestamp=None, sso_token=None, silent=Fals
     # Parse the JSON response
     try:
         response_data = json.loads(result.stdout)
-        # The response might be wrapped in a 'data' key or be a direct array
+        
+        # Check if the response contains an authentication error message
         if isinstance(response_data, dict):
+            error_msg = response_data.get('error') or response_data.get('message') or ''
+            error_msg_lower = error_msg.lower()
+            if '401' in str(response_data) or '403' in str(response_data) or \
+               'unauthorized' in error_msg_lower or 'forbidden' in error_msg_lower or \
+               'authentication' in error_msg_lower or 'invalid token' in error_msg_lower:
+                raise ValueError("Authentication failed: Invalid SSO token. Please check your SSO token and try again.")
+            
+            # The response might be wrapped in a 'data' key or be a direct array
             if 'data' in response_data:
                 response_data = response_data['data']
             elif 'result' in response_data:
                 response_data = response_data['result']
+            else:
+                # If it's a dict but not an error and doesn't have 'data' or 'result', 
+                # it might be an empty result or different structure
+                # Check if it's an error response
+                if 'error' in response_data or 'message' in response_data:
+                    error_text = response_data.get('error') or response_data.get('message') or ''
+                    if not silent:
+                        print(f"API returned error response: {error_text}")
+                    # Return empty list for error responses (will be handled by caller)
+                    return []
+                # Otherwise, treat as empty result
+                if not silent:
+                    print(f"Warning: Expected list but got dict. Response keys: {list(response_data.keys())}")
+                return []
     except json.JSONDecodeError as e:
-        print(f"Error parsing JSON response:")
-        print(f"  Response: {result.stdout}")
-        print(f"  Error: {e}")
+        # Check if the response contains authentication error keywords
+        if '401' in result.stdout or '403' in result.stdout or 'unauthorized' in result.stdout.lower() or 'forbidden' in result.stdout.lower():
+            raise ValueError("Authentication failed: Invalid SSO token. Please check your SSO token and try again.")
+        if not silent:
+            print(f"Error parsing JSON response:")
+            print(f"  Response: {result.stdout}")
+            print(f"  Error: {e}")
         raise
     
     # Ensure we have a list
     if not isinstance(response_data, list):
-        print(f"Warning: Expected list but got {type(response_data)}")
+        if not silent:
+            print(f"Warning: Expected list but got {type(response_data)}. Response: {str(response_data)[:200]}")
         response_data = []
     
     return response_data
@@ -809,10 +846,37 @@ def validate_single_sales_funnel_report(scheduler_name, today_data_file=None, ss
     try:
         reports = fetch_sales_funnel_reports(today_timestamp, sso_token, silent=silent)
     except subprocess.CalledProcessError as e:
+        # Check if this is an authentication error
+        error_output = e.stderr or (hasattr(e, 'stdout') and e.stdout) or ''
+        if '401' in error_output or '403' in error_output or 'unauthorized' in error_output.lower() or 'forbidden' in error_output.lower():
+            error_msg = "Authentication failed: Invalid SSO token. Please check your SSO token and try again."
+            if not silent:
+                print(error_msg)
+            return {
+                'error': error_msg,
+                'auth_error': True,
+                'empty_result': True,
+                'found_reports': 0,
+                'found_schedulers': [],
+                'today_date': datetime.fromtimestamp(today_timestamp / 1000, tz=timezone(timedelta(hours=7))).strftime('%Y-%m-%d')
+            }
         error_msg = f"Error executing curl command (return code: {e.returncode}): {e.stderr}"
         if not silent:
             print(error_msg)
         return {'error': error_msg}
+    except ValueError as e:
+        # This is raised when we detect authentication errors in JSON parsing
+        error_msg = str(e)
+        if not silent:
+            print(error_msg)
+        return {
+            'error': error_msg,
+            'auth_error': True,
+            'empty_result': True,
+            'found_reports': 0,
+            'found_schedulers': [],
+            'today_date': datetime.fromtimestamp(today_timestamp / 1000, tz=timezone(timedelta(hours=7))).strftime('%Y-%m-%d')
+        }
     except Exception as e:
         error_msg = f"Error fetching sales funnel reports: {str(e)}"
         if not silent:
@@ -955,9 +1019,12 @@ def validate_single_sales_funnel_report(scheduler_name, today_data_file=None, ss
     }
     
     # Save to cache if validation is successful and data matches
+    stored_in_cache = False
     if execution_success and match:
         save_validation_cache(scheduler_name, result, silent=silent)
+        stored_in_cache = True
     
+    result['stored_in_cache'] = stored_in_cache
     return result
 
 

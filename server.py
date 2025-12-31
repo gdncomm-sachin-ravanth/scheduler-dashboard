@@ -93,6 +93,9 @@ class DashboardHandler(BaseHTTPRequestHandler):
         elif path == '/api/set-last-updated':
             self.handle_set_last_updated()
             return
+        elif path == '/api/clear-sales-funnel-cache':
+            self.handle_clear_sales_funnel_cache()
+            return
         else:
             self.send_error(404, "Not found")
             return
@@ -215,6 +218,7 @@ class DashboardHandler(BaseHTTPRequestHandler):
                     'success': False,
                     'message': 'Failed to validate sales funnel report',
                     'error': result.get('error'),
+                    'auth_error': result.get('auth_error', False),
                     'empty_result': result.get('empty_result', False),
                     'found_reports': result.get('found_reports', 0),
                     'found_schedulers': result.get('found_schedulers', []),
@@ -230,6 +234,7 @@ class DashboardHandler(BaseHTTPRequestHandler):
                     'report': result.get('report'),
                     'scheduler_record': result.get('scheduler_record'),
                     'from_cache': result.get('from_cache', False),
+                    'stored_in_cache': result.get('stored_in_cache', False),
                     'fetched_at': result.get('fetched_at')
                 }
                 self.send_response(200)
@@ -727,6 +732,100 @@ class DashboardHandler(BaseHTTPRequestHandler):
             self.end_headers()
             self.wfile.write(json.dumps(response).encode('utf-8'))
             print(f"Error in handle_set_last_updated: {error_traceback}")
+    
+    def handle_clear_sales_funnel_cache(self):
+        """Handle POST request to clear sales funnel cache for a specific scheduler."""
+        try:
+            # Read request body
+            content_length = int(self.headers.get('Content-Length', 0))
+            body = self.rfile.read(content_length) if content_length > 0 else b'{}'
+            request_data = json.loads(body.decode('utf-8'))
+            scheduler_name = request_data.get('scheduler_name')
+            
+            if not scheduler_name:
+                response = {
+                    'success': False,
+                    'error': 'Scheduler name is required'
+                }
+                self.send_response(400)
+                self.send_header('Content-Type', 'application/json')
+                self.send_header('Access-Control-Allow-Origin', '*')
+                self.end_headers()
+                self.wfile.write(json.dumps(response).encode('utf-8'))
+                return
+            
+            # Import the cache clearing function
+            import sys
+            script_dir = Path(__file__).parent
+            sys.path.insert(0, str(script_dir))
+            from fetch_today_data import get_sales_funnel_cache_file
+            
+            # Clear cache for the specific scheduler
+            cache_file = get_sales_funnel_cache_file()
+            cache_cleared = False
+            
+            if cache_file.exists():
+                try:
+                    with open(cache_file, 'r') as f:
+                        cache_list = json.load(f)
+                    
+                    if isinstance(cache_list, list):
+                        # Remove entry for this scheduler
+                        updated_list = [item for item in cache_list if item.get('scheduler_name') != scheduler_name]
+                        
+                        if len(updated_list) < len(cache_list):
+                            cache_cleared = True
+                            
+                            # Save updated cache
+                            if updated_list:
+                                with open(cache_file, 'w') as f:
+                                    json.dump(updated_list, f, indent=2)
+                            else:
+                                # If no entries left, delete file
+                                cache_file.unlink()
+                except Exception as e:
+                    print(f"Warning: Failed to clear cache: {e}")
+            
+            if cache_cleared:
+                response = {
+                    'success': True,
+                    'message': f'Cache cleared for {scheduler_name}'
+                }
+            else:
+                response = {
+                    'success': True,
+                    'message': f'No cache found for {scheduler_name} (may have already been cleared)'
+                }
+            
+            self.send_response(200)
+            self.send_header('Content-Type', 'application/json')
+            self.send_header('Access-Control-Allow-Origin', '*')
+            self.end_headers()
+            self.wfile.write(json.dumps(response).encode('utf-8'))
+            
+        except json.JSONDecodeError as e:
+            response = {
+                'success': False,
+                'error': f'Invalid JSON: {str(e)}'
+            }
+            self.send_response(400)
+            self.send_header('Content-Type', 'application/json')
+            self.send_header('Access-Control-Allow-Origin', '*')
+            self.end_headers()
+            self.wfile.write(json.dumps(response).encode('utf-8'))
+        except Exception as e:
+            import traceback
+            error_traceback = traceback.format_exc()
+            response = {
+                'success': False,
+                'error': f'Server Error: {str(e)}'
+            }
+            self.send_response(500)
+            self.send_header('Content-Type', 'application/json')
+            self.send_header('Access-Control-Allow-Origin', '*')
+            self.end_headers()
+            self.wfile.write(json.dumps(response).encode('utf-8'))
+            print(f"Error in handle_clear_sales_funnel_cache: {error_traceback}")
     
     def log_message(self, format, *args):
         """Override to customize log format."""
