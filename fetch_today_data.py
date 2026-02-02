@@ -164,9 +164,10 @@ def build_sales_funnel_curl_command(today_timestamp, sso_token=None):
     if not sso_token:
         sso_token = get_sso_token_from_file()
     
-    # Use provided token or default
-    default_token = 'UwpivB3HAqlRUrQ5TYTp'
-    token = sso_token if sso_token else default_token
+    # Require token - no default token should be used
+    if not sso_token:
+        raise ValueError("SSO token is required. Please provide it via --token argument or .sso_token file.")
+    token = sso_token
     
     # Headers (matching CURL_sales_funnel_report.yaml)
     headers = {

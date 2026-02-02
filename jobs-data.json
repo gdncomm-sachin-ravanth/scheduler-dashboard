@@ -636,18 +636,48 @@
     "timeout": "1m",
     "tab": "Operational",
     "bqDetails": {
-      "source": "rome-prod.user_defined_function.si_operation_cancellation_fulfilment_performance",
+      "source": "seller-inisights-prod.functions.operational_orders",
       "dependantTables": [
-        "geneva-prod.staging.master_brand",
-        "geneva-prod.staging.pcc_product_item",
-        "geneva-prod.master.pcb_category",
-        "geneva-prod.staging.pcc_product_item_images",
-        "rome-prod.datamart.datamart_item_info",
-        "geneva-prod.staging.product_level_3",
-        "geneva-prod.staging.official_store_contract_active_histories",
-        "geneva-prod.intermediate.business_partner",
+        "geneva-prod.staging.official_store_contracts",
+        "geneva-prod.intermediate.xorder_order",
+        "rome-prod.datamart.order_info",
+        "geneva-prod.staging.product_level_4",
+        "geneva-prod.staging.product_level_2",
         "geneva-prod.intermediate.productreview_product_review",
-        "geneva-prod.intermediate.xorder_order"
+        "rome-prod.datamart.order_info",
+        "geneva-prod.staging.product_level_3",
+        "geneva-prod.staging.master_brand",
+        "geneva-prod.intermediate.business_partner"
+      ]
+    }
+  },
+  {
+    "name": "sa_0300_CANCELLATION_FULFILMENT_OPERATIONAL_MONTHLY",
+    "analyticName": "CANCELLATION_FULFILMENT_OPERATIONAL_MONTHLY",
+    "hour": "03,05",
+    "minute": "00",
+    "seconds": "00",
+    "retry": "0",
+    "scheduleEnabled": true,
+    "executionEnabled": true,
+    "frequency": "Daily",
+    "dayInfo": "",
+    "curlCommand": "curl -X POST seller-insights.gdn-sg.cld/seller-insights/v2/scheduler/operational/cancellation-fulfilment-monthly |grep '\"data\":true'",
+    "timeout": "1m",
+    "tab": "Operational",
+    "bqDetails": {
+      "source": "seller-inisights-prod.functions.operational_monthly_orders",
+      "dependantTables": [
+        "geneva-prod.staging.official_store_contracts",
+        "geneva-prod.intermediate.xorder_order",
+        "rome-prod.datamart.order_info",
+        "geneva-prod.staging.product_level_4",
+        "geneva-prod.staging.product_level_2",
+        "geneva-prod.intermediate.productreview_product_review",
+        "rome-prod.datamart.order_info",
+        "geneva-prod.staging.product_level_3",
+        "geneva-prod.staging.master_brand",
+        "geneva-prod.intermediate.business_partner"
       ]
     }
   },
@@ -819,7 +849,7 @@
     "minute": "45",
     "seconds": "00",
     "retry": "0",
-    "scheduleEnabled": true,
+    "scheduleEnabled": false,
     "executionEnabled": true,
     "frequency": "Daily",
     "dayInfo": "",
@@ -1050,5 +1080,131 @@
     "timeout": "1m",
     "tab": "Common schedulers",
     "bqDetails": null
+  },
+  {
+    "name": "sa_0915_TRAFFIC_DAILY",
+    "analyticName": "TRAFFIC_DAILY",
+    "hour": "09,10",
+    "minute": "15",
+    "seconds": "00",
+    "retry": "0",
+    "scheduleEnabled": true,
+    "executionEnabled": true,
+    "frequency": "Daily",
+    "dayInfo": "",
+    "curlCommand": "curl -X POST seller-insights.gdn-sg.cld/seller-insights/v2/scheduler/traffic-v2/daily?isBrand=false | grep '\"data\":true'",
+    "timeout": "1m",
+    "tab": "Traffic",
+    "bqDetails": {
+      "source": "seller-inisights-prod.datamart.traffic_daily_summary",
+      "dependantTables": [
+        "seller-inisights-prod.datamart.traffic_daily_summary"
+      ]
+    }
+  },
+  {
+    "name": "sa_0925_TRAFFIC_MONTHLY",
+    "analyticName": "TRAFFIC_MONTHLY",
+    "hour": "09,10",
+    "minute": "25",
+    "seconds": "00",
+    "retry": "0",
+    "scheduleEnabled": true,
+    "executionEnabled": true,
+    "frequency": "Daily",
+    "dayInfo": "",
+    "curlCommand": "curl -X POST seller-insights-next.gdn-sg.cld/seller-insights/v2/scheduler/traffic-v2/monthly?isBrand=false | grep '\"data\":true'",
+    "timeout": "1m",
+    "tab": "Traffic",
+    "bqDetails": {
+      "source": "seller-inisights-prod.datamart.traffic_daily_summary",
+      "dependantTables": [
+        "seller-inisights-prod.datamart.traffic_daily_summary"
+      ]
+    }
+  },
+  {
+    "name": "sa_0900_TRAFFIC_PROMOTION_DETAILS",
+    "analyticName": "TRAFFIC_PROMOTION_DETAILS",
+    "hour": "09",
+    "minute": "00,45",
+    "seconds": "00",
+    "retry": "0",
+    "scheduleEnabled": true,
+    "executionEnabled": true,
+    "frequency": "Daily",
+    "dayInfo": "",
+    "curlCommand": "curl -X POST seller-insights.gdn-sg.cld/seller-insights/v2/scheduler/traffic-v2/most-visited-items?isPromo=true | grep '\"data\":true'",
+    "timeout": "1m",
+    "tab": "Traffic",
+    "bqDetails": {
+      "source": "seller-inisights-prod.datamart.traffic_promotion_list",
+      "dependantTables": [
+        "seller-inisights-prod.datamart.traffic_promotion_list"
+      ]
+    }
+  },
+  {
+    "name": "sa_0910_TRAFFIC_PRODUCT_DETAILS",
+    "analyticName": "TRAFFIC_PRODUCT_DETAILS",
+    "hour": "09,10",
+    "minute": "10",
+    "seconds": "00",
+    "retry": "0",
+    "scheduleEnabled": true,
+    "executionEnabled": true,
+    "frequency": "Daily",
+    "dayInfo": "",
+    "curlCommand": "curl -X POST seller-insights-next.gdn-sg.cld/seller-insights/v2/scheduler/traffic-v2/most-visited-items | grep '\"data\":true'",
+    "timeout": "1m",
+    "tab": "Traffic",
+    "bqDetails": {
+      "source": "seller-inisights-prod.datamart.traffic_product_list",
+      "dependantTables": [
+        "seller-inisights-prod.datamart.traffic_product_list"
+      ]
+    }
+  },
+  {
+    "name": "sa_0445_CHAT_RESPONSE_OPERATIONAL_DAILY",
+    "analyticName": "CHAT_RESPONSE_OPERATIONAL_DAILY",
+    "hour": "04,06",
+    "minute": "45",
+    "seconds": "00",
+    "retry": "0",
+    "scheduleEnabled": true,
+    "executionEnabled": true,
+    "frequency": "Daily",
+    "dayInfo": "",
+    "curlCommand": "curl -X POST seller-insights-next.gdn-sg.cld/seller-insights/v2/scheduler/operational/chat-response-daily |grep '\"data\":true'",
+    "timeout": "1m",
+    "tab": "Operational",
+    "bqDetails": {
+      "source": "seller-inisights-prod.functions.operational_chats",
+      "dependantTables": [
+        "rome-prod.airflow_scheduler.datamart_seller_chat_order_v2"
+      ]
+    }
+  },
+  {
+    "name": "sa_0445_CHAT_RESPONSE_OPERATIONAL_MONTHLY",
+    "analyticName": "CHAT_RESPONSE_OPERATIONAL_MONTHLY",
+    "hour": "04,06",
+    "minute": "45",
+    "seconds": "00",
+    "retry": "0",
+    "scheduleEnabled": true,
+    "executionEnabled": true,
+    "frequency": "Daily",
+    "dayInfo": "",
+    "curlCommand": "curl -X POST seller-insights.gdn-sg.cld/seller-insights/v2/scheduler/operational/chat-response-monthly |grep '\"data\":true'",
+    "timeout": "1m",
+    "tab": "Operational",
+    "bqDetails": {
+      "source": "seller-inisights-prod.functions.operational_monthly_chats",
+      "dependantTables": [
+        "rome-prod.airflow_scheduler.datamart_seller_chat_order_v2"
+      ]
+    }
   }
 ]

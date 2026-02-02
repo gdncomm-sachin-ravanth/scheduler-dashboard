@@ -2074,8 +2074,8 @@
                 <button class="close" onclick="closeSsoTokenModal()">&times;</button>
             </div>
             <div class="modal-body">
-                <p style="margin-bottom: 1rem; color: var(--gray-700);">
-                    The current SSO token is invalid. Please enter a new token to continue.
+                <p id="ssoTokenModalMessage" style="margin-bottom: 1rem; color: var(--gray-700);">
+                    SSO token is required. Please enter your token to continue.
                 </p>
                 <div style="margin-bottom: 1rem;">
                     <label for="ssoTokenInput" style="display: block; font-weight: 600; color: var(--gray-700); margin-bottom: 0.5rem;">
@@ -2184,6 +2184,11 @@ Option 4 - Node.js (if installed):
         
         // Function to refresh past data - fetches last 14 days and stores in past-data.json
         async function refreshPastData() {
+            // Check for SSO token before making API call
+            if (!checkSsoToken()) {
+                return;
+            }
+            
             const refreshBtn = document.getElementById('refreshPastDataBtn');
             const refreshIcon = document.getElementById('refreshPastDataIcon');
             const refreshText = document.getElementById('refreshPastDataText');
@@ -2936,6 +2941,11 @@ Option 4 - Node.js (if installed):
                 return;
             }
             
+            // Check for SSO token before making API call
+            if (!checkSsoToken()) {
+                return;
+            }
+            
             const btn = document.getElementById('validateSalesFunnelModalBtn');
             const resultsDiv = document.getElementById('salesFunnelValidationResults');
             
@@ -3329,6 +3339,11 @@ Option 4 - Node.js (if installed):
         
         // Function to refresh data by triggering the Python script
         async function refreshData() {
+            // Check for SSO token before making API call
+            if (!checkSsoToken()) {
+                return;
+            }
+            
             const btn = document.getElementById('refreshDataBtn');
             const icon = document.getElementById('refreshIcon');
             const text = document.getElementById('refreshText');
@@ -4701,10 +4716,31 @@ Option 4 - Node.js (if installed):
             localStorage.removeItem('sso_token');
         }
         
+        // Check if token exists, show popup if not
+        function checkSsoToken() {
+            const token = getSsoToken();
+            if (!token) {
+                showSsoTokenModal('missing');
+                return false;
+            }
+            return true;
+        }
+        
         // SSO Token Modal Functions
-        function showSsoTokenModal() {
+        function showSsoTokenModal(reason = 'invalid') {
             const modal = document.getElementById('ssoTokenModal');
+            const messageEl = document.getElementById('ssoTokenModalMessage');
+            
             if (modal) {
+                // Update message based on reason
+                if (messageEl) {
+                    if (reason === 'missing') {
+                        messageEl.textContent = 'SSO token is required. Please enter your token to continue.';
+                    } else {
+                        messageEl.textContent = 'The current SSO token is invalid. Please enter a new token to continue.';
+                    }
+                }
+                
                 modal.style.display = 'block';
                 const input = document.getElementById('ssoTokenInput');
                 if (input) {
@@ -4745,10 +4781,21 @@ Option 4 - Node.js (if installed):
             showToast('Success', 'SSO token saved successfully', 'success', 3000);
             closeSsoTokenModal();
             
-            // Automatically retry refresh
-            setTimeout(() => {
-                refreshData();
-            }, 500);
+            // Check if page was initialized (if TODAY_DATA exists, page was initialized)
+            if (typeof TODAY_DATA === 'undefined' || TODAY_DATA === null) {
+                // Page wasn't initialized, initialize it now
+                setTimeout(async () => {
+                    const dataLoaded = await loadData();
+                    if (dataLoaded) {
+                        init();
+                    }
+                }, 500);
+            } else {
+                // Page was already initialized, just refresh data
+                setTimeout(() => {
+                    refreshData();
+                }, 500);
+            }
         }
         
         // Close modal when clicking outside
@@ -6720,6 +6767,13 @@ Option 4 - Node.js (if installed):
         
         // Initialize on DOM load
         document.addEventListener('DOMContentLoaded', async function() {
+            // Check for SSO token on page load and show popup if missing
+            // Don't block page load, but show popup to prompt user
+            const hasToken = getSsoToken();
+            if (!hasToken) {
+                showSsoTokenModal('missing');
+            }
+            
             // Load data from external JSON files first
             const dataLoaded = await loadData();
             
